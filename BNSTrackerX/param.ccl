@@ -1,0 +1,127 @@
+# Parameter definitions for thorn BNSTrackerX
+
+shares: SphericalSurface
+USES CCTK_INT maxntheta
+USES CCTK_INT maxnphi
+
+PRIVATE:
+
+BOOLEAN track_only "Do not change grid structure, only track stars."
+{
+} "no"
+
+BOOLEAN follow_hmns "move central grid along barycenter between merger and collapse."
+{
+} "no"
+
+BOOLEAN follow_bh "move central grid along BH after collapse."
+{
+} "no"
+
+BOOLEAN move_z "allow following remnants also in z-direction"
+{
+} "no"
+
+
+
+CCTK_INT num_surf "Number of nested spherical surfaces" STEERABLE=recover
+{
+  0:20 :: ""
+} 1
+
+CCTK_INT bns_surface_idx_1[20] "Spherical surface tracking star 1"
+{
+  -1:* :: "valid surface index, -1 means don't track"
+} -1
+
+CCTK_INT bns_surface_idx_2[20] "Spherical surface tracking star 2"
+{
+  -1:* :: "valid surface index, -1 means don't track"
+} -1
+
+CCTK_INT bns_surface_idx_3[20] "Spherical surface tracking HMNS"
+{
+  -1:* :: "valid surface index, -1 means don't track"
+} -1
+
+CCTK_REAL bns_surface_radius_1[20] "Radius of spherical surface tracking star 1"
+{
+  0:* :: "Fixed coordinate radius"
+} 10.0
+
+CCTK_REAL bns_surface_radius_2[20] "Radius of spherical surface tracking star 2"
+{
+  0:* :: "Fixed coordinate radius"
+} 10.0
+
+CCTK_REAL bns_surface_radius_3[20] "Radius of spherical surface tracking HMNS"
+{
+  0:* :: "Fixed coordinate radius"
+} 10.0
+
+CCTK_INT analysis_reflevel "Refinement level used to track the stars" STEERABLE=ALWAYS
+{
+  0:* :: "0 means coarsest level"
+} 0
+
+BOOLEAN sym_pi "Do we have pi-symmetry ?"
+{
+} "no"
+
+
+CCTK_INT analyze_every "Compute star positions when iteration is a multiple of this" STEERABLE = ALWAYS
+{
+  1:* :: ""
+} 32
+
+
+CCTK_REAL initial_phase "initial data: angle between star1 position and x-axis"
+{
+  *:* :: "counter-clockwise, in radians"
+} 0.0
+
+CCTK_INT index_region1 "CarpetRegrid2 region index corresponding to star1"
+{
+  0:* :: "the one with x>0"
+} 0
+
+CCTK_INT index_region2 "CarpetRegrid2 region index corresponding to star2"
+{
+  0:* :: "the one with x<0"
+} 1
+
+CCTK_INT index_region3 "CarpetRegrid2 region index around origin"
+{
+  0:* :: "the one with x=y=z=0"
+} 2
+
+
+
+CCTK_REAL merge_separation "This separation defines onset of merger" STEERABLE=ALWAYS
+{
+  -1:* :: "negative means ignore merger"
+} -1
+
+CCTK_REAL collapse_separation "This separation defines onset of collapse" STEERABLE=ALWAYS
+{
+  -1:* :: "negative means ignore collapse"
+} -1
+
+
+
+CCTK_INT add_levels_post_merge "Additional region 3 levels to be activated at merger" STEERABLE=ALWAYS
+{
+  1:* :: "Define initially inactive levels big enough to cover former moving grids" 
+} 1
+
+CCTK_INT add_levels_post_collapse "Additional region 3 levels to be activated at collapse" STEERABLE=ALWAYS
+{
+  0:* :: ""
+} 0
+
+
+CCTK_INT dist_num_points "Number of sample points to compute proper separation"
+{
+  20:10000 :: ""
+} 200
+

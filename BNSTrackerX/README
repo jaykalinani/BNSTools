@@ -1,0 +1,10 @@
+Cactus Code Thorn BNSTrackerX
+Thorn Author(s)     : Jay Kalinani <jvksma@rit.edu>
+Thorn Maintainer(s) : Jay Kalinani <jvksma@rit.edu>
+--------------------------------------------------------------------------
+
+
+1. Purpose:
+
+This thorn is adapted to CarpeX from the Carpet thorn "BNSTrackerGen" of Wolfgang Kastaun. 
+The thorn allows the tracking of NSs on the CarpetX grid.

@@ -1,0 +1,49 @@
+# Interface definition for thorn BNSTrackerX
+
+IMPLEMENTS: BNSTrackerX
+INHERITS: CarpetX HydroBaseX ADMBaseX SphericalSurface
+
+#USES INCLUDE : pizza_central.h pizzacactus.h  pizza_smatrix.h
+
+PUBLIC:
+
+CCTK_REAL bns_positions TYPE=SCALAR 
+{
+  bns_x_1
+  bns_y_1
+  bns_phase_1
+  bns_r_1
+  bns_x_md_1
+  bns_y_md_1
+  bns_r_md_1
+  bns_phase_md_1
+  bns_x_2
+  bns_y_2
+  bns_phase_2
+  bns_r_2
+  bns_x_md_2
+  bns_y_md_2
+  bns_r_md_2
+  bns_phase_md_2
+  bns_phase_tot
+  bns_sep_tot
+  bns_proper_sep_bc
+  bns_coord_sep_bc
+  bns_proper_sep_md
+  bns_coord_sep_md
+  bns_cms_x
+  bns_cms_y
+  bns_cms_z
+  bh_x
+  bh_y
+  bh_z
+  bns_timestamp
+} "BNS location measures"
+
+
+CCTK_INT bns_merger_stage  TYPE=SCALAR "Stage of the coalescence"
+#
+#-1  : unknown, BNS tracker not run yet
+# 0  : inspiral before merger
+# 1  : between merger and collapse
+# 2  : collapsing
