@@ -15,26 +15,26 @@ CCTK_DEVICE CCTK_HOST CCTK_REAL integrate_regspaced(const std::vector<CCTK_REAL>
   return dx*s;
 }
 
-CCTK_DEVICE CCTK_HOST  CCTK_REAL proper_distance(const cactus_glop& glop, 
+CCTK_DEVICE CCTK_HOST  CCTK_REAL proper_distance(const cactus_glop& glop, //TODO 
                         const CCTK_REAL x0, const CCTK_REAL y0, 
                         const CCTK_REAL x1, const CCTK_REAL y1, int num_points) 
 {
   enum {X=0, Y=1, Z=2, XX=0, XY=1, XZ=2, YY=3, YZ=4, ZZ=5, NUMG=6};
 
   assert(num_points>10 && num_points<10000);
-  vec_u pos0, pos1;
+  vec_u pos0, pos1; //TODO
   pos0(X)=x0; pos0(Y)=y0; pos0(Z)=0.0;
   pos1(X)=x1; pos1(Y)=y1; pos1(Z)=0.0;
 
   const CCTK_REAL dl = 1.0 / (num_points - 1);
-  const vec_u   dp = (pos1-pos0) * dl;
+  const vec_u   dp = (pos1-pos0) * dl; //TODO
 
-  const std::string glo_names[NUMG] = {
+  const std::string glo_names[NUMG] = {             //TODO
     "ADMBase::gxx","ADMBase::gxy","ADMBase::gxz",
     "ADMBase::gyy","ADMBase::gyz","ADMBase::gzz"};
  
-  std::vector<CCTK_REAL> glo[NUMG], ds(num_points);
-  std::vector<vec_u> samp_coord(num_points);
+  std::vector<CCTK_REAL> glo[NUMG], ds(num_points);  //TODO
+  std::vector<vec_u> samp_coord(num_points);  //TODO
 
   for (int k=0; k<num_points; k++) {
     CCTK_REAL l = dl * CCTK_REAL(k);
@@ -42,8 +42,8 @@ CCTK_DEVICE CCTK_HOST  CCTK_REAL proper_distance(const cactus_glop& glop,
   }
 
   for (int i=0; i<NUMG; ++i) {
-    var_index gi(glo_names[i]);
-    glop.interpolate(gi, samp_coord, glo[i]);
+    var_index gi(glo_names[i]); //TODO
+    glop.interpolate(gi, samp_coord, glo[i]); //TODO
   }
   
   for (int k=0; k<num_points; k++) {

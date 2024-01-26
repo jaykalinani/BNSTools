@@ -8,21 +8,21 @@
 
 namespace BNSTrackerX {
 
-CCTK_DEVICE CCTK_HOST void bns_tracker::prep(const cGH *cctkGH) 
+CCTK_DEVICE CCTK_HOST void bns_tracker::prep(const cGH *cctkGH) //TODO 
 {
-  cactus_grid::prep(cctkGH);
+  cactus_grid::prep(cctkGH); //TODO
   DECLARE_CCTK_ARGUMENTS;
 
-  const map_cart &m = mcart();
+  const map_cart &m = mcart(); //TODO
   CCTK_REAL *p_glo[]    = {gxx, gxy, gyy, gxz, gyz, gzz};
 
-  rmd_pc.init(m, rho);  
-  alp_pc.init(m, alp);  
-  lfac_pc.init(m, w_lorentz);  
-  glo_pc.init(m, p_glo);
+  rmd_pc.init(m, rho);  //TODO
+  alp_pc.init(m, alp);  //TODO
+  lfac_pc.init(m, w_lorentz);  //TODO
+  glo_pc.init(m, p_glo); //TODO
 }
 
-cactus_single<bns_tracker> tracker;
+cactus_single<bns_tracker> tracker; //TODO
 
 }// namespace BNSTrackerX
 
@@ -35,7 +35,7 @@ extern "C" int BNSTrackerX_Startup(void)
 {
   DECLARE_CCTK_PARAMETERS;
   CCTK_RegisterBanner("BNSTrackerX: Track binary neutron star positions");
-  tracker = new bns_tracker(analysis_reflevel, dist_num_points);
+  tracker = new bns_tracker(analysis_reflevel, dist_num_points); //TODO
   
   return 0;
 }
@@ -222,7 +222,7 @@ extern "C" void BNSTrackerX_Track_Stars(CCTK_ARGUMENTS)
     *bns_merger_stage = BNSTrackerX::INSPIRAL;
   }
   
-  try {
+  try { //TODO
     if (*bns_merger_stage == BNSTrackerX::COLLAPSING) {
       const bns_locations& locs = 
         tracker.prep(CCTK_PASS_CTOC).track_minalp();
@@ -290,7 +290,7 @@ extern "C" void BNSTrackerX_Separation(CCTK_ARGUMENTS)
   if ((cctk_iteration % analyze_every) != 0) return;
 
   if (*bns_merger_stage == BNSTrackerX::INSPIRAL) {
-    cactus_glop glop(CCTK_PASS_CTOC);
+    cactus_glop glop(CCTK_PASS_CTOC); //TODO
     *bns_proper_sep_bc = proper_distance(glop, 
                 *bns_x_1 + *bns_cms_x, *bns_y_1 + *bns_cms_y, 
                 *bns_x_2 + *bns_cms_x, *bns_y_2 + *bns_cms_y, 

@@ -12,8 +12,8 @@ CCTK_DEVICE CCTK_HOST bns_tracker::bns_tracker(int use_reflevel_, int dist_num_p
 
 CCTK_DEVICE CCTK_HOST void bns_tracker::get_dens(const gpos& i, CCTK_REAL& rmd, CCTK_REAL& crmd)
 {
-  mats_l glo;
-  glo_pc(i) >> glo;
+  mats_l glo; //TODO
+  glo_pc(i) >> glo; //TODO
   CCTK_REAL vc  = sqrt(det(glo));
   rmd         = rmd_pc(i);
   crmd        = vc * lfac_pc(i) * rmd;
@@ -24,8 +24,9 @@ CCTK_DEVICE CCTK_HOST void bns_tracker::track_individual(CCTK_REAL phase_est)
   amrex::GpuComplex rotate = exp(amrex::GpuComplex(0,-phase_est));
   amrex::GpuComplex avg_pos_1(0), avg_pos_2(0), pos_max_1(0), pos_max_2(0);
   CCTK_REAL wsum_1(0), wsum_2(0), maxrmd_1(-1), maxrmd_2(-1);
-  for (region::iterator i(r_int());i;++i) {
-    vec_u pos   = coord(i);
+ 
+  for (region::iterator i(r_int());i;++i) { //TODO
+    vec_u pos   = coord(i); //TODO
     CCTK_REAL weight, rmd; 
     get_dens(i, rmd, weight);
     amrex::GpuComplex cp(pos(0)-cms_x, pos(1)-cms_y);
@@ -47,23 +48,23 @@ CCTK_DEVICE CCTK_HOST void bns_tracker::track_individual(CCTK_REAL phase_est)
       }
     }
   }
-  avg_pos_1      = global_sum(avg_pos_1);
-  wsum_1         = global_sum(wsum_1);
-  avg_pos_2      = global_sum(avg_pos_2);
-  wsum_2         = global_sum(wsum_2);
+  avg_pos_1      = global_sum(avg_pos_1); //TODO: check global sum
+  wsum_1         = global_sum(wsum_1); //TODO
+  avg_pos_2      = global_sum(avg_pos_2); //TODO
+  wsum_2         = global_sum(wsum_2); //TODO
   avg_pos_1      = (avg_pos_1 / wsum_1) / rotate;
   avg_pos_2      = (avg_pos_2 / wsum_2) / rotate;
 
   CCTK_REAL mcnt_1 = (maxrmd_1 < global_max(maxrmd_1)) ? 0.0 : 1.0;
   pos_max_1      = pos_max_1 * mcnt_1;
-  mcnt_1         = global_sum(mcnt_1);
-  pos_max_1      = global_sum(pos_max_1);
+  mcnt_1         = global_sum(mcnt_1); //TODO
+  pos_max_1      = global_sum(pos_max_1); //TODO
   pos_max_1      = (pos_max_1 / mcnt_1) / rotate;
 
   CCTK_REAL mcnt_2 = (maxrmd_2 < global_max(maxrmd_2)) ? 0.0 : 1.0;
   pos_max_2      = pos_max_2 * mcnt_2;
-  mcnt_2         = global_sum(mcnt_2);
-  pos_max_2      = global_sum(pos_max_2);
+  mcnt_2         = global_sum(mcnt_2); //TODO
+  pos_max_2      = global_sum(pos_max_2); //TODO
   pos_max_2      = (pos_max_2 / mcnt_2) / rotate;
 
   star1.set_phase_sep(remove_phase_jump(phase_est, 
@@ -84,17 +85,17 @@ CCTK_DEVICE CCTK_HOST void bns_tracker::track_average(const double prev_phase)
   CCTK_REAL avg_r(0), wsum(0);
   CCTK_REAL rmd(0), crmd(0);
   
-  for (region::iterator i(r_int());i;++i) {
-    vec_u pos         = coord(i);
+  for (region::iterator i(r_int());i;++i) { //TODO
+    vec_u pos         = coord(i); //TODO
     get_dens(i, rmd, crmd);
     amrex::GpuComplex cp(pos(0), pos(1));
     cms_pos           += crmd * cp;
     cms_zpos          += crmd * pos(2);
     wsum              += crmd;
   }
-  cms_pos           = global_sum(cms_pos);
-  cms_zpos          = global_sum(cms_zpos);
-  wsum              = global_sum(wsum);
+  cms_pos           = global_sum(cms_pos); //TODO
+  cms_zpos          = global_sum(cms_zpos); //TODO
+  wsum              = global_sum(wsum); //TODO
   cms_pos           /= wsum;
   cms_zpos          /= wsum;
 
@@ -107,8 +108,8 @@ CCTK_DEVICE CCTK_HOST void bns_tracker::track_average(const double prev_phase)
     avg_r             += crmd * d;
     avg_pos           += crmd * cp2;
   }
-  avg_r             = global_sum(avg_r);
-  avg_pos           = global_sum(avg_pos);
+  avg_r             = global_sum(avg_r); //TODO
+  avg_pos           = global_sum(avg_pos); //TODO
   avg_r             /= wsum;
   avg_pos           /= wsum;
   CCTK_REAL new_phase = std::arg(avg_pos) / 2.0;
@@ -127,8 +128,8 @@ CCTK_DEVICE CCTK_HOST const bns_locations& bns_tracker::track_minalp()
   CCTK_REAL mx(0),my(0),mz(0);
   CCTK_REAL minalp(0);
   bool first(true);
-  for (region::iterator i(r_int());i;++i) {
-    vec_u pos   = coord(i);
+  for (region::iterator i(r_int());i;++i) { //TODO
+    vec_u pos   = coord(i); //TODO
     CCTK_REAL alp = alp_pc(i);
     if (first || (alp < minalp)) {
       first = false;
@@ -143,11 +144,11 @@ CCTK_DEVICE CCTK_HOST const bns_locations& bns_tracker::track_minalp()
   mx             = mx * mcnt;
   my             = my * mcnt;
   mz             = mz * mcnt;
-  mcnt           = global_sum(mcnt);
+  mcnt           = global_sum(mcnt); //TODO
   assert(mcnt>0);
-  mx             = global_sum(mx);
-  my             = global_sum(my);
-  mz             = global_sum(mz);
+  mx             = global_sum(mx); //TODO
+  my             = global_sum(my); //TODO
+  mz             = global_sum(mz); //TODO
   
   minalp_x       = mx / mcnt;
   minalp_y       = my / mcnt;
