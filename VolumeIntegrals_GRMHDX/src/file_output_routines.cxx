@@ -40,7 +40,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void CREATE_OUTDIR(CCT
     if (izzle < 0)
       {
         CCTK_VWarn (1, __LINE__, __FILE__, CCTK_THORNSTRING,
-                    "VolumeIntegrals_GRMHD:file_output_routines.C Problem creating directory '%s' "
+                    "VolumeIntegrals_GRMHDX:file_output_routines.C Problem creating directory '%s' "
                     "for output", actual_dir);
       }
     else if (izzle >= 0 && verbose==1)
@@ -74,7 +74,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void OUTDIR_NAME(CCTK_
       }
 }
 
-extern "C" void VI_GRMHD_file_output_routine_Startup(CCTK_ARGUMENTS) {
+extern "C" void VI_GRMHDX_file_output_routine_Startup(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   if(enable_file_output==1) {
@@ -83,8 +83,8 @@ extern "C" void VI_GRMHD_file_output_routine_Startup(CCTK_ARGUMENTS) {
   }
 }
 
-extern "C" void VI_GRMHD_file_output(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_VI_GRMHD_file_output;
+extern "C" void VI_GRMHDX_file_output(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_VI_GRMHDX_file_output;
   DECLARE_CCTK_PARAMETERS;
   if(CCTK_MyProc(cctkGH)==0 && cctk_iteration%VolIntegral_out_every==0 && enable_file_output==1) {
     char* actual_dir;
@@ -94,12 +94,12 @@ extern "C" void VI_GRMHD_file_output(CCTK_ARGUMENTS) {
 
     /* allocate filename string buffer and build the filename */
     char *filename = (char *)malloc (strlen (actual_dir) +
-                                     strlen ("volume_integrals-GRMHD.asc") + 10); // <- Tiny amount of memory.
-    sprintf (filename, "%svolume_integrals-GRMHD.asc", actual_dir);
+                                     strlen ("volume_integrals-GRMHDX.asc") + 10); // <- Tiny amount of memory.
+    sprintf (filename, "%svolume_integrals-GRMHDX.asc", actual_dir);
     FILE *file = fopen (filename,"a+");
     if (! file) {
       CCTK_VWarn (1, __LINE__, __FILE__, CCTK_THORNSTRING,
-                  "VolumeIntegrals_GRMHD: Cannot open output file '%s'", filename);
+                  "VolumeIntegrals_GRMHDX: Cannot open output file '%s'", filename);
       exit(1);
     } else {
       fseek(file, 0, SEEK_END);
@@ -151,7 +151,7 @@ extern "C" void VI_GRMHD_file_output(CCTK_ARGUMENTS) {
                     "%s# Col. %d: %s. (Integral over full grid)\n",
                     header_buffer,which_col,Integration_quantity_keyword[which_integral]);
           }
-            which_col+=VI_GRMHD_number_of_reductions(which_integral);
+            which_col+=VI_GRMHDX_number_of_reductions(which_integral);
         }
         fprintf(file,"%s",header_buffer);
         free(header_buffer);
@@ -176,7 +176,7 @@ extern "C" void VI_GRMHD_file_output(CCTK_ARGUMENTS) {
         sprintf(buffer,"%s%e ",buffer,*physical_time);
       }
       for(int which_integral=1;which_integral<=NumIntegrals;which_integral++) {
-        int num_reductions = VI_GRMHD_number_of_reductions(which_integral);
+        int num_reductions = VI_GRMHDX_number_of_reductions(which_integral);
         for(int reduction=0;reduction<num_reductions;reduction++) {
           if(which_integral==NumIntegrals && reduction==num_reductions-1) {
             sprintf(buffer, "%s%.15e\n",buffer,VolIntegral[4*(which_integral) + reduction]);

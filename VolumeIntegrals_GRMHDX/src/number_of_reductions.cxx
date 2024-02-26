@@ -1,5 +1,5 @@
-#ifndef VI_GRMHD_REDUCTIONS_CXX
-#define VI_GRMHD_REDUCTIONS_CXX
+#ifndef VI_GRMHDX_REDUCTIONS_CXX
+#define VI_GRMHDX_REDUCTIONS_CXX
 
 #include "cctk.h"
 #include "cctk_Parameters.h"
@@ -10,7 +10,7 @@
 #include <cstdlib>
 
 /* ADD TO THIS LIST IF YOU HAVE NEW INTEGRAND */
-CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE static inline int VI_GRMHD_number_of_reductions(int which_integral) {
+CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE static inline int VI_GRMHDX_number_of_reductions(int which_integral) {
   DECLARE_CCTK_PARAMETERS;
   if(CCTK_EQUALS(Integration_quantity_keyword[which_integral],"usepreviousintegrands")) return volintegral_usepreviousintegrands_num_integrands[which_integral];
   if(CCTK_EQUALS(Integration_quantity_keyword[which_integral],"centerofmass")) return 4;

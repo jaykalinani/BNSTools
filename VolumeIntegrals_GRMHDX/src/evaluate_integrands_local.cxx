@@ -8,9 +8,9 @@
 
 #include "integrands.cxx"
 
-extern "C" void VI_GRMHD_ComputeIntegrand(CCTK_ARGUMENTS)
+extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS)
 {
-  DECLARE_CCTK_ARGUMENTSX_VI_GRMHD_ComputeIntegrand;
+  DECLARE_CCTK_ARGUMENTSX_VI_GRMHDX_ComputeIntegrand;
   DECLARE_CCTK_PARAMETERS;
 
   int which_integral = NumIntegrals - *IntegralCounter + 1;

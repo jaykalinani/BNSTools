@@ -2,7 +2,7 @@
 # $Header:$
 
 implements: VolumeIntegrals_GRMHDX
-inherits: grid ADMBaseX CarpetX HydroBaseX ADMBaseX
+inherits: grid ADMBaseX CarpetX HydroBaseX ADMBaseX BoxInBox
 
 private:
 CCTK_REAL VolIntegrands TYPE=GF TIMELEVELS=1 tags='checkpoint="no"'

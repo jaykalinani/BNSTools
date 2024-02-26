@@ -7,63 +7,108 @@ STORAGE: VolIntegrands,VolIntegrals,MovingSphRegionIntegrals,IntegralCounterVar,
 ##### FILE OUTPUT STUFF #####
 if(enable_file_output) {
 
-SCHEDULE VI_GRMHD_file_output_routine_Startup AT CCTK_INITIAL
+SCHEDULE VI_GRMHDX_file_output_routine_Startup AT CCTK_INITIAL
 {
   LANG: C
-} "Create directory for VI GRMHD file output."
+} "Create directory for VI GRMHDX file output."
 
 # In case we change our mind about disabling file output, at a checkpoint.
-SCHEDULE VI_GRMHD_file_output_routine_Startup AT CCTK_POST_RECOVER_VARIABLES
+SCHEDULE VI_GRMHDX_file_output_routine_Startup AT CCTK_POST_RECOVER_VARIABLES
 {
   LANG: C
-} "Create directory for VI GRMHD file output."
+} "Create directory for VI GRMHDX file output."
 
 }
 
 #############################
-SCHEDULE VI_GRMHD_InitializeIntegralCounterToZero AT CCTK_INITIAL
+SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_INITIAL
 {
   LANG: C
   OPTIONS: GLOBAL
+  WRITES: IntegralCounter(everywhere)
 } "Initialize IntegralCounter variable to zero"
 
-SCHEDULE VI_GRMHD_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLES
+SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLES
 {
   LANG: C
   OPTIONS: GLOBAL
+  WRITES: IntegralCounter(everywhere)
 } "Initialize IntegralCounter variable to zero"
 
-SCHEDULE VI_GRMHD_InitializeIntegralCounter before VI_GRMHD_VolumeIntegralGroup AT CCTK_ANALYSIS
+SCHEDULE VI_GRMHDX_InitializeIntegralCounter before VI_GRMHDX_VolumeIntegralGroup AT CCTK_ANALYSIS
 {
   LANG: C
   OPTIONS: GLOBAL
+  WRITES: IntegralCounter(everywhere)
 } "Initialize IntegralCounter variable"
 ##################
-SCHEDULE GROUP VI_GRMHD_VolumeIntegralGroup AT CCTK_ANALYSIS BEFORE CarpetLib_printtimestats BEFORE CarpetLib_printmemstats WHILE VolumeIntegrals_GRMHD::IntegralCounter
+SCHEDULE GROUP VI_GRMHDX_VolumeIntegralGroup AT CCTK_ANALYSIS BEFORE CarpetLib_printtimestats BEFORE CarpetLib_printmemstats WHILE VolumeIntegrals_GRMHDX::IntegralCounter
 {
 } "Evaluate all volume integrals"
 
-SCHEDULE VI_GRMHD_ComputeIntegrand in VI_GRMHD_VolumeIntegralGroup before DoSum
+SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup before DoSum
 {
   STORAGE: VolIntegrands,VolIntegrals,MovingSphRegionIntegrals
   OPTIONS: GLOBAL,LOOP-LOCAL
   LANG: C
+  READS: BoxInBox::position_x(everywhere)
+  READS: BoxInBox::position_y(everywhere)
+  READS: BoxInBox::position_z(everywhere)
+  WRITES: VolIntegrand1(everywhere) 
+  WRITES: VolIntegrand2(everywhere) 
+  WRITES: VolIntegrand3(everywhere) 
+  WRITES: VolIntegrand4(everywhere)
+  WRITES: volintegral_inside_sphere__center_x(everywhere) 
+  WRITES: volintegral_inside_sphere__center_y(everywhere) 
+  WRITES: volintegral_inside_sphere__center_z(everywhere)
+  WRITES: volintegral_outside_sphere__center_x(everywhere) 
+  WRITES: volintegral_outside_sphere__center_y(everywhere) 
+  WRITES: volintegral_outside_sphere__center_z(everywhere)
+  #SYNC: VolIntegrand1 VolIntegrand2 VolIntegrand3 VolIntegrand4
+  #SYNC: volintegral_inside_sphere__center_x volintegral_inside_sphere__center_y volintegral_inside_sphere__center_z
+  #SYNC: volintegral_outside_sphere__center_x volintegral_outside_sphere__center_y volintegral_outside_sphere__center_z
 } "Compute Integrand"
 
-SCHEDULE VI_GRMHD_DoSum in VI_GRMHD_VolumeIntegralGroup after ComputeIntegrand
+SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup after ComputeIntegrand
 {
   OPTIONS: GLOBAL
   LANG: C
+  READS: IntegralCounter(everywhere)
+  READS: volintegral_inside_sphere__center_x(everywhere)
+  READS: volintegral_inside_sphere__center_y(everywhere)
+  READS: volintegral_inside_sphere__center_z(everywhere)  
+  READS: volintegral_outside_sphere__center_x(everywhere)
+  READS: volintegral_outside_sphere__center_y(everywhere)
+  READS: volintegral_outside_sphere__center_z(everywhere)
+  READS: VolIntegral(everywhere)
+  READS: BoxInBox::position_x(everywhere)
+  READS: BoxInBox::position_y(everywhere)
+  READS: BoxInBox::position_z(everywhere)
+  WRITES: VolIntegral(everywhere)
+  WRITES: BoxInBox::position_x(everywhere)
+  WRITES: BoxInBox::position_y(everywhere)
+  WRITES: BoxInBox::position_z(everywhere)
+  WRITES: BoxInBox::active(everywhere)
+
 } "Do Sum"
 #######
-SCHEDULE VI_GRMHD_DecrementIntegralCounter in VI_GRMHD_VolumeIntegralGroup after DoSum
+SCHEDULE VI_GRMHDX_DecrementIntegralCounter in VI_GRMHDX_VolumeIntegralGroup after DoSum
 {
   LANG: C
   OPTIONS: GLOBAL
+  WRITES: IntegralCounter(everywhere)
 } "Decrement IntegralCounter variable"
 ##################
-SCHEDULE VI_GRMHD_file_output after VI_GRMHD_VolumeIntegralGroup AT CCTK_ANALYSIS
+SCHEDULE VI_GRMHDX_file_output after VI_GRMHDX_VolumeIntegralGroup AT CCTK_ANALYSIS
 {
   LANG: C
   OPTIONS: GLOBAL
+  READS: volintegral_inside_sphere__center_x(everywhere)
+  READS: volintegral_inside_sphere__center_y(everywhere)
+  READS: volintegral_inside_sphere__center_z(everywhere)
+  READS: volintegral_outside_sphere__center_x(everywhere)
+  READS: volintegral_outside_sphere__center_y(everywhere)
+  READS: volintegral_outside_sphere__center_z(everywhere)
+  READS: VolIntegral(everywhere)
+  WRITES: physical_time(everywhere)
 } "Output VolumeIntegral results to disk"
