@@ -1,0 +1,334 @@
+% *======================================================================*
+%  Cactus Thorn template for ThornGuide documentation
+%  Author: Ian Kelley
+%  Date: Sun Jun 02, 2002
+%  $Header$
+%
+%  Thorn documentation in the latex file doc/documentation.tex
+%  will be included in ThornGuides built with the Cactus make system.
+%  The scripts employed by the make system automatically include
+%  pages about variables, parameters and scheduling parsed from the
+%  relevant thorn CCL files.
+%
+%  This template contains guidelines which help to assure that your
+%  documentation will be correctly added to ThornGuides. More
+%  information is available in the Cactus UsersGuide.
+%
+%  Guidelines:
+%   - Do not change anything before the line
+%       % START CACTUS THORNGUIDE",
+%     except for filling in the title, author, date, etc. fields.
+%        - Each of these fields should only be on ONE line.
+%        - Author names should be separated with a \\ or a comma.
+%   - You can define your own macros, but they must appear after
+%     the START CACTUS THORNGUIDE line, and must not redefine standard
+%     latex commands.
+%   - To avoid name clashes with other thorns, 'labels', 'citations',
+%     'references', and 'image' names should conform to the following
+%     convention:
+%       ARRANGEMENT_THORN_LABEL
+%     For example, an image wave.eps in the arrangement CactusWave and
+%     thorn WaveToyC should be renamed to CactusWave_WaveToyC_wave.eps
+%   - Graphics should only be included using the graphicx package.
+%     More specifically, with the "\includegraphics" command.  Do
+%     not specify any graphic file extensions in your .tex file. This
+%     will allow us to create a PDF version of the ThornGuide
+%     via pdflatex.
+%   - References should be included with the latex "\bibitem" command.
+%   - Use \begin{abstract}...\end{abstract} instead of \abstract{...}
+%   - Do not use \appendix, instead include any appendices you need as
+%     standard sections.
+%   - For the benefit of our Perl scripts, and for future extensions,
+%     please use simple latex.
+%
+% *======================================================================*
+%
+% Example of including a graphic image:
+%    \begin{figure}[ht]
+% 	\begin{center}
+%    	   \includegraphics[width=6cm]{MyArrangement_MyThorn_MyFigure}
+% 	\end{center}
+% 	\caption{Illustration of this and that}
+% 	\label{MyArrangement_MyThorn_MyLabel}
+%    \end{figure}
+%
+% Example of using a label:
+%   \label{MyArrangement_MyThorn_MyLabel}
+%
+% Example of a citation:
+%    \cite{MyArrangement_MyThorn_Author99}
+%
+% Example of including a reference
+%   \bibitem{MyArrangement_MyThorn_Author99}
+%   {J. Author, {\em The Title of the Book, Journal, or periodical}, 1 (1999),
+%   1--16. {\tt http://www.nowhere.com/}}
+%
+% *======================================================================*
+
+% If you are using CVS use this line to give version information
+% $Header$
+
+\documentclass{article}
+
+% Use the Cactus ThornGuide style file
+% (Automatically used from Cactus distribution, if you have a
+%  thorn without the Cactus Flesh download this from the Cactus
+%  homepage at www.cactuscode.org)
+\usepackage{../../../../doc/latex/cactus}
+%% \usepackage{cactus}
+
+\begin{document}
+
+% The author of the documentation
+\author{Zachariah B.~Etienne \textless zachetie *at* gmail *dot* com \textgreater\\
+  Documentation by Leonardo R.~Werneck \textless wernecklr *at* gmail *dot* com \textgreater
+}
+
+% The title of the document (not necessarily the name of the Thorn)
+\title{\texttt{VolumeIntegrals\_GRMHD}: An Einstein Toolkit thorn for GRMHD volume integrations}
+
+% the date your document was last changed, if your document is in CVS,
+% please use:
+\date{May 28, 2021}
+
+\maketitle
+
+% Do not delete next line
+% START CACTUS THORNGUIDE
+
+% Add all definitions used in this documentation here
+%   \def\mydef etc
+\newcommand{\beq}{\begin{equation}}
+\newcommand{\eeq}{\end{equation}}
+\newcommand{\beqn}{\begin{eqnarray}}
+\newcommand{\eeqn}{\end{eqnarray}}
+\newcommand{\half} {{1\over 2}}
+\newcommand{\sgam} {\sqrt{\gamma}}
+\newcommand{\tB}{\tilde{B}}
+\newcommand{\tS}{\tilde{S}}
+\newcommand{\tF}{\tilde{F}}
+\newcommand{\tf}{\tilde{f}}
+\newcommand{\tT}{\tilde{T}}
+\newcommand{\sg}{\sqrt{\gamma}\,}
+\newcommand{\ve}[1]{\mbox{\boldmath $#1$}}
+\newcommand{\Madm}{M_{\rm ADM}}
+\newcommand{\Padm}{P_{\rm ADM}}
+\newcommand{\Jadm}{J_{\rm ADM}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\rhob}{\rho_{\rm b}}
+\newcommand{\rhostar}{\rho_{\star}}
+
+\newcommand{\GiR}{{\texttt{GiRaFFE}}}
+\newcommand{\IGM}{{\texttt{IllinoisGRMHD}}}
+
+\linespread{1.0}
+
+\newenvironment{packed_itemize}{
+\begin{itemize}
+  \setlength{\itemsep}{0.0pt}
+  \setlength{\parskip}{0.0pt}
+  \setlength{\parsep}{ 0.0pt}
+}{\end{itemize}}
+
+\newenvironment{packed_enumerate}{
+\begin{enumerate}
+  \setlength{\itemsep}{0.0pt}
+  \setlength{\parskip}{0.0pt}
+  \setlength{\parsep}{ 0.0pt}
+}{\end{enumerate}}
+
+% Add an abstract for this thorn's documentation
+\begin{abstract}
+  \texttt{VolumeIntegrals\_GRMHD} is a thorn for integration of
+  spacetime quantities, accepting integration volumes consisting of
+  spherical shells, regions with hollowed balls, and simple spheres.
+  Results from of integrals, such as the center of mass, can be used
+  to track e.g.\ neutron stars.
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Volume Integrals %%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Volume integrals}
+\label{sec:volume_integrals}
+
+We now briefly describe the volume integrals that can be performed
+using the \texttt{VolumeIntegrals\_GRMHD} thorn.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% Rest mass %%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Rest mass}
+\label{sec:rest_mass}
+We start by defining the ``densitised density'' (see e.g.~\cite{duez2005relativistic})
+%%
+\beq
+\rhostar \equiv \alpha\sqrt{\gamma}\rhob u^{0} = W\rhob\sqrt{\gamma},
+\eeq
+%%
+where $\alpha$ is the lapse function, $\gamma$ is the determinant of
+the physical spatial metric $\gamma_{ij}$, $\rhob$ is the baryonic
+density, $u^{\mu}$ is the fluid four-velocity, and $W\equiv\alpha u^{0}$
+is the Lorentz factor. The rest mass integral is then given by
+%%
+\beq
+\boxed{ M_{0} = \int \rhostar dV = \int \left(W\rhob\sqrt{\gamma}\right)dV }\; .
+\eeq
+%%
+The volume $V$ can be specified using spherical shells, regions with hollowed balls,
+and simple spheres. It can also be set to the entire computational domain.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Center of mass %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Center of mass}
+\label{sec:com}
+
+The coordinates of center of mass $X^{i}$ are computed from the integral
+%%
+\beq
+\boxed{ X^{i} = \frac{\int \rhostar x^{i}dV}{\int \rhostar dV} }\; ,
+\eeq
+%%
+where $x^{i}$ is the position vector. The volume $V$ can be specified using spherical shells,
+regions with hollowed balls, and simple spheres. It can also be set to the entire domain size.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%% Unit integral %%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Unit (for debugging)}
+\label{sec:unit}
+
+This thorn also provides the functionality of performing a volume
+integral with a unit integrand, which should just yield the volume
+of the integrated region, i.e.
+%%
+\beq
+\boxed{ V = \int dV }\; .
+\eeq
+%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%% Basic usage %%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Basic usage}
+\label{sec:basic_usage}
+
+Except for the definition of the integrands, the behavior of this thorn
+is almost completely driver by the configuration of the parameter file.
+We present here an example of such a parameter file, which performs the
+following tasks:
+
+\begin{packed_enumerate}
+  \item Integrate the entire volume with an integrand of 1.
+  (used for testing/validation purposes only).
+  \label{item1}
+
+  \item Perform all four integrals required to compute the
+  center of mass (numerator=3, denominator=1 integral),
+  in an integration volume originally centered at
+  $(x,y,z)=(-15.2,0,0)$ with a coordinate radius of 13.5
+  Also use the center of mass integral result to SET
+  the ZEROTH AMR center. In this way, the AMR grids
+  will track the center of mass as computed by this
+  integration.
+  \label{item2}
+
+  \item Same as \ref{item2}, except use the integrand=1 (for validation
+  purposes, to ensure the integration volume is
+  approximately $(4/3)\pi13.5^3$). Also disable tracking of
+  this integration volume.
+  \label{item3}
+
+  \item Same as \ref{item2}, except for the neutron star originally
+  centered at $(x,y,z)=(+15.2,0,0)$.
+  \label{item4}
+
+  \item Same as \ref{item4}, except use the integrand=1 (for validation
+  purposes, to ensure the integration volume is
+  approximately $(4/3)\pi13.5^3$). Also disable tracking of
+  this integration volume.
+  \label{item5}
+
+  \item Perform rest-mass integrals over entire volume.
+  \label{item6}
+\end{packed_enumerate}
+%%
+To achieve this, add the following configuration to your parameter file:
+%%
+\begin{verbatim}
+ActiveThorns = "VolumeIntegrals_GRMHD"
+
+# Set number of integrals
+VolumeIntegrals_GRMHD::NumIntegrals = 6
+
+# Set frequency of integration. If tracking AMR centres this should
+# match the regridding frequency of the thorn CactusRegrid2
+VolumeIntegrals_GRMHD::VolIntegral_out_every = 32
+
+# Enable file output
+VolumeIntegrals_GRMHD::enable_file_output = 1
+
+# Set output directory
+VolumeIntegrals_GRMHD::outVolIntegral_dir = "volume_integration"
+
+# Set verbose level. 0 disables it, 1 provides useful
+# information, and 2 is very verbose.
+VolumeIntegrals_GRMHD::verbose = 1
+
+# The AMR centre will only track the first referenced
+# integration quantities that track said centre.
+
+# Integral #1: unit integrand
+VolumeIntegrals_GRMHD::Integration_quantity_keyword[1] = "one"
+# Integral #2: CoM
+VolumeIntegrals_GRMHD::Integration_quantity_keyword[2] = "centerofmass"
+# Integral #3: unit integrand
+VolumeIntegrals_GRMHD::Integration_quantity_keyword[3] = "one"
+# Integral #4: CoM
+VolumeIntegrals_GRMHD::Integration_quantity_keyword[4] = "centerofmass"
+# Integral #5: unit integrand
+VolumeIntegrals_GRMHD::Integration_quantity_keyword[5] = "one"
+# Integral #6: rest mass
+VolumeIntegrals_GRMHD::Integration_quantity_keyword[6] = "restmass"
+
+# Set radius of integration for integral #2
+VolumeIntegrals_GRMHD::volintegral_sphere__center_x_initial         [2] = -15.2
+VolumeIntegrals_GRMHD::volintegral_inside_sphere__radius            [2] =  13.5
+# Let the result of integral #2 track the grid centre 0
+VolumeIntegrals_GRMHD::amr_centre__tracks__volintegral_inside_sphere[2] =  0
+
+# Set radius of integrattion for integral #3
+VolumeIntegrals_GRMHD::volintegral_sphere__center_x_initial         [3] = -15.2
+VolumeIntegrals_GRMHD::volintegral_inside_sphere__radius            [3] =  13.5
+
+# Set radius of integration for integral #4
+VolumeIntegrals_GRMHD::volintegral_sphere__center_x_initial         [4] =  15.2
+VolumeIntegrals_GRMHD::volintegral_inside_sphere__radius            [4] =  13.5
+# Let the result of integral #4 track the grid centre 1
+VolumeIntegrals_GRMHD::amr_centre__tracks__volintegral_inside_sphere[4] =  1
+
+# Set radius of integrattion for integral #5
+VolumeIntegrals_GRMHD::volintegral_sphere__center_x_initial         [5] =  15.2
+VolumeIntegrals_GRMHD::volintegral_inside_sphere__radius            [5] =  13.5
+\end{verbatim}
+%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% References %%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{thebibliography}{1}
+
+\bibitem{duez2005relativistic}
+  M.D. Duez, Y.T. Liu, S.L. Shapiro, and B.C. Stephens,
+  \newblock {\em Relativistic magnetohydrodynamics in dynamical spacetimes: Numerical methods and tests},
+  Physical Review D, 72, 2, 024028 (2005).
+
+\end{thebibliography}
+
+% Do not delete next line
+% END CACTUS THORNGUIDE
+
+\end{document}

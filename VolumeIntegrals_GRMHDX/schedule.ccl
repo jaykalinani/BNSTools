@@ -1,0 +1,69 @@
+# Schedule definitions for thorn VolumeIntegrals_GRMHDX
+# $Header:$
+
+STORAGE: VolIntegrands,VolIntegrals,MovingSphRegionIntegrals,IntegralCounterVar,VolIntegrals_vacuum_time
+
+
+##### FILE OUTPUT STUFF #####
+if(enable_file_output) {
+
+SCHEDULE VI_GRMHD_file_output_routine_Startup AT CCTK_INITIAL
+{
+  LANG: C
+} "Create directory for VI GRMHD file output."
+
+# In case we change our mind about disabling file output, at a checkpoint.
+SCHEDULE VI_GRMHD_file_output_routine_Startup AT CCTK_POST_RECOVER_VARIABLES
+{
+  LANG: C
+} "Create directory for VI GRMHD file output."
+
+}
+
+#############################
+SCHEDULE VI_GRMHD_InitializeIntegralCounterToZero AT CCTK_INITIAL
+{
+  LANG: C
+  OPTIONS: GLOBAL
+} "Initialize IntegralCounter variable to zero"
+
+SCHEDULE VI_GRMHD_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLES
+{
+  LANG: C
+  OPTIONS: GLOBAL
+} "Initialize IntegralCounter variable to zero"
+
+SCHEDULE VI_GRMHD_InitializeIntegralCounter before VI_GRMHD_VolumeIntegralGroup AT CCTK_ANALYSIS
+{
+  LANG: C
+  OPTIONS: GLOBAL
+} "Initialize IntegralCounter variable"
+##################
+SCHEDULE GROUP VI_GRMHD_VolumeIntegralGroup AT CCTK_ANALYSIS BEFORE CarpetLib_printtimestats BEFORE CarpetLib_printmemstats WHILE VolumeIntegrals_GRMHD::IntegralCounter
+{
+} "Evaluate all volume integrals"
+
+SCHEDULE VI_GRMHD_ComputeIntegrand in VI_GRMHD_VolumeIntegralGroup before DoSum
+{
+  STORAGE: VolIntegrands,VolIntegrals,MovingSphRegionIntegrals
+  OPTIONS: GLOBAL,LOOP-LOCAL
+  LANG: C
+} "Compute Integrand"
+
+SCHEDULE VI_GRMHD_DoSum in VI_GRMHD_VolumeIntegralGroup after ComputeIntegrand
+{
+  OPTIONS: GLOBAL
+  LANG: C
+} "Do Sum"
+#######
+SCHEDULE VI_GRMHD_DecrementIntegralCounter in VI_GRMHD_VolumeIntegralGroup after DoSum
+{
+  LANG: C
+  OPTIONS: GLOBAL
+} "Decrement IntegralCounter variable"
+##################
+SCHEDULE VI_GRMHD_file_output after VI_GRMHD_VolumeIntegralGroup AT CCTK_ANALYSIS
+{
+  LANG: C
+  OPTIONS: GLOBAL
+} "Output VolumeIntegral results to disk"

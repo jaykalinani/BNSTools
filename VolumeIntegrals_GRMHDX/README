@@ -1,0 +1,73 @@
+Cactus Code Thorn VolumeIntegrals_GRMHDX
+Author(s)    : Zachariah B. Etienne, Jay Kalinani
+Note         : Thorn for integration of spacetime quantities, in
+               integration volumes consisting of spherical shells,
+               regions with hollowed balls, and simple spheres.
+
+Usage example: Except for the definition of integrands, the
+               behavior of this thorn is almost completely driven
+               by the parameter file.
+
+               Here's an example of a binary neutron star parameter
+               file that performs a total of 6 integrals, computed
+               every 32 timesteps. The neutron stars are originally
+               centered at (+/-15.2,0,0) and have radii of a little
+               less than 13.5 (equal-mass neutron stars):
+               
+               1. Integrate the entire volume with an integrand of 1.
+                  (used for testing/validation purposes only).
+
+               2. Perform all four integrals required to compute the
+                  center of mass (numerator=3, denominator=1 integral):
+                  COM^i = Integral(rho_star * x^i)/Integral(rho_star),
+                  in an integration volume originally centered at
+                  (x,y,z)=(-15.2,0,0) with a coordinate radius of 13.5
+                  Also use the center of mass integral result to *SET*
+                  the *ZEROTH* AMR center. In this way, the AMR grids
+                  will track the center of mass as computed by this
+                  integration.
+
+               3. Same as (2), except use the integrand=1 (for validation
+                  purposes, to ensure the integration volume is
+                  approximately 4/3*pi*13.5^3). Also disable tracking of
+                  this integration volume.
+
+               4. Same as (2), except for the neutron star originally
+                  centered at (x,y,z)=(+15.2,0,0).
+
+               5. Same as (4), except use the integrand=1 (for validation
+                  purposes, to ensure the integration volume is
+                  approximately 4/3*pi*13.5^3). Also disable tracking of
+                  this integration volume.
+
+               6. Perform rest-mass integrals over entire volume.
+
+VolumeIntegrals_GRMHD::NumIntegrals = 6
+VolumeIntegrals_GRMHD::VolIntegral_out_every = 32
+VolumeIntegrals_GRMHD::enable_file_output = 1
+VolumeIntegrals_GRMHD::outVolIntegral_dir = "volume_integration"
+VolumeIntegrals_GRMHD::verbose = 1
+# The AMR centre will only track the first referenced integration quantities that track said centre.
+#   Thus, centeroflapse output will not feed back into the AMR centre positions.
+VolumeIntegrals_GRMHD::Integration_quantity_keyword[1] = "one"
+VolumeIntegrals_GRMHD::Integration_quantity_keyword[2] = "centerofmass"
+VolumeIntegrals_GRMHD::Integration_quantity_keyword[3] = "one"
+VolumeIntegrals_GRMHD::Integration_quantity_keyword[4] = "centerofmass"
+VolumeIntegrals_GRMHD::Integration_quantity_keyword[5] = "one"
+VolumeIntegrals_GRMHD::Integration_quantity_keyword[6] = "restmass"
+
+VolumeIntegrals_GRMHD::volintegral_sphere__center_x_initial         [2] = -15.2
+VolumeIntegrals_GRMHD::volintegral_inside_sphere__radius            [2] =  13.5
+VolumeIntegrals_GRMHD::amr_centre__tracks__volintegral_inside_sphere[2] =  0
+VolumeIntegrals_GRMHD::volintegral_sphere__center_x_initial         [3] = -15.2
+VolumeIntegrals_GRMHD::volintegral_inside_sphere__radius            [3] =  13.5
+
+VolumeIntegrals_GRMHD::volintegral_sphere__center_x_initial         [4] =  15.2
+VolumeIntegrals_GRMHD::volintegral_inside_sphere__radius            [4] =  13.5
+VolumeIntegrals_GRMHD::amr_centre__tracks__volintegral_inside_sphere[4] =  1
+VolumeIntegrals_GRMHD::volintegral_sphere__center_x_initial         [5] =  15.2
+VolumeIntegrals_GRMHD::volintegral_inside_sphere__radius            [5] =  13.5
+
+Maintainer(s): Jay Kalinani, Zachariah B. Etienne
+License      : BSD 2-Clause (FreeBSD license)
+--------------------------------------------------------------------------

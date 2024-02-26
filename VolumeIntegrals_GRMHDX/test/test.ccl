@@ -1,0 +1,4 @@
+TEST magnetized_explosionTOV
+{ 
+  ABSTOL 1e-10
+} 
