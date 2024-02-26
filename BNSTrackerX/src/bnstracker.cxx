@@ -10,7 +10,7 @@ CCTK_DEVICE CCTK_HOST bns_tracker::bns_tracker(int use_reflevel_, int dist_num_p
   dist_num_points(dist_num_points_)
 {}
 
-CCTK_DEVICE CCTK_HOST void bns_tracker::get_dens(const gpos& i, CCTK_REAL& rmd, CCTK_REAL& crmd)
+CCTK_DEVICE CCTK_HOST void bns_tracker::get_dens(const gpos& i, CCTK_REAL& rmd, CCTK_REAL& crmd) //TODO
 {
   mats_l glo; //TODO
   glo_pc(i) >> glo; //TODO
