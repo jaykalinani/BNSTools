@@ -1,11 +1,6 @@
 # Parameter definitions for thorn VolumeIntegrals_GRMHDX
 # $Header:$
 
-shares: grid
-
-USES KEYWORD domain
-
-
 private:
 
 CCTK_INT enable_file_output "Enable output file" STEERABLE = RECOVER

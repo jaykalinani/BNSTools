@@ -51,9 +51,18 @@ SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup before DoSu
   STORAGE: VolIntegrands,VolIntegrals,MovingSphRegionIntegrals
   OPTIONS: GLOBAL,LOOP-LOCAL
   LANG: C
+  READS: IntegralCounter(everywhere)
   READS: BoxInBox::position_x(everywhere)
   READS: BoxInBox::position_y(everywhere)
   READS: BoxInBox::position_z(everywhere)
+  READS: HydroBaseX::rho(everywhere)
+  READS: HydroBaseX::vel(everywhere)
+  READS: ADMBaseX::gxx(everywhere)
+  READS: ADMBaseX::gxy(everywhere)
+  READS: ADMBaseX::gxz(everywhere)
+  READS: ADMBaseX::gyy(everywhere)
+  READS: ADMBaseX::gyz(everywhere)
+  READS: ADMBaseX::gzz(everywhere)
   WRITES: VolIntegrand1(everywhere) 
   WRITES: VolIntegrand2(everywhere) 
   WRITES: VolIntegrand3(everywhere) 
@@ -89,7 +98,9 @@ SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup after ComputeIntegrand
   WRITES: BoxInBox::position_y(everywhere)
   WRITES: BoxInBox::position_z(everywhere)
   WRITES: BoxInBox::active(everywhere)
-
+  WRITES: volintegral_inside_sphere__center_x(everywhere)
+  WRITES: volintegral_inside_sphere__center_y(everywhere)
+  WRITES: volintegral_inside_sphere__center_z(everywhere)
 } "Do Sum"
 #######
 SCHEDULE VI_GRMHDX_DecrementIntegralCounter in VI_GRMHDX_VolumeIntegralGroup after DoSum

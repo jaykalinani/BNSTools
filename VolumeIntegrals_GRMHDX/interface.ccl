@@ -2,10 +2,12 @@
 # $Header:$
 
 implements: VolumeIntegrals_GRMHDX
-inherits: grid ADMBaseX CarpetX HydroBaseX ADMBaseX BoxInBox
+inherits: ADMBaseX CarpetX HydroBaseX ADMBaseX BoxInBox
+
+USES INCLUDE HEADER: loop_device.hxx
 
 private:
-CCTK_REAL VolIntegrands TYPE=GF TIMELEVELS=1 tags='checkpoint="no"'
+CCTK_REAL VolIntegrands TYPE=GF CENTERING={ccc} tags='checkpoint="no"'
 {
   VolIntegrand1,VolIntegrand2,VolIntegrand3,VolIntegrand4
 } "Volume integrands."
@@ -21,12 +23,12 @@ CCTK_REAL MovingSphRegionIntegrals TYPE=ARRAY DISTRIB=CONSTANT DIM=1 SIZE=101
   volintegral_outside_sphere__center_x, volintegral_outside_sphere__center_y, volintegral_outside_sphere__center_z
 } "Specify regions for volume integrals inside/outside spheres THAT MOVE."
 
-CCTK_REAL IntegralCounterVar type = SCALAR tags='checkpoint="no"'
+CCTK_REAL IntegralCounterVar type=SCALAR tags='checkpoint="no"'
 {
   IntegralCounter
 } "Counter that keeps track of which integral we are calculating."
 
-CCTK_REAL VolIntegrals_vacuum_time type = SCALAR tags='checkpoint="no"'
+CCTK_REAL VolIntegrals_vacuum_time type=SCALAR tags='checkpoint="no"'
 {
   physical_time
 } "keeps track of the physical time, in case time coordinate is reparameterized, a la http://arxiv.org/abs/1404.6523"

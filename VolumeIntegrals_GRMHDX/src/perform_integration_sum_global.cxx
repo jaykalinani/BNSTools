@@ -18,6 +18,7 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS)
   /* FIXME: Add this symmetry stuff... Should be straightforward. */
   CCTK_REAL sym_factor1,sym_factor2,sym_factor3;
 
+/*
   if (CCTK_EQUALS(domain,"bitant")){
     sym_factor1 = 2.0e0;
     sym_factor2 = 2.0e0;
@@ -31,7 +32,11 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS)
     sym_factor2 = 1.0e0;
     sym_factor3 = 1.0e0;
   }
+*/
 
+  sym_factor1 = 1.0e0;
+  sym_factor2 = 1.0e0;
+  sym_factor3 = 1.0e0;
   double d3x = cctk_delta_space[0]*cctk_delta_space[1]*cctk_delta_space[2];
   /* Note: Must edit VI_GRMHDX_number_of_reductions() when adding new integrands!
      This function is defined in VI_GRMHDX_number_of_reductions.C */

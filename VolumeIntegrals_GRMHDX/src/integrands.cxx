@@ -1,6 +1,8 @@
 #ifndef INTEGRANDS_CXX
 #define INTEGRANDS_CXX
 
+#include <loop_device.hxx>
+
 /*
   NRPy+ Python code that generates below C code:
   (Note: used commit 6a86d39aa3e4c863caa51c2fc7a04f3d06727167 in
@@ -13,9 +15,8 @@ from outputC import *
 
 DIM=3
 
-# Need to read from memory & write to memory manually due to speed limiter if() statement.
-with open("compute_rhostar.h","w") as file:
-    file.write("""
+# Need to read from memory & write to memory manually due to speed limiter if()
+statement. with open("compute_rhostar.h","w") as file: file.write("""
 // This function computes
 //  rho_* = alpha*u^0*sqrt(gamma)*rho_0
 //        = w_lorentz*sqrt(gamma)*rho_0 ,
@@ -25,13 +26,13 @@ with open("compute_rhostar.h","w") as file:
 
     for i in range(DIM):
         for j in range(i,DIM):
-            file.write("const CCTK_REAL gammaDD"+str(i)+str(j)+" = g"+chr(ord('x')+i)+chr(ord('x')+j)+"[index];\n")
-    file.write("""
-const CCTK_REAL w_lorentz = w_lorentz[index];
-const CCTK_REAL rho0      = rhozero[  index];
+            file.write("const CCTK_REAL gammaDD"+str(i)+str(j)+" =
+g"+chr(ord('x')+i)+chr(ord('x')+j)+"[index];\n") file.write(""" const CCTK_REAL
+w_lorentz = w_lorentz[index]; const CCTK_REAL rho0      = rhozero[  index];
 
 CCTK_REAL w_lorentz_limited = w_lorentz;
-if(w_lorentz > CoM_integrand_GAMMA_SPEED_LIMIT) w_lorentz_limited = CoM_integrand_GAMMA_SPEED_LIMIT;
+if(w_lorentz > CoM_integrand_GAMMA_SPEED_LIMIT) w_lorentz_limited =
+CoM_integrand_GAMMA_SPEED_LIMIT;
 """)
 
     rho0,w_lorentz_limited = sp.symbols("rho0 w_lorentz_limited")
@@ -41,19 +42,24 @@ if(w_lorentz > CoM_integrand_GAMMA_SPEED_LIMIT) w_lorentz_limited = CoM_integran
 
     rhostar = w_lorentz_limited*sp.sqrt(detgamma)*rho0
 
-    rho_star_str_ugly = outputC(rhostar, "const CCTK_REAL rhostar", filename="returnstring",params="includebraces=False")
-    # Beautify rho_star_str_ugly
-    rho_star_str = rho_star_str_ugly.replace(
-        "pow(gammaDD02, 2)","(gammaDD02*gammaDD02)").replace(
-        "pow(gammaDD12, 2)","(gammaDD12*gammaDD12)").replace(
-        "pow(gammaDD01, 2)","(gammaDD01*gammaDD01)")
+    rho_star_str_ugly = outputC(rhostar, "const CCTK_REAL rhostar",
+filename="returnstring",params="includebraces=False") # Beautify
+rho_star_str_ugly rho_star_str = rho_star_str_ugly.replace( "pow(gammaDD02,
+2)","(gammaDD02*gammaDD02)").replace( "pow(gammaDD12,
+2)","(gammaDD12*gammaDD12)").replace( "pow(gammaDD01,
+2)","(gammaDD01*gammaDD01)")
 
     file.write(rho_star_str)
 */
 
-CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline CCTK_REAL compute_rho_star(const int index, const CCTK_REAL *restrict w_lorentzGF, const CCTK_REAL *restrict rho0GF,
-                                  const CCTK_REAL *restrict gxx,const CCTK_REAL *restrict gxy,const CCTK_REAL *restrict gxz,
-                                  const CCTK_REAL *restrict gyy,const CCTK_REAL *restrict gyz,const CCTK_REAL *restrict gzz) {
+CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline CCTK_REAL
+compute_rho_star(const int index, const Loop::PointDesc &p,
+                 const Loop::GF3D2<const double> velx, const Loop::GF3D2<const double> vely,
+                 const Loop::GF3D2<const double> velz,
+                 const Loop::GF3D2<const double> rho0GF,
+                 const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
+                 const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
+                 const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz) {
   DECLARE_CCTK_PARAMETERS;
 
   // This function computes
@@ -63,48 +69,76 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline CCTK_REAL compute_rho_
   // rho_0 is the rest-mass density, and
   // w_lorentz is the Lorentz factor
 
-  const CCTK_REAL gammaDD00 = gxx[index];
-  const CCTK_REAL gammaDD01 = gxy[index];
-  const CCTK_REAL gammaDD02 = gxz[index];
-  const CCTK_REAL gammaDD11 = gyy[index];
-  const CCTK_REAL gammaDD12 = gyz[index];
-  const CCTK_REAL gammaDD22 = gzz[index];
+  const CCTK_REAL gammaDD00 = gxx(p.I);
+  const CCTK_REAL gammaDD01 = gxy(p.I);
+  const CCTK_REAL gammaDD02 = gxz(p.I);
+  const CCTK_REAL gammaDD11 = gyy(p.I);
+  const CCTK_REAL gammaDD12 = gyz(p.I);
+  const CCTK_REAL gammaDD22 = gzz(p.I);
 
-  const CCTK_REAL w_lorentz = w_lorentzGF[index];
-  const CCTK_REAL rho0      = rho0GF[     index];
+  const CCTK_REAL vU0 = velx(p.I);
+  const CCTK_REAL vU1 = vely(p.I);
+  const CCTK_REAL vU2 = velz(p.I);
+
+  const CCTK_REAL vD0 = gammaDD00 * vU0 + gammaDD01 * vU1 + gammaDD02 * vU2;
+  const CCTK_REAL vD1 = gammaDD01 * vU0 + gammaDD11 * vU1 + gammaDD12 * vU2;
+  const CCTK_REAL vD2 = gammaDD02 * vU0 + gammaDD12 * vU1 + gammaDD22 * vU2;
+
+  const CCTK_REAL w_lorentz =
+      1.0 / sqrt(1.0 - (vU0 * vD0 + vU1 * vD1 + vU2 * vD2));
+  const CCTK_REAL rho0 = rho0GF(p.I);
 
   CCTK_REAL w_lorentz_limited = w_lorentz;
-  if(w_lorentz > CoM_integrand_GAMMA_SPEED_LIMIT) w_lorentz_limited = CoM_integrand_GAMMA_SPEED_LIMIT;
+  if (w_lorentz > CoM_integrand_GAMMA_SPEED_LIMIT)
+    w_lorentz_limited = CoM_integrand_GAMMA_SPEED_LIMIT;
   /*
    *  Original SymPy expression:
-   *  "rhostar = rho0*w_lorentz_limited*sqrt(gammaDD00*gammaDD11*gammaDD22 - gammaDD00*gammaDD12**2 - gammaDD01**2*gammaDD22 + 2*gammaDD01*gammaDD02*gammaDD12 - gammaDD02**2*gammaDD11)"
+   *  "rhostar = rho0*w_lorentz_limited*sqrt(gammaDD00*gammaDD11*gammaDD22 -
+   * gammaDD00*gammaDD12**2 - gammaDD01**2*gammaDD22 +
+   * 2*gammaDD01*gammaDD02*gammaDD12 - gammaDD02**2*gammaDD11)"
    */
-  const CCTK_REAL rhostar = rho0*w_lorentz_limited*sqrt(gammaDD00*gammaDD11*gammaDD22 - gammaDD00*(gammaDD12*gammaDD12) - (gammaDD01*gammaDD01)*gammaDD22 + 2*gammaDD01*gammaDD02*gammaDD12 - (gammaDD02*gammaDD02)*gammaDD11);
+  const CCTK_REAL rhostar = rho0 * w_lorentz_limited *
+                            sqrt(gammaDD00 * gammaDD11 * gammaDD22 -
+                                 gammaDD00 * (gammaDD12 * gammaDD12) -
+                                 (gammaDD01 * gammaDD01) * gammaDD22 +
+                                 2 * gammaDD01 * gammaDD02 * gammaDD12 -
+                                 (gammaDD02 * gammaDD02) * gammaDD11);
 
   return rhostar;
 }
 
-
 /* Center of Mass: */
-CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void CoM_integrand(double *VolIntegrand1,double *VolIntegrand2,double *VolIntegrand3,double *VolIntegrand4, const int index,
-                          const CCTK_REAL *restrict w_lorentz, const CCTK_REAL *restrict rho0,
-                          const CCTK_REAL *restrict gxx,const CCTK_REAL *restrict gxy,const CCTK_REAL *restrict gxz,
-                          const CCTK_REAL *restrict gyy,const CCTK_REAL *restrict gyz,const CCTK_REAL *restrict gzz,
-                          const CCTK_REAL *restrict x,const CCTK_REAL *restrict y,const CCTK_REAL *restrict z) {
-  double rho_starL = compute_rho_star(index, w_lorentz, rho0, gxx,gxy,gxz, gyy,gyz,gzz);
-  VolIntegrand1[index] = rho_starL*x[index];
-  VolIntegrand2[index] = rho_starL*y[index];
-  VolIntegrand3[index] = rho_starL*z[index];
-  VolIntegrand4[index] = rho_starL;
+CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void
+CoM_integrand(const Loop::GF3D2<double> VolIntegrand1,
+              const Loop::GF3D2<double> VolIntegrand2,
+              const Loop::GF3D2<double> VolIntegrand3,
+              const Loop::GF3D2<double> VolIntegrand4, const int index,
+              const Loop::PointDesc &p, const Loop::GF3D2<const double> velx,
+              const Loop::GF3D2<const double> vely, const Loop::GF3D2<const double> velz,
+              const Loop::GF3D2<const double> rho0, const Loop::GF3D2<const double> gxx,
+              const Loop::GF3D2<const double> gxy, const Loop::GF3D2<const double> gxz,
+              const Loop::GF3D2<const double> gyy, const Loop::GF3D2<const double> gyz,
+              const Loop::GF3D2<const double> gzz) {
+  double rho_starL = compute_rho_star(index, p, velx, vely, velz, rho0, gxx,
+                                      gxy, gxz, gyy, gyz, gzz);
+  VolIntegrand1(p.I) = rho_starL * p.x;
+  VolIntegrand2(p.I) = rho_starL * p.y;
+  VolIntegrand3(p.I) = rho_starL * p.z;
+  VolIntegrand4(p.I) = rho_starL;
 }
 
 /* Rest Mass: */
-CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void M0_integrand(double *VolIntegrand1, const int index,
-                          const CCTK_REAL *restrict w_lorentz, const CCTK_REAL *restrict rho0,
-                          const CCTK_REAL *restrict gxx,const CCTK_REAL *restrict gxy,const CCTK_REAL *restrict gxz,
-                          const CCTK_REAL *restrict gyy,const CCTK_REAL *restrict gyz,const CCTK_REAL *restrict gzz) {
-  double rho_starL = compute_rho_star(index, w_lorentz, rho0, gxx,gxy,gxz, gyy,gyz,gzz);
-  VolIntegrand1[index] = rho_starL;
+CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void
+M0_integrand(const Loop::GF3D2<double> VolIntegrand1, const int index,
+             const Loop::PointDesc &p, const Loop::GF3D2<const double> velx,
+             const Loop::GF3D2<const double> vely, const Loop::GF3D2<const double> velz,
+             const Loop::GF3D2<const double> rho0, const Loop::GF3D2<const double> gxx,
+             const Loop::GF3D2<const double> gxy, const Loop::GF3D2<const double> gxz,
+             const Loop::GF3D2<const double> gyy, const Loop::GF3D2<const double> gyz,
+             const Loop::GF3D2<const double> gzz) {
+  double rho_starL = compute_rho_star(index, p, velx, vely, velz, rho0, gxx,
+                                      gxy, gxz, gyy, gyz, gzz);
+  VolIntegrand1(p.I) = rho_starL;
 }
 
 #endif
