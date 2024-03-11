@@ -1,3 +1,5 @@
+//TODO: Fix memory allocation in the output routine
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

@@ -110,16 +110,19 @@ SCHEDULE VI_GRMHDX_DecrementIntegralCounter in VI_GRMHDX_VolumeIntegralGroup aft
   WRITES: IntegralCounter(everywhere)
 } "Decrement IntegralCounter variable"
 ##################
-SCHEDULE VI_GRMHDX_file_output after VI_GRMHDX_VolumeIntegralGroup AT CCTK_ANALYSIS
-{
-  LANG: C
-  OPTIONS: GLOBAL
-  READS: volintegral_inside_sphere__center_x(everywhere)
-  READS: volintegral_inside_sphere__center_y(everywhere)
-  READS: volintegral_inside_sphere__center_z(everywhere)
-  READS: volintegral_outside_sphere__center_x(everywhere)
-  READS: volintegral_outside_sphere__center_y(everywhere)
-  READS: volintegral_outside_sphere__center_z(everywhere)
-  READS: VolIntegral(everywhere)
-  WRITES: physical_time(everywhere)
-} "Output VolumeIntegral results to disk"
+
+if(enable_file_output) {
+  SCHEDULE VI_GRMHDX_file_output after VI_GRMHDX_VolumeIntegralGroup AT CCTK_ANALYSIS
+  {
+    LANG: C
+    OPTIONS: GLOBAL
+    READS: volintegral_inside_sphere__center_x(everywhere)
+    READS: volintegral_inside_sphere__center_y(everywhere)
+    READS: volintegral_inside_sphere__center_z(everywhere)
+    READS: volintegral_outside_sphere__center_x(everywhere)
+    READS: volintegral_outside_sphere__center_y(everywhere)
+    READS: volintegral_outside_sphere__center_z(everywhere)
+    READS: VolIntegral(everywhere)
+    WRITES: physical_time(everywhere)
+  } "Output VolumeIntegral results to disk"
+}

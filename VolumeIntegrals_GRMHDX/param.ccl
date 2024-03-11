@@ -6,7 +6,7 @@ private:
 CCTK_INT enable_file_output "Enable output file" STEERABLE = RECOVER
 {
   0:1 :: "0 = no output; 1 = yes, output to file"
-} 1
+} 0
 
 STRING outVolIntegral_dir "Output directory for volume integration output files, overrides IO::out_dir" STEERABLE = RECOVER
 {
