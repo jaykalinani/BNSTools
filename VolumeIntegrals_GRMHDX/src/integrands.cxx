@@ -2,6 +2,7 @@
 #define INTEGRANDS_CXX
 
 #include <loop_device.hxx>
+#include <VI_utils.hxx>
 
 /*
   NRPy+ Python code that generates below C code:
@@ -69,12 +70,17 @@ compute_rho_star(const int index, const Loop::PointDesc &p,
   // rho_0 is the rest-mass density, and
   // w_lorentz is the Lorentz factor
 
-  const CCTK_REAL gammaDD00 = gxx(p.I);
-  const CCTK_REAL gammaDD01 = gxy(p.I);
-  const CCTK_REAL gammaDD02 = gxz(p.I);
-  const CCTK_REAL gammaDD11 = gyy(p.I);
-  const CCTK_REAL gammaDD12 = gyz(p.I);
-  const CCTK_REAL gammaDD22 = gzz(p.I);
+  const smat<GF3D2<const CCTK_REAL>, 3> gf_g{gxx, gxy, gxz, gyy, gyz, gzz};
+  /* Get covariant metric */
+  const smat<CCTK_REAL, 3> glo(
+        [&](int i, int j) ARITH_INLINE { return calc_avg_v2c(gf_g(i, j), p); });
+
+  const CCTK_REAL gammaDD00 = glo(0,0);
+  const CCTK_REAL gammaDD01 = glo(0,1);
+  const CCTK_REAL gammaDD02 = glo(0,2);
+  const CCTK_REAL gammaDD11 = glo(1,1);
+  const CCTK_REAL gammaDD12 = glo(1,2);
+  const CCTK_REAL gammaDD22 = glo(2,2);
 
   const CCTK_REAL vU0 = velx(p.I);
   const CCTK_REAL vU1 = vely(p.I);
