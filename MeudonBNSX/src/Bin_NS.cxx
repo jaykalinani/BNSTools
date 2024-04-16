@@ -234,6 +234,7 @@ extern "C" void MeudonBNSX_Interpolation_C2V(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_MeudonBNSX_Interpolation_C2V;
   DECLARE_CCTK_PARAMETERS;
 
+  CCTK_INFO("Starting interpolation for ADM variables.");
   grid.loop_int<0, 0, 0>(grid.nghostzones,
                          [=] CCTK_HOST(const Loop::PointDesc &p)
                              CCTK_ATTRIBUTE_ALWAYS_INLINE {
@@ -262,7 +263,7 @@ extern "C" void MeudonBNSX_Interpolation_C2V(CCTK_ARGUMENTS) {
                                dtbetaz(p.I) = calc_avg_c2v(dtbetaz_cc, p);
                              });
 
-  CCTK_INFO("Done interpolation for TOV ADM variables.");
+  CCTK_INFO("Done interpolation for ADM variables.");
 
 } 
 
