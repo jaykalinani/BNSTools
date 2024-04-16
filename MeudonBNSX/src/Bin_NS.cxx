@@ -66,10 +66,10 @@ void MeudonBNSX_initialise(CCTK_ARGUMENTS)
   
   //TODO: currently works only with polytropic EOS 
   CCTK_INFO("MeudonBNSX will use the polytropic equation of state.");
-    
+ 
   grid.loop_all<1, 1, 1>(
       grid.nghostzones,
-      [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+      [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {    
     const array<CCTK_INT, dim> indextype = {1, 1, 1};
     const GF3D2layout layout(cctkGH, indextype);
     CCTK_INT idx = layout.linear(p.I);
@@ -139,9 +139,9 @@ void MeudonBNSX_initialise(CCTK_ARGUMENTS)
 
   CCTK_INFO ("Filling in Cactus grid points");
 
-  grid.loop_all_device<1, 1, 1>(
+  grid.loop_all<1, 1, 1>(
       grid.nghostzones,
-      [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+      [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
     const array<CCTK_INT, dim> indextype = {1, 1, 1};
     const GF3D2layout layout(cctkGH, indextype);
     CCTK_INT idx = layout.linear(p.I);
