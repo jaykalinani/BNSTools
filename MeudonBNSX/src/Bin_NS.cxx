@@ -61,13 +61,13 @@ void MeudonBNSX_initialise(CCTK_ARGUMENTS)
 
   CCTK_INFO ("Setting up coordinates");
 
-  int const npoints = (cctk_lsh[0]-1) * (cctk_lsh[1]-1) * (cctk_lsh[2]-1);
+  int const npoints = (cctk_lsh[0]-grid.nghostzones[0]-1) * (cctk_lsh[1]-grid.nghostzones[1]-1) * (cctk_lsh[2]-grid.nghostzones[2]-1);
   vector<double> xx(npoints), yy(npoints), zz(npoints);
   
   //TODO: currently works only with polytropic EOS 
   CCTK_INFO("MeudonBNSX will use the polytropic equation of state.");
  
-  grid.loop_all<1, 1, 1>(
+  grid.loop_int<1, 1, 1>(
       grid.nghostzones,
       [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {    
     const array<CCTK_INT, dim> indextype = {1, 1, 1};
@@ -139,7 +139,7 @@ void MeudonBNSX_initialise(CCTK_ARGUMENTS)
 
   CCTK_INFO ("Filling in Cactus grid points");
 
-  grid.loop_all<1, 1, 1>(
+  grid.loop_int<1, 1, 1>(
       grid.nghostzones,
       [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
     const array<CCTK_INT, dim> indextype = {1, 1, 1};
