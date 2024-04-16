@@ -1,0 +1,23 @@
+# Interface definition for thorn Meudon_BNSX
+
+IMPLEMENTS: Meudon_BNSX
+
+INHERITS: CarpetX ADMBaseX HydroBaseX
+
+USES INCLUDE HEADER: loop_device.hxx
+USES INCLUDE HEADER: bin_ns.h unites.h
+
+PUBLIC:
+
+CCTK_REAL metric_cc TYPE=gf CENTERING={ccc} TAGS='checkpoint="no"' { gxx_cc gxy_cc gxz_cc gyy_cc gyz_cc gzz_cc } "cell-centered ADM 3-metric g_ij"
+
+CCTK_REAL curv_cc TYPE=gf CENTERING={ccc} TAGS='checkpoint="no"' { kxx_cc kxy_cc kxz_cc kyy_cc kyz_cc kzz_cc } "cell-centered ADM extrinstic curvature K_ij"
+
+CCTK_REAL lapse_cc TYPE=gf CENTERING={ccc} TAGS='checkpoint="no"' { alp_cc } "cell-centered ADM lapse function alpha"
+
+CCTK_REAL shift_cc TYPE=gf CENTERING={ccc} TAGS='checkpoint="no"' { betax_cc betay_cc betaz_cc} "cell-centered ADM shift function beta^i"
+
+CCTK_REAL dtlapse_cc TYPE=gf CENTERING={ccc} TAGS='checkpoint="no"' { dtalp_cc } "cell-centered Time derivative of ADM lapse function"
+CCTK_REAL dtshift_cc TYPE=gf CENTERING={ccc} TAGS='checkpoint="no"' { dtbetax_cc dtbetay_cc dtbetaz_cc} "cell-centered Time derivative of ADM shift function"
+
+
