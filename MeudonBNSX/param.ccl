@@ -1,30 +1,30 @@
-# Parameter definitions for thorn Meudon_BNSX
+# Parameter definitions for thorn MeudonBNSX
 
 SHARES: ADMBaseX
 
 EXTENDS KEYWORD initial_data
 {
-  "Meudon_BNSX" :: "LORENE Binary Neutron Star initial data"
+  "MeudonBNSX" :: "LORENE Binary Neutron Star initial data"
 }
 
 EXTENDS KEYWORD initial_lapse
 {
-  "Meudon_BNSX" :: "LORENE Binary Neutron Star initial data"
+  "MeudonBNSX" :: "LORENE Binary Neutron Star initial data"
 }
 
 EXTENDS KEYWORD initial_shift
 {
-  "Meudon_BNSX" :: "LORENE Binary Neutron Star initial data"
+  "MeudonBNSX" :: "LORENE Binary Neutron Star initial data"
 }
 
 EXTENDS KEYWORD initial_dtlapse
 {
-  "Meudon_BNSX" :: "LORENE Binary Neutron Star initial data"
+  "MeudonBNSX" :: "LORENE Binary Neutron Star initial data"
 }
 
 EXTENDS KEYWORD initial_dtshift
 {
-  "Meudon_BNSX" :: "LORENE Binary Neutron Star initial data"
+  "MeudonBNSX" :: "LORENE Binary Neutron Star initial data"
 }
 
 
@@ -32,7 +32,7 @@ SHARES: HydroBaseX
 
 EXTENDS KEYWORD initial_hydro
 {
-  "Meudon_BNSX" :: "LORENE Binary Neutron Star initial data"
+  "MeudonBNSX" :: "LORENE Binary Neutron Star initial data"
 }
 
 

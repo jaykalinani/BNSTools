@@ -19,9 +19,9 @@
 
 #include <loop.hxx>
 #include <loop_device.hxx>
-#include <meudon_bnsx_utils.hxx>
+#include <meudonbnsx_utils.hxx>
 
-namespace Meudon_BNSX {
+namespace MeudonBNSX {
 using namespace std;
 using namespace Arith;
 using namespace Loop;
@@ -31,9 +31,9 @@ namespace Lorene {}
 using namespace Lorene;
 
 extern "C"
-void Meudon_BNSX_initialise(CCTK_ARGUMENTS)
+void MeudonBNSX_initialise(CCTK_ARGUMENTS)
 {
-  DECLARE_CCTK_ARGUMENTSX_Meudon_BNSX_initialise;
+  DECLARE_CCTK_ARGUMENTSX_MeudonBNSX_initialise;
   DECLARE_CCTK_PARAMETERS;
 
   CCTK_INFO("Setting up LORENE Bin_NS initial data");
@@ -65,7 +65,7 @@ void Meudon_BNSX_initialise(CCTK_ARGUMENTS)
   vector<double> xx(npoints), yy(npoints), zz(npoints);
   
   //TODO: currently works only with polytropic EOS 
-  CCTK_INFO("Meudon_BNSX will use the polytropic equation of state.");
+  CCTK_INFO("MeudonBNSX will use the polytropic equation of state.");
     
   grid.loop_all<1, 1, 1>(
       grid.nghostzones,
@@ -146,17 +146,17 @@ void Meudon_BNSX_initialise(CCTK_ARGUMENTS)
     const GF3D2layout layout(cctkGH, indextype);
     CCTK_INT idx = layout.linear(p.I);
 
-    if (CCTK_EQUALS(initial_lapse, "Meudon_Bin_NS")) { 
+    if (CCTK_EQUALS(initial_lapse, "MeudonBNSX")) { 
       alp_cc(p.I) = bin_ns.nnn[idx];
     }
 
-    if (CCTK_EQUALS(initial_shift, "Meudon_Bin_NS")) { 
+    if (CCTK_EQUALS(initial_shift, "MeudonBNSX")) { 
       betax_cc(p.I) = -bin_ns.beta_x[idx];
       betay_cc(p.I) = -bin_ns.beta_y[idx];
       betaz_cc(p.I) = -bin_ns.beta_z[idx];
     }
 
-    if (CCTK_EQUALS(initial_data, "Meudon_Bin_NS")) {
+    if (CCTK_EQUALS(initial_data, "MeudonBNSX")) {
       gxx_cc(p.I) = bin_ns.g_xx[idx];
       gxy_cc(p.I) = bin_ns.g_xy[idx];
       gxz_cc(p.I) = bin_ns.g_xz[idx];
@@ -172,7 +172,7 @@ void Meudon_BNSX_initialise(CCTK_ARGUMENTS)
       kzz_cc(p.I) = bin_ns.k_zz[idx] * coord_unit;
     }
 
-    if (CCTK_EQUALS(initial_data, "Meudon_Bin_NS")) {
+    if (CCTK_EQUALS(initial_data, "MeudonBNSX")) {
       rho(p.I) = bin_ns.nbar[idx] / rho_unit;
       if (!recalculate_eps)
         eps(p.I) = bin_ns.ener_spec[idx];
@@ -200,8 +200,8 @@ void Meudon_BNSX_initialise(CCTK_ARGUMENTS)
 
 //  {
 
-    if (CCTK_EQUALS(initial_lapse, "Meudon_Bin_NS")) { 
-      if (CCTK_EQUALS (initial_dtlapse, "Meudon_Bin_NS")) {
+    if (CCTK_EQUALS(initial_lapse, "MeudonBNSX")) { 
+      if (CCTK_EQUALS (initial_dtlapse, "MeudonBNSX")) {
         CCTK_ERROR("Code for computing time derivatives of lapse is not yet implemented");
       } else if (CCTK_EQUALS (initial_dtlapse, "none") or CCTK_EQUALS(initial_dtlapse,"zero")) {
         dtalp_cc(p.I) = 0.0;
@@ -210,8 +210,8 @@ void Meudon_BNSX_initialise(CCTK_ARGUMENTS)
       }
     }
 
-    if (CCTK_EQUALS(initial_shift, "Meudon_Bin_NS")) { 
-      if (CCTK_EQUALS (initial_dtshift, "Meudon_Bin_NS")) {
+    if (CCTK_EQUALS(initial_shift, "MeudonBNSX")) { 
+      if (CCTK_EQUALS (initial_dtshift, "MeudonBNSX")) {
         CCTK_ERROR("Code for calculating time derivatives of shift is not yet implemented");
       } else if (CCTK_EQUALS (initial_dtshift, "none") or CCTK_EQUALS(initial_dtshift,"zero")) {
         dtbetax_cc(p.I) = 0.0;
@@ -230,8 +230,8 @@ void Meudon_BNSX_initialise(CCTK_ARGUMENTS)
 //  }
 }
 
-extern "C" void Meudon_BNSX_Interpolation_C2V(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_Meudon_BNSX_Interpolation_C2V;
+extern "C" void MeudonBNSX_Interpolation_C2V(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_MeudonBNSX_Interpolation_C2V;
   DECLARE_CCTK_PARAMETERS;
 
   grid.loop_int<0, 0, 0>(grid.nghostzones,

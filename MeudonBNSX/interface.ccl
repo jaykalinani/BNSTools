@@ -1,6 +1,6 @@
-# Interface definition for thorn Meudon_BNSX
+# Interface definition for thorn MeudonBNSX
 
-IMPLEMENTS: Meudon_BNSX
+IMPLEMENTS: MeudonBNSX
 
 INHERITS: CarpetX ADMBaseX HydroBaseX
 

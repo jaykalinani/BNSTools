@@ -1,9 +1,9 @@
-#ifndef MEUDON_BNSX_UTILS_HXX
-#define MEUDON_BNSX_UTILS_HXX
+#ifndef MEUDONBNSX_UTILS_HXX
+#define MEUDONBNSX_UTILS_HXX
 
 #include <loop.hxx>
 
-namespace Meudon_BNSX {
+namespace MeudonBNSX {
 
 using namespace Loop;
 /* - utility routine

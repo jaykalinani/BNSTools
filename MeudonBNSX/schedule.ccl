@@ -1,13 +1,13 @@
-# Schedule definitions for thorn Meudon_BNSX
+# Schedule definitions for thorn MeudonBNSX
 
-if (CCTK_EQUALS (initial_data,    "Meudon_BNSX") ||
-    CCTK_EQUALS (initial_lapse,   "Meudon_BNSX") ||
-    CCTK_EQUALS (initial_shift,   "Meudon_BNSX") ||
-    CCTK_EQUALS (initial_dtlapse, "Meudon_BNSX") ||
-    CCTK_EQUALS (initial_dtshift, "Meudon_BNSX") ||
-    CCTK_EQUALS (initial_hydro,   "Meudon_BNSX"))
+if (CCTK_EQUALS (initial_data,    "MeudonBNSX") ||
+    CCTK_EQUALS (initial_lapse,   "MeudonBNSX") ||
+    CCTK_EQUALS (initial_shift,   "MeudonBNSX") ||
+    CCTK_EQUALS (initial_dtlapse, "MeudonBNSX") ||
+    CCTK_EQUALS (initial_dtshift, "MeudonBNSX") ||
+    CCTK_EQUALS (initial_hydro,   "MeudonBNSX"))
 {
-  SCHEDULE Meudon_BNSX_initialise IN HydroBaseX_InitialData
+  SCHEDULE MeudonBNSX_initialise IN HydroBaseX_InitialData
   {
     LANG: C
     WRITES: metric_cc(everywhere)
@@ -22,7 +22,7 @@ if (CCTK_EQUALS (initial_data,    "Meudon_BNSX") ||
     WRITES: HYDROBASEX::press(everywhere)
   } "Set up binary neutron star initial data"
  
-  SCHEDULE Meudon_BNSX_Interpolation_C2V IN HydroBaseX_InitialData AFTER Meudon_BNSX_initialise 
+  SCHEDULE MeudonBNSX_Interpolation_C2V IN HydroBaseX_InitialData AFTER MeudonBNSX_initialise 
   {
   LANG: C
   READS: metric_cc(everywhere)
