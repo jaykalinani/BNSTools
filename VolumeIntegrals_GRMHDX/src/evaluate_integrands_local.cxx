@@ -21,17 +21,18 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
   grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE  {
-      int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
+      // int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
       CoM_integrand(VolIntegrand1, VolIntegrand2, VolIntegrand3, VolIntegrand4,
-                    index,p, velx, vely, velz, rho, gxx, gxy, gxz, gyy, gyz, gzz); });
+                    p, velx, vely, velz, rho, gxx, gxy, gxz, gyy, gyz, gzz,
+		    CoM_integrand_GAMMA_SPEED_LIMIT); });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "restmass")) {
     grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-      int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
-      M0_integrand(VolIntegrand1, index, p, velx, vely, velz, rho, gxx, gxy, gxz,
-                   gyy, gyz, gzz); });
+      // int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
+      M0_integrand(VolIntegrand1, p, velx, vely, velz, rho, gxx, gxy, gxz,
+                   gyy, gyz, gzz, CoM_integrand_GAMMA_SPEED_LIMIT); });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "usepreviousintegrands")) {
     /* Do Nothing; the action for this is below. */
@@ -39,7 +40,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
     grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-      int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
+      // int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
       VolIntegrand1(p.I) = 1.0; });
   } else {
     /* Print a warning if no integrand is computed because
@@ -116,7 +117,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
     grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-      int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
+      // int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
       double x_minus_xprime = p.x - xprime;
       double y_minus_xprime = p.y - yprime;
       double z_minus_xprime = p.z - zprime;
@@ -144,7 +145,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
     grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-      int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
+      // int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
       double x_minus_xprime = p.x - xprime;
       double y_minus_xprime = p.y - yprime;
       double z_minus_xprime = p.z - zprime;

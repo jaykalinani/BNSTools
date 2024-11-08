@@ -14,7 +14,7 @@
 /********************************************************************
  ********************    Macro Definitions   ************************
  ********************************************************************/
-CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void CREATE_OUTDIR(CCTK_ARGUMENTS,const char *input_dir,char *&actual_dir)
+CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void CREATE_OUTDIR(CCTK_ARGUMENTS,const char *input_dir,char *&actual_dir)
   {
     DECLARE_CCTK_PARAMETERS;
     const char *_dir = input_dir;
@@ -52,7 +52,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void CREATE_OUTDIR(CCT
       }
   }
 
-CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void OUTDIR_NAME(CCTK_ARGUMENTS,const char *input_dir,char *&actual_dir)
+CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void OUTDIR_NAME(CCTK_ARGUMENTS,const char *input_dir,char *&actual_dir)
 {
     DECLARE_CCTK_PARAMETERS;
     const char *_dir = input_dir;
