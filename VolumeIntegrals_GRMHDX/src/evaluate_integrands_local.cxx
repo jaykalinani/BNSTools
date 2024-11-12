@@ -14,6 +14,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   int which_integral = NumIntegrals - *IntegralCounter + 1;
+  CCTK_VINFO("Computing Integrand %d", which_integral);
 
   /* Note: Must extend this if/else statement if adding a new integrand! */
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],

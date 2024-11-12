@@ -26,6 +26,7 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_INITIAL
   LANG: C
   OPTIONS: GLOBAL
   WRITES: IntegralCounter(everywhere)
+  WRITES: VolIntegral(everywhere)
 } "Initialize IntegralCounter variable to zero"
 
 SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLES
@@ -90,6 +91,7 @@ SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup after ComputeIntegrand
   READS: volintegral_outside_sphere__center_y(everywhere)
   READS: volintegral_outside_sphere__center_z(everywhere)
   READS: VolIntegral(everywhere)
+  READS: VolIntegrands(everywhere)
   READS: BoxInBox::position_x(everywhere)
   READS: BoxInBox::position_y(everywhere)
   READS: BoxInBox::position_z(everywhere)
