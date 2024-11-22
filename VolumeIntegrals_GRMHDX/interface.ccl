@@ -5,7 +5,6 @@ implements: VolumeIntegrals_GRMHDX
 inherits: ADMBaseX HydroBaseX ADMBaseX BoxInBox
 
 USES INCLUDE HEADER: loop_device.hxx
-USES INCLUDE HEADER: reduction.hxx
 
 private:
 CCTK_REAL VolIntegrands TYPE=GF CENTERING={ccc} tags='checkpoint="no"'

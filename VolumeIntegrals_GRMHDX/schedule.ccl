@@ -49,8 +49,7 @@ SCHEDULE GROUP VI_GRMHDX_VolumeIntegralGroup AT CCTK_ANALYSIS BEFORE CarpetLib_p
 
 SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup before DoSum
 {
-  STORAGE: VolIntegrands,VolIntegrals,MovingSphRegionIntegrals
-  OPTIONS: GLOBAL,LOOP-LOCAL
+  # OPTIONS: GLOBAL,LOOP-LOCAL
   LANG: C
   READS: IntegralCounter(everywhere)
   READS: BoxInBox::position_x(everywhere)

@@ -14,7 +14,9 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   int which_integral = NumIntegrals - *IntegralCounter + 1;
-  CCTK_VINFO("Computing Integrand %d", which_integral);
+  if (CCTK_MyProc == 0){
+    CCTK_VINFO("Computing Integrand %d", which_integral);
+  }
 
   /* Note: Must extend this if/else statement if adding a new integrand! */
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
@@ -22,7 +24,6 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
   grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE  {
-      // int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
       CoM_integrand(VolIntegrand1, VolIntegrand2, VolIntegrand3, VolIntegrand4,
                     p, velx, vely, velz, rho, gxx, gxy, gxz, gyy, gyz, gzz,
 		    CoM_integrand_GAMMA_SPEED_LIMIT); });
@@ -31,7 +32,6 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
     grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-      // int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
       M0_integrand(VolIntegrand1, p, velx, vely, velz, rho, gxx, gxy, gxz,
                    gyy, gyz, gzz, CoM_integrand_GAMMA_SPEED_LIMIT); });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
@@ -41,8 +41,9 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
     grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-      // int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
-      VolIntegrand1(p.I) = 1.0; });
+      	    VolIntegrand1(p.I) = 1.0; 
+        }
+    );
   } else {
     /* Print a warning if no integrand is computed because
      * Integration_quantity_keyword unrecognized. */
@@ -118,7 +119,6 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
     grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-      // int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
       double x_minus_xprime = p.x - xprime;
       double y_minus_xprime = p.y - yprime;
       double z_minus_xprime = p.z - zprime;
@@ -127,7 +127,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
                z_minus_xprime * z_minus_xprime) > radius)
         VolIntegrand1(p.I) = VolIntegrand2(p.I) = VolIntegrand3(p.I) =
             VolIntegrand4(p.I) = 0.0;
-	});
+        });
   }
 
   /* Set integrands to zero inside a sphere centered at x,y,z.
@@ -146,7 +146,6 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
     grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-      // int index = CCTK_GFINDEX3D(cctkGH, p.I[0], p.I[1], p.I[2]);
       double x_minus_xprime = p.x - xprime;
       double y_minus_xprime = p.y - yprime;
       double z_minus_xprime = p.z - zprime;
@@ -155,6 +154,6 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
                z_minus_xprime * z_minus_xprime) <= radius)
         VolIntegrand1(p.I) = VolIntegrand2(p.I) = VolIntegrand3(p.I) =
             VolIntegrand4(p.I) = 0.0;
-	});
+        });
   }
 }
