@@ -54,13 +54,14 @@ rho_star_str_ugly rho_star_str = rho_star_str_ugly.replace( "pow(gammaDD02,
 */
 
 CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline CCTK_REAL
-compute_rho_star(const int index, const Loop::PointDesc &p,
-                 const Loop::GF3D2<const double> velx, const Loop::GF3D2<const double> vely,
-                 const Loop::GF3D2<const double> velz,
-                 const Loop::GF3D2<const double> rho0GF,
-                 const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
-                 const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
-                 const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz) {
+compute_rho_star(
+    const int index, const Loop::PointDesc &p,
+    const Loop::GF3D2<const double> velx, const Loop::GF3D2<const double> vely,
+    const Loop::GF3D2<const double> velz,
+    const Loop::GF3D2<const double> rho0GF, const Loop::GF3D2<const double> gxx,
+    const Loop::GF3D2<const double> gxy, const Loop::GF3D2<const double> gxz,
+    const Loop::GF3D2<const double> gyy, const Loop::GF3D2<const double> gyz,
+    const Loop::GF3D2<const double> gzz) {
   DECLARE_CCTK_PARAMETERS;
 
   // This function computes
@@ -73,14 +74,14 @@ compute_rho_star(const int index, const Loop::PointDesc &p,
   const smat<GF3D2<const CCTK_REAL>, 3> gf_g{gxx, gxy, gxz, gyy, gyz, gzz};
   /* Get covariant metric */
   const smat<CCTK_REAL, 3> glo(
-        [&](int i, int j) ARITH_INLINE { return calc_avg_v2c(gf_g(i, j), p); });
+      [&](int i, int j) ARITH_INLINE { return calc_avg_v2c(gf_g(i, j), p); });
 
-  const CCTK_REAL gammaDD00 = glo(0,0);
-  const CCTK_REAL gammaDD01 = glo(0,1);
-  const CCTK_REAL gammaDD02 = glo(0,2);
-  const CCTK_REAL gammaDD11 = glo(1,1);
-  const CCTK_REAL gammaDD12 = glo(1,2);
-  const CCTK_REAL gammaDD22 = glo(2,2);
+  const CCTK_REAL gammaDD00 = glo(0, 0);
+  const CCTK_REAL gammaDD01 = glo(0, 1);
+  const CCTK_REAL gammaDD02 = glo(0, 2);
+  const CCTK_REAL gammaDD11 = glo(1, 1);
+  const CCTK_REAL gammaDD12 = glo(1, 2);
+  const CCTK_REAL gammaDD22 = glo(2, 2);
 
   const CCTK_REAL vU0 = velx(p.I);
   const CCTK_REAL vU1 = vely(p.I);
@@ -114,17 +115,17 @@ compute_rho_star(const int index, const Loop::PointDesc &p,
 }
 
 /* Center of Mass: */
-CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void
-CoM_integrand(const Loop::GF3D2<double> VolIntegrand1,
-              const Loop::GF3D2<double> VolIntegrand2,
-              const Loop::GF3D2<double> VolIntegrand3,
-              const Loop::GF3D2<double> VolIntegrand4, const int index,
-              const Loop::PointDesc &p, const Loop::GF3D2<const double> velx,
-              const Loop::GF3D2<const double> vely, const Loop::GF3D2<const double> velz,
-              const Loop::GF3D2<const double> rho0, const Loop::GF3D2<const double> gxx,
-              const Loop::GF3D2<const double> gxy, const Loop::GF3D2<const double> gxz,
-              const Loop::GF3D2<const double> gyy, const Loop::GF3D2<const double> gyz,
-              const Loop::GF3D2<const double> gzz) {
+CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void CoM_integrand(
+    const Loop::GF3D2<double> VolIntegrand1,
+    const Loop::GF3D2<double> VolIntegrand2,
+    const Loop::GF3D2<double> VolIntegrand3,
+    const Loop::GF3D2<double> VolIntegrand4, const int index,
+    const Loop::PointDesc &p, const Loop::GF3D2<const double> velx,
+    const Loop::GF3D2<const double> vely, const Loop::GF3D2<const double> velz,
+    const Loop::GF3D2<const double> rho0, const Loop::GF3D2<const double> gxx,
+    const Loop::GF3D2<const double> gxy, const Loop::GF3D2<const double> gxz,
+    const Loop::GF3D2<const double> gyy, const Loop::GF3D2<const double> gyz,
+    const Loop::GF3D2<const double> gzz) {
   double rho_starL = compute_rho_star(index, p, velx, vely, velz, rho0, gxx,
                                       gxy, gxz, gyy, gyz, gzz);
   VolIntegrand1(p.I) = rho_starL * p.x;
@@ -134,14 +135,14 @@ CoM_integrand(const Loop::GF3D2<double> VolIntegrand1,
 }
 
 /* Rest Mass: */
-CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void
-M0_integrand(const Loop::GF3D2<double> VolIntegrand1, const int index,
-             const Loop::PointDesc &p, const Loop::GF3D2<const double> velx,
-             const Loop::GF3D2<const double> vely, const Loop::GF3D2<const double> velz,
-             const Loop::GF3D2<const double> rho0, const Loop::GF3D2<const double> gxx,
-             const Loop::GF3D2<const double> gxy, const Loop::GF3D2<const double> gxz,
-             const Loop::GF3D2<const double> gyy, const Loop::GF3D2<const double> gyz,
-             const Loop::GF3D2<const double> gzz) {
+CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void M0_integrand(
+    const Loop::GF3D2<double> VolIntegrand1, const int index,
+    const Loop::PointDesc &p, const Loop::GF3D2<const double> velx,
+    const Loop::GF3D2<const double> vely, const Loop::GF3D2<const double> velz,
+    const Loop::GF3D2<const double> rho0, const Loop::GF3D2<const double> gxx,
+    const Loop::GF3D2<const double> gxy, const Loop::GF3D2<const double> gxz,
+    const Loop::GF3D2<const double> gyy, const Loop::GF3D2<const double> gyz,
+    const Loop::GF3D2<const double> gzz) {
   double rho_starL = compute_rho_star(index, p, velx, vely, velz, rho0, gxx,
                                       gxy, gxz, gyy, gyz, gzz);
   VolIntegrand1(p.I) = rho_starL;
