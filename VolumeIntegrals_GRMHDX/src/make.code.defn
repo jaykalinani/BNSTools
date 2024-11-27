@@ -1,8 +1,8 @@
-# Main make.code.defn file for thorn VolumeIntegrals_GRMHDX
-# $Header:$
+#Main make.code.defn file for thorn VolumeIntegrals_GRMHDX
+#$Header : $
 
-# Source files in this directory
+#Source files in this directory
 SRCS = evaluate_integrands_local.cxx Initialize_or_Decrement_IntegralCounter.cxx perform_integration_sum_global.cxx file_output_routines.cxx
 
-# Subdirectories containing source files
-SUBDIRS = 
+#Subdirectories containing source files
+SUBDIRS =

@@ -2,7 +2,7 @@
 # $Header:$
 
 implements: VolumeIntegrals_GRMHDX
-inherits: ADMBaseX CarpetX HydroBaseX ADMBaseX BoxInBox
+inherits: ADMBaseX HydroBaseX ADMBaseX BoxInBox
 
 USES INCLUDE HEADER: loop_device.hxx
 
@@ -23,7 +23,7 @@ CCTK_REAL MovingSphRegionIntegrals TYPE=ARRAY DISTRIB=CONSTANT DIM=1 SIZE=101
   volintegral_outside_sphere__center_x, volintegral_outside_sphere__center_y, volintegral_outside_sphere__center_z
 } "Specify regions for volume integrals inside/outside spheres THAT MOVE."
 
-CCTK_REAL IntegralCounterVar type=SCALAR tags='checkpoint="no"'
+CCTK_INT IntegralCounterVar type=SCALAR tags='checkpoint="no"'
 {
   IntegralCounter
 } "Counter that keeps track of which integral we are calculating."
