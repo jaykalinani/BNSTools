@@ -12,7 +12,7 @@
 #include <loop_device.hxx>
 
 /* ADD TO THIS LIST IF YOU HAVE NEW INTEGRAND */
-CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE static inline int
+CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE static inline int
 VI_GRMHDX_number_of_reductions(int which_integral) {
   DECLARE_CCTK_PARAMETERS;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],

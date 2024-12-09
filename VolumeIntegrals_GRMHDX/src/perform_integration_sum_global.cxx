@@ -5,8 +5,11 @@
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
+#include <iostream>
 
 #include "number_of_reductions.cxx"
+#include "../../../CarpetX/CarpetX/src/driver.hxx"
+#include "../../../CarpetX/CarpetX/src/reduction.hxx"
 
 extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_VI_GRMHDX_DoSum;
@@ -36,7 +39,12 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
   sym_factor1 = 1.0e0;
   sym_factor2 = 1.0e0;
   sym_factor3 = 1.0e0;
-  double d3x = cctk_delta_space[0] * cctk_delta_space[1] * cctk_delta_space[2];
+
+  // CarpetX reductions currently include the cell volume in the sum. Keeping
+  // this code here in case that ever changes. const amrex::Geometry &geom =
+  // CarpetX::ghext->patchdata.at(0).amrcore->Geom(0); const CCTK_REAL *restrict
+  // const dx = geom.CellSize(); double d3x = dx[0] * dx[1] * dx[2];
+
   /* Note: Must edit VI_GRMHDX_number_of_reductions() when adding new
      integrands! This function is defined in VI_GRMHDX_number_of_reductions.C */
   int num_reductions = VI_GRMHDX_number_of_reductions(which_integral);
@@ -59,26 +67,29 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
            volintegral_outside_sphere__radius[which_integral]);
 
   /* Perform the reduction sums across all MPI processes */
-  int reduction_handle = CCTK_ReductionHandle("sum");
 
   for (int i = 0; i < num_reductions; i++) {
     char integralname[100];
     sprintf(integralname, "VolumeIntegrals_GRMHDX::VolIntegrand%d", i + 1);
-    int varindex = CCTK_VarIndex(integralname);
-    int ierr = 0;
-    assert(varindex >= 0);
-    ierr = CCTK_Reduce(cctkGH, -1, reduction_handle, 1, CCTK_VARIABLE_REAL,
-                       (void *)&VolIntegral[4 * (which_integral) + i], 1,
-                       varindex);
-    assert(!ierr);
 
-    VolIntegral[4 * (which_integral) + i] *=
-        d3x; // <- Multiply the integrand by d3x
+    // Get group and var idx for reduction
+    int varindex = CCTK_VarIndex(integralname);
+    const int gi = CCTK_GroupIndexFromVarI(varindex);
+    assert(gi >= 0);
+    const int v0 = CCTK_FirstVarIndexI(gi);
+    assert(v0 >= 0);
+    const int vi = varindex - v0;
+
+    // Perform reduction. We only want the summed integrands.
+    const CarpetX::reduction<CCTK_REAL, 3> red = CarpetX::reduce(gi, vi, 0);
+
+    VolIntegral[4 * (which_integral) + i] =
+        red.sum; // * d3x; // <- Multiply the integrand by d3x
 
     if (verbose == 2)
       printf("VolumeIntegrals_GRMHDX: Iteration %d, reduction %d of %d. "
              "Reduction value=%e\n",
-             which_integral, i, num_reductions,
+             which_integral, i + 1, num_reductions,
              VolIntegral[4 * (which_integral) + i]);
   }
 
@@ -99,8 +110,8 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
     if (verbose >= 1)
       printf("VolumeIntegrals_GRMHDX: AMR centre #%d tracks Integral %d: "
              "(x,y,z)=(%e,%e,%e) [norm=%e]. Prev centre @ (%e,%e,%e).\n",
-             which_integral,
              amr_centre__tracks__volintegral_inside_sphere[which_integral],
+             which_integral,
              volintegral_inside_sphere__center_x[which_integral],
              volintegral_inside_sphere__center_y[which_integral],
              volintegral_inside_sphere__center_z[which_integral], norm,

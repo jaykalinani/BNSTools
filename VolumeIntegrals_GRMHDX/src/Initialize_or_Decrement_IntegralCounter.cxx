@@ -9,7 +9,17 @@
 extern "C" void VI_GRMHDX_InitializeIntegralCounterToZero(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_VI_GRMHDX_InitializeIntegralCounterToZero;
   DECLARE_CCTK_PARAMETERS;
+
+  // Init Counter
   *IntegralCounter = 0;
+
+  // Init Array that Holds Results
+  for (int ii = 0; ii < 101; ii++) {
+    for (int jj = 0; jj < 4; jj++) {
+      const int arridx = 4 * ii + jj;
+      VolIntegral[arridx] = 0.0;
+    }
+  }
 
   if (verbose == 2)
     printf("VolumeIntegrals_GRMHDX: Just set IntegralCounter to %d\n",
