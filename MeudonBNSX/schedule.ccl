@@ -10,16 +10,16 @@ if (CCTK_EQUALS (initial_data,    "MeudonBNSX") ||
   SCHEDULE MeudonBNSX_initialise IN HydroBaseX_InitialData
   {
     LANG: C
-    WRITES: metric_cc(interior)
-    WRITES: lapse_cc(interior)
-    WRITES: shift_cc(interior)
-    WRITES: curv_cc(interior)
-    WRITES: dtlapse_cc(interior)
-    WRITES: dtshift_cc(interior)
-    WRITES: HYDROBASEX::eps(interior)
-    WRITES: HYDROBASEX::rho(interior)
-    WRITES: HYDROBASEX::vel(interior)
-    WRITES: HYDROBASEX::press(interior)
+    WRITES: metric_cc(everywhere)
+    WRITES: lapse_cc(everywhere)
+    WRITES: shift_cc(everywhere)
+    WRITES: curv_cc(everywhere)
+    WRITES: dtlapse_cc(everywhere)
+    WRITES: dtshift_cc(everywhere)
+    WRITES: HYDROBASEX::eps(everywhere)
+    WRITES: HYDROBASEX::rho(everywhere)
+    WRITES: HYDROBASEX::vel(everywhere)
+    WRITES: HYDROBASEX::press(everywhere)
     SYNC: metric_cc lapse_cc shift_cc curv_cc dtlapse_cc dtshift_cc
     SYNC: HYDROBASEX::eps HYDROBASEX::rho HYDROBASEX::vel HYDROBASEX::press
   } "Set up binary neutron star initial data"

@@ -27,7 +27,7 @@ using namespace Arith;
 using namespace Loop;
 
 // define namespace here for old versions of Lorene that don't do so
-namespace Lorene {}
+// namespace Lorene {}
 using namespace Lorene;
 
 extern "C"
@@ -61,18 +61,21 @@ void MeudonBNSX_initialise(CCTK_ARGUMENTS)
 
   CCTK_INFO ("Setting up coordinates");
 
-  int const npoints = (cctk_lsh[0]-grid.nghostzones[0]-1) * (cctk_lsh[1]-grid.nghostzones[1]-1) * (cctk_lsh[2]-grid.nghostzones[2]-1);
+  // int const npoints = (cctk_lsh[0]-grid.nghostzones[0]-1) * (cctk_lsh[1]-grid.nghostzones[1]-1) * (cctk_lsh[2]-grid.nghostzones[2]-1);
+  // int const npoints = (cctk_lsh[0] - 1) * (cctk_lsh[1] - 1) * (cctk_lsh[2] -1);
+  int const npoints = cctk_lsh[0] * cctk_lsh[1] * cctk_lsh[2];
   vector<double> xx(npoints), yy(npoints), zz(npoints);
   
   //TODO: currently works only with polytropic EOS 
   CCTK_INFO("MeudonBNSX will use the polytropic equation of state.");
  
-  grid.loop_int<1, 1, 1>(
+  grid.loop_all<1, 1, 1>(
       grid.nghostzones,
       [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {    
     const array<CCTK_INT, dim> indextype = {1, 1, 1};
     const GF3D2layout layout(cctkGH, indextype);
-    CCTK_INT idx = layout.linear(p.I);
+    // CCTK_INT idx = layout.delta(p.I);
+    CCTK_INT idx = p.I[0] + cctk_lsh[0] * p.I[1] + cctk_lsh[0] * cctk_lsh[1] * p.I[2];
     xx[idx] = p.X[0] * coord_unit;
     yy[idx] = p.X[1] * coord_unit;
     zz[idx] = p.X[2] * coord_unit;
@@ -99,6 +102,12 @@ void MeudonBNSX_initialise(CCTK_ARGUMENTS)
 
 
   CCTK_VInfo (CCTK_THORNSTRING, "Reading from file \"%s\"", filename);
+
+  if (CCTK_MyProc(cctkGH) == 0) {
+          for (int ii=0; ii<(2 * cctk_lsh[0]); ii++) {
+        	CCTK_VINFO("Lorene x coord = %e", xx[ii]);
+          }
+  }
 
   //try {
   Bin_NS bin_ns (npoints, &xx[0], &yy[0], &zz[0], filename);
@@ -139,12 +148,13 @@ void MeudonBNSX_initialise(CCTK_ARGUMENTS)
 
   CCTK_INFO ("Filling in Cactus grid points");
 
-  grid.loop_int<1, 1, 1>(
+  grid.loop_all<1, 1, 1>(
       grid.nghostzones,
       [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
     const array<CCTK_INT, dim> indextype = {1, 1, 1};
     const GF3D2layout layout(cctkGH, indextype);
-    CCTK_INT idx = layout.linear(p.I);
+    // CCTK_INT idx = layout.linear(p.I);
+    CCTK_INT idx = p.I[0] + cctk_lsh[0] * p.I[1] + cctk_lsh[0] * cctk_lsh[1] * p.I[2];
 
     if (CCTK_EQUALS(initial_lapse, "MeudonBNSX")) { 
       alp_cc(p.I) = bin_ns.nnn[idx];
