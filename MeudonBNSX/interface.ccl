@@ -5,7 +5,7 @@ IMPLEMENTS: MeudonBNSX
 INHERITS: ADMBaseX HydroBaseX
 
 USES INCLUDE HEADER: loop_device.hxx
-# USES INCLUDE HEADER: bin_ns.h unites.h
+USES INCLUDE HEADER: bin_ns.h unites.h
 
 PUBLIC:
 

@@ -20,8 +20,6 @@ if (CCTK_EQUALS (initial_data,    "MeudonBNSX") ||
     WRITES: HYDROBASEX::rho(everywhere)
     WRITES: HYDROBASEX::vel(everywhere)
     WRITES: HYDROBASEX::press(everywhere)
-    SYNC: metric_cc lapse_cc shift_cc curv_cc dtlapse_cc dtshift_cc
-    SYNC: HYDROBASEX::eps HYDROBASEX::rho HYDROBASEX::vel HYDROBASEX::press
   } "Set up binary neutron star initial data"
  
   SCHEDULE MeudonBNSX_Interpolation_C2V IN HydroBaseX_InitialData AFTER MeudonBNSX_initialise 
