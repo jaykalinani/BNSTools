@@ -142,15 +142,44 @@ void MeudonBNSX_initialise(CCTK_ARGUMENTS)
 
   assert (bin_ns.np == npoints);
 
+  CCTK_INFO ("Initializing spacetime helpers to zero");
+
+  grid.loop_all<1, 1, 1>(
+      grid.nghostzones,
+      [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+
+    alp_cc(p.I) = 0.0;
+    
+    betax_cc(p.I) = 0.0; 
+    betay_cc(p.I) = 0.0; 
+    betaz_cc(p.I) = 0.0; 
+    
+    dtbetax_cc(p.I) = 0.0;
+    dtbetay_cc(p.I) = 0.0;
+    dtbetaz_cc(p.I) = 0.0;
+
+    gxx_cc(p.I) = 0.0; 
+    gxy_cc(p.I) = 0.0; 
+    gxz_cc(p.I) = 0.0; 
+    gyy_cc(p.I) = 0.0; 
+    gyz_cc(p.I) = 0.0; 
+    gzz_cc(p.I) = 0.0; 
+    
+    kxx_cc(p.I) = 0.0; 
+    kxy_cc(p.I) = 0.0; 
+    kxz_cc(p.I) = 0.0; 
+    kyy_cc(p.I) = 0.0; 
+    kyz_cc(p.I) = 0.0; 
+    kzz_cc(p.I) = 0.0; 
+
+  });
+
   CCTK_INFO ("Filling in Cactus grid points");
 
   grid.loop_all<1, 1, 1>(
       grid.nghostzones,
       [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-    // const array<CCTK_INT, dim> indextype = {1, 1, 1};
-    // const GF3D2layout layout(cctkGH, indextype);
     CCTK_INT idx = CCC_layout.linear(p.I);
-    // CCTK_INT idx = p.I[0] + cctk_lsh[0] * p.I[1] + cctk_lsh[0] * cctk_lsh[1] * p.I[2];
 
     if (CCTK_EQUALS(initial_lapse, "MeudonBNSX")) { 
       alp_cc(p.I) = bin_ns.nnn[idx];
@@ -182,8 +211,10 @@ void MeudonBNSX_initialise(CCTK_ARGUMENTS)
       rho(p.I) = bin_ns.nbar[idx] / rho_unit;
       if (!recalculate_eps)
         eps(p.I) = bin_ns.ener_spec[idx];
-
       //TODO: currently works only with polytropic EOS 
+      else
+	eps(p.I) = K * pow(rho(p.I), bin_ns.gamma_poly1-1.) / (bin_ns.gamma_poly1-1.);
+
       press(p.I) = K * pow(rho(p.I), bin_ns.gamma_poly1);
 
       velx(p.I) = bin_ns.u_euler_x[idx];
