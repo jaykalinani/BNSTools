@@ -27,12 +27,10 @@ using namespace Arith;
 using namespace Loop;
 
 // define namespace here for old versions of Lorene that don't do so
-namespace Lorene {}
+// namespace Lorene {}
 using namespace Lorene;
 
-extern "C"
-void MeudonBNSX_initialise(CCTK_ARGUMENTS)
-{
+extern "C" void MeudonBNSX_initialise(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_MeudonBNSX_initialise;
   DECLARE_CCTK_PARAMETERS;
 
@@ -43,81 +41,84 @@ void MeudonBNSX_initialise(CCTK_ARGUMENTS)
   // Be aware: these are the constants Lorene uses. They do differ from other
   // conventions, but they gave the best results in some tests.
 
-  CCTK_REAL const c_light  = Unites::c_si;      // speed of light [m/s]
-  CCTK_REAL const nuc_dens = Unites::rhonuc_si; // Nuclear density as used in Lorene units [kg/m^3]
-  CCTK_REAL const G_grav   = Unites::g_si;      // gravitational constant [m^3/kg/s^2]
-  CCTK_REAL const M_sun    = Unites::msol_si;   // solar mass [kg]
+  CCTK_REAL const c_light = Unites::c_si; // speed of light [m/s]
+  CCTK_REAL const nuc_dens =
+      Unites::rhonuc_si; // Nuclear density as used in Lorene units [kg/m^3]
+  CCTK_REAL const G_grav = Unites::g_si; // gravitational constant [m^3/kg/s^2]
+  CCTK_REAL const M_sun = Unites::msol_si; // solar mass [kg]
 
   // Cactus units in terms of SI units:
   // (These are derived from M = M_sun, c = G = 1, and using 1/M_sun
   // for the magnetic field)
   CCTK_REAL const cactusM = M_sun;
-  CCTK_REAL const cactusL = cactusM * G_grav / pow(c_light,2);
+  CCTK_REAL const cactusL = cactusM * G_grav / pow(c_light, 2);
   CCTK_REAL const cactusT = cactusL / c_light;
 
   // Other quantities in terms of Cactus units
-  CCTK_REAL const coord_unit = cactusL / 1.0e+3;         // from km (~1.477)
-  CCTK_REAL const rho_unit   = cactusM / pow(cactusL,3); // from kg/m^3
+  CCTK_REAL const coord_unit = cactusL / 1.0e+3;        // from km (~1.477)
+  CCTK_REAL const rho_unit = cactusM / pow(cactusL, 3); // from kg/m^3
 
-  CCTK_INFO ("Setting up coordinates");
+  CCTK_INFO("Setting up coordinates");
 
-  int const npoints = (cctk_lsh[0]-grid.nghostzones[0]-1) * (cctk_lsh[1]-grid.nghostzones[1]-1) * (cctk_lsh[2]-grid.nghostzones[2]-1);
+  const array<CCTK_INT, dim> indextype = {1, 1, 1};
+  const GF3D2layout CCC_layout(cctkGH, indextype);
+
+  int const nx = cctk_lsh[0] - 1;
+  int const ny = cctk_lsh[1] - 1;
+  int const nz = cctk_lsh[2] - 1;
+  int const npoints = nx * ny * nz;
   vector<double> xx(npoints), yy(npoints), zz(npoints);
-  
-  //TODO: currently works only with polytropic EOS 
+
+  // TODO: currently works only with polytropic EOS
   CCTK_INFO("MeudonBNSX will use the polytropic equation of state.");
- 
-  grid.loop_int<1, 1, 1>(
-      grid.nghostzones,
-      [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {    
-    const array<CCTK_INT, dim> indextype = {1, 1, 1};
-    const GF3D2layout layout(cctkGH, indextype);
-    CCTK_INT idx = layout.linear(p.I);
-    xx[idx] = p.X[0] * coord_unit;
-    yy[idx] = p.X[1] * coord_unit;
-    zz[idx] = p.X[2] * coord_unit;
-  });
-  
+
+  grid.loop_all<1, 1, 1>(grid.nghostzones,
+                         [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+                           CCTK_INT idx = CCC_layout.linear(p.I);
+                           xx[idx] = p.X[0] * coord_unit;
+                           yy[idx] = p.X[1] * coord_unit;
+                           zz[idx] = p.X[2] * coord_unit;
+                         });
+
   // --------------------------------------------------------------
   //   CHECKING FILE NAME EXISTENCE
   // --------------------------------------------------------------
   FILE *file;
-  if ((file = fopen(filename, "r")) != NULL) 
-     fclose(file);
+  if ((file = fopen(filename, "r")) != NULL)
+    fclose(file);
   else {
-     CCTK_VError(__LINE__, __FILE__, CCTK_THORNSTRING,
-                 "File \"%s\" does not exist. ABORTING", filename);
+    CCTK_VError(__LINE__, __FILE__, CCTK_THORNSTRING,
+                "File \"%s\" does not exist. ABORTING", filename);
   }
   // Handle potentially different EOS table directory. LORENE recieves that via
   // environment variable
   if (strlen(eos_table_filepath) > 0) {
     if (setenv("LORENE_TABULATED_EOS_PATH", eos_table_filepath, 1)) {
-      CCTK_ERROR("Unable to set environment variable LORENE_TABULATED_EOS_PATH");
-
+      CCTK_ERROR(
+          "Unable to set environment variable LORENE_TABULATED_EOS_PATH");
     }
   }
 
+  CCTK_VInfo(CCTK_THORNSTRING, "Reading from file \"%s\"", filename);
 
-  CCTK_VInfo (CCTK_THORNSTRING, "Reading from file \"%s\"", filename);
+  // try {
+  Bin_NS bin_ns(npoints, &xx[0], &yy[0], &zz[0], filename);
 
-  //try {
-  Bin_NS bin_ns (npoints, &xx[0], &yy[0], &zz[0], filename);
-
-  CCTK_VInfo (CCTK_THORNSTRING, "omega [rad/s]:       %g", bin_ns.omega);
-  CCTK_VInfo (CCTK_THORNSTRING, "dist [km]:           %g", bin_ns.dist);
-  CCTK_VInfo (CCTK_THORNSTRING, "dist_mass [km]:      %g", bin_ns.dist_mass);
-  CCTK_VInfo (CCTK_THORNSTRING, "mass1_b [M_sun]:     %g", bin_ns.mass1_b);
-  CCTK_VInfo (CCTK_THORNSTRING, "mass2_b [M_sun]:     %g", bin_ns.mass2_b);
-  CCTK_VInfo (CCTK_THORNSTRING, "mass_ADM [M_sun]:    %g", bin_ns.mass_adm);
-  CCTK_VInfo (CCTK_THORNSTRING, "L_tot [G M_sun^2/c]: %g", bin_ns.angu_mom);
-  CCTK_VInfo (CCTK_THORNSTRING, "rad1_x_comp [km]:    %g", bin_ns.rad1_x_comp);
-  CCTK_VInfo (CCTK_THORNSTRING, "rad1_y [km]:         %g", bin_ns.rad1_y);
-  CCTK_VInfo (CCTK_THORNSTRING, "rad1_z [km]:         %g", bin_ns.rad1_z);
-  CCTK_VInfo (CCTK_THORNSTRING, "rad1_x_opp [km]:     %g", bin_ns.rad1_x_opp);
-  CCTK_VInfo (CCTK_THORNSTRING, "rad2_x_comp [km]:    %g", bin_ns.rad2_x_comp);
-  CCTK_VInfo (CCTK_THORNSTRING, "rad2_y [km]:         %g", bin_ns.rad2_y);
-  CCTK_VInfo (CCTK_THORNSTRING, "rad2_z [km]:         %g", bin_ns.rad2_z);
-  CCTK_VInfo (CCTK_THORNSTRING, "rad2_x_opp [km]:     %g", bin_ns.rad2_x_opp);
+  CCTK_VInfo(CCTK_THORNSTRING, "omega [rad/s]:       %g", bin_ns.omega);
+  CCTK_VInfo(CCTK_THORNSTRING, "dist [km]:           %g", bin_ns.dist);
+  CCTK_VInfo(CCTK_THORNSTRING, "dist_mass [km]:      %g", bin_ns.dist_mass);
+  CCTK_VInfo(CCTK_THORNSTRING, "mass1_b [M_sun]:     %g", bin_ns.mass1_b);
+  CCTK_VInfo(CCTK_THORNSTRING, "mass2_b [M_sun]:     %g", bin_ns.mass2_b);
+  CCTK_VInfo(CCTK_THORNSTRING, "mass_ADM [M_sun]:    %g", bin_ns.mass_adm);
+  CCTK_VInfo(CCTK_THORNSTRING, "L_tot [G M_sun^2/c]: %g", bin_ns.angu_mom);
+  CCTK_VInfo(CCTK_THORNSTRING, "rad1_x_comp [km]:    %g", bin_ns.rad1_x_comp);
+  CCTK_VInfo(CCTK_THORNSTRING, "rad1_y [km]:         %g", bin_ns.rad1_y);
+  CCTK_VInfo(CCTK_THORNSTRING, "rad1_z [km]:         %g", bin_ns.rad1_z);
+  CCTK_VInfo(CCTK_THORNSTRING, "rad1_x_opp [km]:     %g", bin_ns.rad1_x_opp);
+  CCTK_VInfo(CCTK_THORNSTRING, "rad2_x_comp [km]:    %g", bin_ns.rad2_x_comp);
+  CCTK_VInfo(CCTK_THORNSTRING, "rad2_y [km]:         %g", bin_ns.rad2_y);
+  CCTK_VInfo(CCTK_THORNSTRING, "rad2_z [km]:         %g", bin_ns.rad2_z);
+  CCTK_VInfo(CCTK_THORNSTRING, "rad2_x_opp [km]:     %g", bin_ns.rad2_x_opp);
   // LORENE's EOS is in terms on number density n = rho/m_nucleon:
   // P = K n^Gamma
   // to convert to SI units:
@@ -130,104 +131,136 @@ void MeudonBNSX_initialise(CCTK_ARGUMENTS)
   // In Cactus units P and rho have the same units thus K_Cactus is unitless.
   // Conversion between K_SI and K_Cactus thus amounts to dividing out the
   // units of the SI quantity.
-  double K = bin_ns.kappa_poly1 * pow((pow(c_light, 6.0) /
-             ( pow(G_grav, 3.0) * M_sun * M_sun *
-               nuc_dens )),bin_ns.gamma_poly1-1.);
-  CCTK_VInfo (CCTK_THORNSTRING, "K [ET unit]:         %.15g", K);
+  double K =
+      bin_ns.kappa_poly1 *
+      pow((pow(c_light, 6.0) / (pow(G_grav, 3.0) * M_sun * M_sun * nuc_dens)),
+          bin_ns.gamma_poly1 - 1.);
+  CCTK_VInfo(CCTK_THORNSTRING, "K [ET unit]:         %.15g", K);
 
-  assert (bin_ns.np == npoints);
+  assert(bin_ns.np == npoints);
 
-  CCTK_INFO ("Filling in Cactus grid points");
+  CCTK_INFO("Initializing spacetime helpers to zero");
 
-  grid.loop_int<1, 1, 1>(
-      grid.nghostzones,
-      [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-    const array<CCTK_INT, dim> indextype = {1, 1, 1};
-    const GF3D2layout layout(cctkGH, indextype);
-    CCTK_INT idx = layout.linear(p.I);
+  grid.loop_all<1, 1, 1>(grid.nghostzones,
+                         [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+                           alp_cc(p.I) = 0.0;
 
-    if (CCTK_EQUALS(initial_lapse, "MeudonBNSX")) { 
-      alp_cc(p.I) = bin_ns.nnn[idx];
-    }
+                           betax_cc(p.I) = 0.0;
+                           betay_cc(p.I) = 0.0;
+                           betaz_cc(p.I) = 0.0;
 
-    if (CCTK_EQUALS(initial_shift, "MeudonBNSX")) { 
-      betax_cc(p.I) = -bin_ns.beta_x[idx];
-      betay_cc(p.I) = -bin_ns.beta_y[idx];
-      betaz_cc(p.I) = -bin_ns.beta_z[idx];
-    }
+                           dtbetax_cc(p.I) = 0.0;
+                           dtbetay_cc(p.I) = 0.0;
+                           dtbetaz_cc(p.I) = 0.0;
 
-    if (CCTK_EQUALS(initial_data, "MeudonBNSX")) {
-      gxx_cc(p.I) = bin_ns.g_xx[idx];
-      gxy_cc(p.I) = bin_ns.g_xy[idx];
-      gxz_cc(p.I) = bin_ns.g_xz[idx];
-      gyy_cc(p.I) = bin_ns.g_yy[idx];
-      gyz_cc(p.I) = bin_ns.g_yz[idx];
-      gzz_cc(p.I) = bin_ns.g_zz[idx];
+                           gxx_cc(p.I) = 0.0;
+                           gxy_cc(p.I) = 0.0;
+                           gxz_cc(p.I) = 0.0;
+                           gyy_cc(p.I) = 0.0;
+                           gyz_cc(p.I) = 0.0;
+                           gzz_cc(p.I) = 0.0;
 
-      kxx_cc(p.I) = bin_ns.k_xx[idx] * coord_unit;
-      kxy_cc(p.I) = bin_ns.k_xy[idx] * coord_unit;
-      kxz_cc(p.I) = bin_ns.k_xz[idx] * coord_unit;
-      kyy_cc(p.I) = bin_ns.k_yy[idx] * coord_unit;
-      kyz_cc(p.I) = bin_ns.k_yz[idx] * coord_unit;
-      kzz_cc(p.I) = bin_ns.k_zz[idx] * coord_unit;
-    }
+                           kxx_cc(p.I) = 0.0;
+                           kxy_cc(p.I) = 0.0;
+                           kxz_cc(p.I) = 0.0;
+                           kyy_cc(p.I) = 0.0;
+                           kyz_cc(p.I) = 0.0;
+                           kzz_cc(p.I) = 0.0;
+                         });
 
-    if (CCTK_EQUALS(initial_data, "MeudonBNSX")) {
-      rho(p.I) = bin_ns.nbar[idx] / rho_unit;
-      if (!recalculate_eps)
-        eps(p.I) = bin_ns.ener_spec[idx];
+  CCTK_INFO("Filling in Cactus grid points");
 
-      //TODO: currently works only with polytropic EOS 
-      press(p.I) = K * pow(rho(p.I), bin_ns.gamma_poly1);
+  grid.loop_all<1, 1, 1>(
+      grid.nghostzones, [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        CCTK_INT idx = CCC_layout.linear(p.I);
 
-      velx(p.I) = bin_ns.u_euler_x[idx];
-      vely(p.I) = bin_ns.u_euler_y[idx];
-      velz(p.I) = bin_ns.u_euler_z[idx];
+        if (CCTK_EQUALS(initial_lapse, "MeudonBNSX")) {
+          alp_cc(p.I) = bin_ns.nnn[idx];
+        }
 
-      // Especially the velocity is set to strange values outside of the
-      // matter region, so take care of this in the following way
-      if (rho(p.I) < 1.e-30) {
-        rho(p.I) = 1.e-30;
-        velx(p.I) = 0.0;
-        vely(p.I) = 0.0;
-        velz(p.I) = 0.0;
-        eps(p.I) = K * pow(rho(p.I), bin_ns.gamma_poly1-1.) / (bin_ns.gamma_poly1-1.);
-        press(p.I) = K * pow(rho(p.I), bin_ns.gamma_poly1);
-      }
-    }
+        if (CCTK_EQUALS(initial_shift, "MeudonBNSX")) {
+          betax_cc(p.I) = -bin_ns.beta_x[idx];
+          betay_cc(p.I) = -bin_ns.beta_y[idx];
+          betaz_cc(p.I) = -bin_ns.beta_z[idx];
+        }
 
-//  });
+        if (CCTK_EQUALS(initial_data, "MeudonBNSX")) {
+          gxx_cc(p.I) = bin_ns.g_xx[idx];
+          gxy_cc(p.I) = bin_ns.g_xy[idx];
+          gxz_cc(p.I) = bin_ns.g_xz[idx];
+          gyy_cc(p.I) = bin_ns.g_yy[idx];
+          gyz_cc(p.I) = bin_ns.g_yz[idx];
+          gzz_cc(p.I) = bin_ns.g_zz[idx];
 
-//  {
+          kxx_cc(p.I) = bin_ns.k_xx[idx] * coord_unit;
+          kxy_cc(p.I) = bin_ns.k_xy[idx] * coord_unit;
+          kxz_cc(p.I) = bin_ns.k_xz[idx] * coord_unit;
+          kyy_cc(p.I) = bin_ns.k_yy[idx] * coord_unit;
+          kyz_cc(p.I) = bin_ns.k_yz[idx] * coord_unit;
+          kzz_cc(p.I) = bin_ns.k_zz[idx] * coord_unit;
+        }
 
-    if (CCTK_EQUALS(initial_lapse, "MeudonBNSX")) { 
-      if (CCTK_EQUALS (initial_dtlapse, "MeudonBNSX")) {
-        CCTK_ERROR("Code for computing time derivatives of lapse is not yet implemented");
-      } else if (CCTK_EQUALS (initial_dtlapse, "none") or CCTK_EQUALS(initial_dtlapse,"zero")) {
-        dtalp_cc(p.I) = 0.0;
-      } else {
-        CCTK_WARN (CCTK_WARN_ABORT, "internal error");
-      }
-    }
+        if (CCTK_EQUALS(initial_data, "MeudonBNSX")) {
+          rho(p.I) = bin_ns.nbar[idx] / rho_unit;
+          if (!recalculate_eps)
+            eps(p.I) = bin_ns.ener_spec[idx];
+          // TODO: currently works only with polytropic EOS
+          else
+            eps(p.I) = K * pow(rho(p.I), bin_ns.gamma_poly1 - 1.) /
+                       (bin_ns.gamma_poly1 - 1.);
 
-    if (CCTK_EQUALS(initial_shift, "MeudonBNSX")) { 
-      if (CCTK_EQUALS (initial_dtshift, "MeudonBNSX")) {
-        CCTK_ERROR("Code for calculating time derivatives of shift is not yet implemented");
-      } else if (CCTK_EQUALS (initial_dtshift, "none") or CCTK_EQUALS(initial_dtshift,"zero")) {
-        dtbetax_cc(p.I) = 0.0;
-        dtbetay_cc(p.I) = 0.0;
-        dtbetaz_cc(p.I) = 0.0;
-      } else {
-        CCTK_WARN (CCTK_WARN_ABORT, "internal error");
-      }
-    }
-  });
+          press(p.I) = K * pow(rho(p.I), bin_ns.gamma_poly1);
 
-  CCTK_INFO ("Done.");
-//  } catch (ios::failure e) {
-//    CCTK_VWarn (CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,
-//                "Could not read initial data from file '%s': %s", filename, e.what());
-//  }
+          velx(p.I) = bin_ns.u_euler_x[idx];
+          vely(p.I) = bin_ns.u_euler_y[idx];
+          velz(p.I) = bin_ns.u_euler_z[idx];
+
+          // Especially the velocity is set to strange values outside of the
+          // matter region, so take care of this in the following way
+          if (rho(p.I) < 1.e-30) {
+            rho(p.I) = 1.e-30;
+            velx(p.I) = 0.0;
+            vely(p.I) = 0.0;
+            velz(p.I) = 0.0;
+            eps(p.I) = K * pow(rho(p.I), bin_ns.gamma_poly1 - 1.) /
+                       (bin_ns.gamma_poly1 - 1.);
+            press(p.I) = K * pow(rho(p.I), bin_ns.gamma_poly1);
+          }
+        }
+
+        if (CCTK_EQUALS(initial_lapse, "MeudonBNSX")) {
+          if (CCTK_EQUALS(initial_dtlapse, "MeudonBNSX")) {
+            CCTK_ERROR("Code for computing time derivatives of lapse is not "
+                       "yet implemented");
+          } else if (CCTK_EQUALS(initial_dtlapse, "none") or
+                     CCTK_EQUALS(initial_dtlapse, "zero")) {
+            dtalp_cc(p.I) = 0.0;
+          } else {
+            CCTK_WARN(CCTK_WARN_ABORT, "internal error");
+          }
+        }
+
+        if (CCTK_EQUALS(initial_shift, "MeudonBNSX")) {
+          if (CCTK_EQUALS(initial_dtshift, "MeudonBNSX")) {
+            CCTK_ERROR("Code for calculating time derivatives of shift is not "
+                       "yet implemented");
+          } else if (CCTK_EQUALS(initial_dtshift, "none") or
+                     CCTK_EQUALS(initial_dtshift, "zero")) {
+            dtbetax_cc(p.I) = 0.0;
+            dtbetay_cc(p.I) = 0.0;
+            dtbetaz_cc(p.I) = 0.0;
+          } else {
+            CCTK_WARN(CCTK_WARN_ABORT, "internal error");
+          }
+        }
+      });
+
+  CCTK_INFO("Done.");
+  //  } catch (ios::failure e) {
+  //    CCTK_VWarn (CCTK_WARN_ABORT, __LINE__, __FILE__, CCTK_THORNSTRING,
+  //                "Could not read initial data from file '%s': %s", filename,
+  //                e.what());
+  //  }
 }
 
 extern "C" void MeudonBNSX_Interpolation_C2V(CCTK_ARGUMENTS) {
@@ -264,7 +297,6 @@ extern "C" void MeudonBNSX_Interpolation_C2V(CCTK_ARGUMENTS) {
                              });
 
   CCTK_INFO("Done interpolation for ADM variables.");
+}
 
-} 
-
-} //namespace
+} // namespace MeudonBNSX

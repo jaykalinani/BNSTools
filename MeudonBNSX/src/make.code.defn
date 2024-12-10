@@ -1,7 +1,7 @@
-# Main make.code.defn file for thorn Meudon_Bin_NS
+#Main make.code.defn file for thorn Meudon_Bin_NS
 
-# Source files in this directory
+#Source files in this directory
 SRCS = Bin_NS.cxx
 
-# Subdirectories containing source files
-SUBDIRS = 
+#Subdirectories containing source files
+           SUBDIRS =
