@@ -30,4 +30,4 @@ CCTK_DEVICE CCTK_HOST T calc_avg_c2v(const GF3D2<T> &gf, const PointDesc &p) {
   return gf_avg / 8.0;
 }
 
-} // namespace 
+} // namespace RNSReader
