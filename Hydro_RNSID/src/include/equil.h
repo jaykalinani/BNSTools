@@ -1,3 +1,4 @@
+namespace RNSReader {
 
 void make_grid( double s_gp[SDIV+1], 
                 double mu[MDIV+1]);                        
@@ -184,4 +185,4 @@ void iterate(double s_gp[SDIV+1],
 
 
 
-
+}

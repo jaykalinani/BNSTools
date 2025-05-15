@@ -2,6 +2,8 @@
 #define _RNSID_H_ 1
 
 #ifdef __cplusplus
+namespace RNSReader {
+
 extern "C" 
 {
 #endif
@@ -53,6 +55,7 @@ void rnsid(
   
   
 #ifdef __cplusplus
+}
 }
 #endif
 

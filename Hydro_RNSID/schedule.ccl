@@ -17,19 +17,20 @@ if (CCTK_Equals(initial_data,"hydro_rnsid"))
    SCHEDULE Hydro_rnsid_init IN HydroBaseX_InitialData
    {
      LANG: C
-     WRITES: metric_cc(interior)
-     WRITES: lapse_cc(interior)
-     WRITES: shift_cc(interior)
-     WRITES: curv_cc(interior)
-     WRITES: dtlapse_cc(interior)
-     WRITES: dtshift_cc(interior)
-     WRITES: HYDROBASEX::eps(interior)
-     WRITES: HYDROBASEX::rho(interior)
-     WRITES: HYDROBASEX::vel(interior)
-     WRITES: HYDROBASEX::press(interior)
-     SYNC: metric_cc lapse_cc shift_cc curv_cc dtlapse_cc dtshift_cc
+     WRITES: metric_cc(everywhere)
+     WRITES: lapse_cc(everywhere)
+     WRITES: shift_cc(everywhere)
+     WRITES: curv_cc(everywhere)
+     WRITES: dtlapse_cc(everywhere)
+     WRITES: dtshift_cc(everywhere)
+     WRITES: HYDROBASEX::eps(everywhere)
+     WRITES: HYDROBASEX::rho(everywhere)
+     #WRITES: HYDROBASEX::w_lorentz(everywhere)
+     WRITES: HYDROBASEX::vel(everywhere)
+     WRITES: HYDROBASEX::press(everywhere)
+     #SYNC: metric_cc lapse_cc shift_cc curv_cc dtlapse_cc dtshift_cc
      #SYNC:   ADMBaseX::metric,   ADMBaseX::curv,   ADMBaseX::lapse,   ADMBaseX::shift
-     SYNC:   HydroBaseX::rho HydroBaseX::press HydroBaseX::eps HydroBaseX::vel
+     #SYNC:   HydroBaseX::rho HydroBaseX::press HydroBaseX::eps HydroBaseX::vel
   } "Create Rotating Neutron Star Initial Data"
 
   SCHEDULE RNSReader_Interpolation_C2V IN HydroBaseX_InitialData AFTER Hydro_rnsid_init

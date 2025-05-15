@@ -1,9 +1,14 @@
 #ifndef _RNSID_UTILS_H_
 #define _RNSID_UTILS_H_
 
+#include <loop_device.hxx>
+
 #define IMAX(a,b) ( a>b ? a : b ) 
 #define IMIN(a,b) ( a<b ? a : b ) 
 #define SIGN(a,b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
+
+namespace RNSReader {
+using namespace Loop;
 
 double **array_allocate(long nrl, long nrh, long ncl, long nch);
 void array_free(double **m, long nrl, long nrh, long ncl, long nch);
@@ -38,13 +43,14 @@ void grid_interp(double **old,
                  int nx,
                  int ny,
                  int nz,  
-                 double *x_grid,
-                 double *y_grid,
-                 double *z_grid, 
-                 int i,
-                 int j,
-                 int k, 
-                 double *new,
+                 // double *x_grid,
+                 // double *y_grid,
+                 // double *z_grid, 
+                 // int i,
+                 // int j,
+                 // int k, 
+                 PointDesc p,
+                 double *vnew,
                  int sign);
  
 
@@ -54,12 +60,13 @@ void grid_interp_all( double *s_gp,
                       int     nx,
                       int     ny,
                       int     nz, 
-                      double *x_grid,
-                      double *y_grid,
-                      double *z_grid, 
-                      int i,
-                      int j,
-                      int k, 
+                      // double *x_grid,
+                      // double *y_grid,
+                      // double *z_grid, 
+                      // int i,
+                      // int j,
+                      // int k, 
+                 			PointDesc p,
                       double **nu, 
                       double **B, 
                       double **alpha, 
@@ -166,4 +173,5 @@ void transform_units(
 		 double *J);
 
 
+} // namespace RNSReader
 #endif

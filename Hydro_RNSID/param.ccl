@@ -1,43 +1,51 @@
 # Parameter definitions for thorn Hydro_rnsid
 # $Header$
 
-shares:HydroBase
-
-USES CCTK_INT timelevels
+#shares:HydroBaseX
+#
+#USES CCTK_INT timelevels
 
 private:
 
+# NOTE: These params are used to generate an RNS solution and are thus disabled
+# for this stripped-down reader. CarpetX doesn't like treating parameters as non-consts?
+
+# KEYWORD rotation_type "Specify type of rotation law"
+# {
+#  "uniform" :: "uniform rotation"
+#  "diff" :: "KEH differential rotation law"
+# } "uniform"
+
+# REAL A_diff "constant A in differential rotation law"
+# {
+#   0.0: :: "Any positive number"
+# } 1.0   
+
+# REAL axes_ratio "rnsid axes ratio"
+# {
+#   0: :: "Any positive number"
+# } 1
+
+# KEYWORD eos_type "Specify type of equation of state"
+# {
+#  "poly" :: "Polytropic EOS"
+#  "tab"  :: "Tabulated EOS"
+# } "poly"
+
+# STRING eos_file "Equation of state table"
+# {
+#  .* :: "EOS table file"
+# } ""
+
+
 ########## -----------------------------------------------------------------
-
-KEYWORD rotation_type "Specify type of rotation law"
-{
- "uniform" :: "uniform rotation"
- "diff" :: "KEH differential rotation law"
-} "uniform"
-
-
-REAL axes_ratio "rnsid axes ratio"
-{
-  0: :: "Any positive number"
-} 1
 
 REAL rho_central "Central Density for Star"
 {
   : :: ""
 } 1.24e-3
 
-REAL A_diff "constant A in differential rotation law"
-{
-  0.0: :: "Any positive number"
-} 1.0   
-
 ########## -----------------------------------------------------------------
-
-KEYWORD eos_type "Specify type of equation of state"
-{
- "poly" :: "Polytropic EOS"
- "tab"  :: "Tabulated EOS"
-} "poly"
 
 REAL RNS_Gamma "If we're using a different EoS at run time, this is the RNS Gamma"
 {
@@ -49,11 +57,6 @@ REAL RNS_K "If we're using a different EoS at run time, this is the RNS K"
   *:* :: "Will be ignored if negative"
 } 100
 
-
-STRING eos_file "Equation of state table"
-{
- .* :: "EOS table file"
-} ""
 
 ########## -----------------------------------------------------------------
 
@@ -111,7 +114,7 @@ INT RNS_lmax "max. term in Legendre poly."
 
 ########## -----------------------------------------------------------------
 
-shares: ADMBase
+shares: ADMBaseX
 EXTENDS KEYWORD initial_data ""
 {
   "hydro_rnsid"	:: "Construnct stationary initial data with rnsid"
@@ -127,7 +130,7 @@ EXTENDS KEYWORD initial_shift ""
   "hydro_rnsid"	:: "Construnct stationary initial data with rnsid"
 }
 
-shares: hydrobase
+shares: HydroBaseX
 EXTENDS KEYWORD initial_hydro ""
 {
   "hydro_rnsid"	:: "Construnct stationary initial data with rnsid"

@@ -1,3 +1,4 @@
+namespace RNSReader {
 
 void hunt(double xx[], int n, double x, int *jlo);
 
@@ -72,3 +73,4 @@ double rotation_law( double x,
                      double mugp, 
                      double Omega_c,
 		     double A_diff);
+}

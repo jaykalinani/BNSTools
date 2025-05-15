@@ -1,7 +1,0 @@
-# Main make.configuration.defn file for Hydro_RNS
-
-# Define this thorn's utilities
-ALL_UTILS += RNS RNS_readID
-
-
-	

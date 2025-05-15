@@ -30,8 +30,8 @@
 /*#define SDIV 401 */
 
 /* MAXIMUM RESOLUTION (NO POINT IN GOING BEYOND THAT DUE TO GIBBS ERRORS) */
-#define MDIV 301 
-#define SDIV 601
+#define MDIV 401 
+#define SDIV 801
 #define DM (1.0/(MDIV-1.0))          /* spacing in mu direction */ 
 #define RDIV 900                     /* grid point in RK integration */ 
 #define SMAX 0.9999                  /* maximum value of s-coordinate */  
@@ -57,10 +57,10 @@
   http://www-pdg.lbl.gov/2016/reviews/rpp2016-rev-astrophysical-constants.pdf
   ==============================================================================  */
 
-#define C 2.99792458e10              /* speed of light in vacuum */
+#define CLIGHT 2.99792458e10         /* speed of light in vacuum */
 #define G 6.6738e-8                  /* gravitational constant */ 
-#define KAPPA (1.0e-15*C*C/G)        /* scaling factor */
-#define KSCALE (KAPPA*G/(C*C*C*C))   /* another scaling factor */
+#define KAPPA (1.0e-15*CLIGHT*CLIGHT/G)        /* scaling factor */
+#define KSCALE (KAPPA*G/(CLIGHT*CLIGHT*CLIGHT*CLIGHT))   /* another scaling factor */
 #define MSUN 1.9885e33               /* Mass of Sun */
 #define SQ(x) ((x)*(x))              /* square macro */
 #define MB 1.66e-24                  /* baryon mass (conventional) */
