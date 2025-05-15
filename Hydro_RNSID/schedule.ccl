@@ -1,0 +1,59 @@
+# Schedule definitions for thorn rnsid
+
+if (CCTK_Equals(initial_data,"hydro_rnsid")) 
+{
+  STORAGE:ADMBaseX::metric,ADMBaseX::curv,ADMBaseX::lapse,ADMBaseX::shift
+
+  #schedule Hydro_RNSID_CheckParameters  AT CCTK_PARAMCHECK
+  #{
+  #  LANG: C
+  #} "Check parameters"
+
+  ##SCHEDULE Hydro_RNSID_RefinementLevel IN HydroBaseX_Initial BEFORE hydro_rnsid_init
+  ##{
+  ##  LANG: F90
+  ##} "Compute the current refinement level for RNSID"
+
+   SCHEDULE Hydro_rnsid_init IN HydroBaseX_InitialData
+   {
+     LANG: C
+     WRITES: metric_cc(interior)
+     WRITES: lapse_cc(interior)
+     WRITES: shift_cc(interior)
+     WRITES: curv_cc(interior)
+     WRITES: dtlapse_cc(interior)
+     WRITES: dtshift_cc(interior)
+     WRITES: HYDROBASEX::eps(interior)
+     WRITES: HYDROBASEX::rho(interior)
+     WRITES: HYDROBASEX::vel(interior)
+     WRITES: HYDROBASEX::press(interior)
+     SYNC: metric_cc lapse_cc shift_cc curv_cc dtlapse_cc dtshift_cc
+     #SYNC:   ADMBaseX::metric,   ADMBaseX::curv,   ADMBaseX::lapse,   ADMBaseX::shift
+     SYNC:   HydroBaseX::rho HydroBaseX::press HydroBaseX::eps HydroBaseX::vel
+  } "Create Rotating Neutron Star Initial Data"
+
+  SCHEDULE RNSReader_Interpolation_C2V IN HydroBaseX_InitialData AFTER Hydro_rnsid_init
+  {
+		LANG: C
+		READS: metric_cc(everywhere)
+		READS: lapse_cc(everywhere)
+		READS: shift_cc(everywhere)
+		READS: curv_cc(everywhere)
+		READS: dtlapse_cc(everywhere)
+		READS: dtshift_cc(everywhere)
+
+		WRITES: ADMBaseX::metric(interior)
+		WRITES: ADMBaseX::lapse(interior)
+		WRITES: ADMBaseX::shift(interior)
+		WRITES: ADMBaseX::curv(interior)
+		WRITES: ADMBaseX::dtlapse(interior)
+		WRITES: ADMBaseX::dtshift(interior)
+
+		SYNC: ADMBaseX::metric ADMBaseX::lapse ADMBaseX::shift ADMBaseX::curv
+		SYNC: ADMBaseX::dtlapse ADMBaseX::dtshift
+  } "Interpolate metric from cell center to vertex"
+
+}
+
+
+
