@@ -233,7 +233,7 @@ void hdf5_read_var(int *sdiv, int *mdiv, const char fname[],
                    /* ------------------- */
                    double *s_qp, /*SDIV+1*/
                    double *mu,   /*MDIV+1*/
-                                 /* ------------------- */
+                   /* ------------------- */
                    double **rho_potential, double **gama, double **alpha,
                    double **omega, double **energy, double **pressure,
                    double **enthalpy, double **velocity_sq, double *Omega,
@@ -358,12 +358,14 @@ void hdf5_read_var(int *sdiv, int *mdiv, const char fname[],
   /* ============================================= */
   dataset_id = H5Dopen(file_id, "/s_qp", H5P_DEFAULT);
 
+  printf("Reading s_qp.");
   datasetH5type = H5Dget_type(dataset_id);
   datasetH5type = H5Tget_native_type(datasetH5type, H5T_DIR_DEFAULT);
   status =
       H5Dread(dataset_id, datasetH5type, H5S_ALL, H5S_ALL, H5P_DEFAULT, s_qp);
   status = H5Dclose(dataset_id);
 
+  printf("Reading mu.");
   dataset_id = H5Dopen(file_id, "/mu", H5P_DEFAULT);
   status =
       H5Dread(dataset_id, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, mu);
@@ -377,6 +379,10 @@ void hdf5_read_var(int *sdiv, int *mdiv, const char fname[],
   /*  Read the data set for variables              */
   /* ============================================= */
   for (varIndex = 0; varIndex < varlistLEN; varIndex++) {
+    printf("Reading grid var ");
+    printf(varlist[varIndex].name);
+    printf("\n");
+
     dset_data = (double *)malloc(*sdiv * *mdiv * sizeof(double));
     dims[0] = *sdiv;
     dims[1] = *mdiv;

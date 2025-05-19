@@ -1,0 +1,280 @@
+# q1
+$itlast = 32
+$final_time = 1000
+$xmin = -640
+$xmax = +640
+$ncells = 300
+$ncellsz = 225
+$nlevels = 7
+$error_threshold = 0.9
+$dtfac = 0.35
+$out_every = 1024
+
+ActiveThorns = "
+    ADMBaseX
+    CarpetX
+    CoordinatesX
+    BoxInBox
+    HydroBaseX
+    IOUtil
+    ODESolvers
+    TimerReport
+    TmunuBaseX
+    Z4c
+    AsterX
+    AsterSeeds
+    RNSReader
+    Subcycling
+    VolumeIntegrals_GRMHDX
+"
+
+Cactus::cctk_show_schedule = yes
+
+Cactus::presync_mode = "mixed-error"
+
+Cactus::terminate = "iteration"
+Cactus::cctk_itlast = $itlast
+Cactus::cctk_final_time = $final_time
+
+CarpetX::verbose = no
+CarpetX::poison_undefined_values = no
+CarpetX::use_subcycling_wip = yes
+CarpetX::restrict_during_sync = no
+
+# =============================================================================
+# Grid
+# =============================================================================
+
+CarpetX::xmin = $xmin
+CarpetX::ymin = $xmin
+CarpetX::zmin = $xmin
+
+CarpetX::xmax = $xmax
+CarpetX::ymax = $xmax
+CarpetX::zmax = $xmax
+
+CarpetX::ncells_x = $ncells
+CarpetX::ncells_y = $ncells
+CarpetX::ncells_z = $ncellsz
+
+CarpetX::max_tile_size_x = 1024000
+CarpetX::max_tile_size_y = 1024000
+CarpetX::max_tile_size_z = 1024000
+
+CarpetX::blocking_factor_x = 1
+CarpetX::blocking_factor_y = 1
+CarpetX::blocking_factor_z = 1
+
+CarpetX::max_grid_size_x = 300
+CarpetX::max_grid_size_y = 300 
+CarpetX::max_grid_size_z = 300
+
+# CarpetX::max_grid_size_x = 54 
+# CarpetX::max_grid_size_y = 108 
+# CarpetX::max_grid_size_z = 108
+
+# CarpetX::max_grid_sizes_x[9] = 66 
+# CarpetX::max_grid_sizes_y[9] = 132 
+# CarpetX::max_grid_sizes_z[9] = 132
+
+# CarpetX::max_grid_sizes_x[10] = 108 
+# CarpetX::max_grid_sizes_y[10] = 108 
+# CarpetX::max_grid_sizes_z[10] = 108
+# 
+# CarpetX::max_grid_sizes_x[11] = 160 
+# CarpetX::max_grid_sizes_y[11] = 160
+# CarpetX::max_grid_sizes_z[11] = 160
+
+# CarpetX::refine_grid_layout = "no"
+
+CarpetX::boundary_x = "neumann" #"dirichlet"
+CarpetX::boundary_y = "neumann" #"dirichlet"
+CarpetX::boundary_z = "neumann" #"dirichlet"
+CarpetX::boundary_upper_x = "neumann" #"dirichlet"
+CarpetX::boundary_upper_y = "neumann" #"dirichlet"
+CarpetX::boundary_upper_z = "neumann" #"dirichlet"
+
+CarpetX::ghost_size = 3
+#CarpetX::interpolation_order = 3
+
+CarpetX::max_num_levels = $nlevels
+CarpetX::regrid_every = 0 #64
+
+CarpetX::prolongation_type = "ddf"
+CarpetX::prolongation_order = 5
+
+BoxInBox::num_regions = 1
+
+# Region 1
+BoxInBox::shape_1 = "cube"
+BoxInBox::num_levels_1 = 7
+BoxInBox::radius_x_1 = [-1., 320., 160., 80., 40., 20., 10.]
+BoxInBox::radius_y_1 = [-1., 320., 160., 80., 40., 20., 10.]
+BoxInBox::radius_z_1 = [-1., 240., 120., 60., 30., 15., 7.5]
+
+# =============================================================================
+# Time integration
+# =============================================================================
+
+ODESolvers::verbose = no
+ODESolvers::method = "RK4"
+CarpetX::dtfac = $dtfac
+
+# =============================================================================
+# Initial data
+# =============================================================================
+
+ADMBaseX::initial_data = "RNSReader"
+ADMBaseX::initial_lapse = "RNSReader"
+ADMBaseX::initial_shift = "RNSReader"
+ADMBaseX::initial_dtlapse = "zero"
+ADMBaseX::initial_dtshift = "zero"
+
+HydroBaseX::initial_hydro = "RNSReader"
+
+RNSReader::RNS_rho_min = 1e-11
+RNSReader::recover_2Dmodel = "yes"
+RNSReader::model2D_file = "/work/09319/acw6923/vista/EOS/Poly_jconst/solutions/Poly_jconst.hdf5"
+
+AsterSeeds::test_type = "3DTest"
+AsterSeeds::test_case = "magTOV"
+AsterSeeds::Afield_config = "internal dipole"
+AsterSeeds::Ab = 0.0
+AsterSeeds::press_cut = 0.04
+AsterSeeds::press_max = 1.638e-4
+AsterSeeds::Avec_kappa = 2.0
+
+# =============================================================================
+# AsterX Evolution
+# =============================================================================
+
+AsterX::debug_mode = "no"
+AsterX::flux_type = "HLLE"
+AsterX::vector_potential_gauge = "algebraic"
+AsterX::local_spatial_order = 4
+AsterX::update_tmunu = "yes"
+AsterX::local_estimate_error = "no"
+AsterX::use_entropy_fix = "yes"
+
+ReconX::reconstruction_method = "ppm"
+ReconX::ppm_zone_flattening = "yes"
+ReconX::ppm_shock_detection = "no"
+
+EOSX::evolution_eos = "IdealGas"
+EOSX::gl_gamma = 2.0
+EOSX::poly_gamma = 2.0
+EOSX::poly_k = 100
+EOSX::rho_min = 1e-11
+EOSX::eps_min = 1e-9
+
+Con2PrimFactory::unit_test = "no"
+Con2PrimFactory::c2p_prime = "Noble"
+Con2PrimFactory::c2p_second = "Palenzuela"
+Con2PrimFactory::c2p_tol = 1e-8
+Con2PrimFactory::max_iter = 100
+Con2PrimFactory::rho_abs_min = 1e-11
+Con2PrimFactory::eps_atmo = EOSX::eps_min
+Con2PrimFactory::p_atmo = EOSX::eps_min * EOSX::rho_min
+Con2PrimFactory::atmo_tol = 1e-3
+Con2PrimFactory::B_lim = 1e8
+Con2PrimFactory::vw_lim = 8
+Con2PrimFactory::Ye_lenient = "yes"
+#Con2PrimFactory::rho_strict = 6.4e-05 #1e8
+
+# =============================================================================
+# Spacetime Evolution
+# =============================================================================
+
+Z4c::calc_ADM_vars = yes                  # for Weyl
+Z4c::calc_ADMRHS_vars = no               # for Weyl
+Z4c::calc_constraints = yes
+Z4c::chi_floor = 1.0e-6
+Z4c::alphaG_floor = 1.0e-8
+Z4c::epsdiss = 0.32
+Z4c::boundary_conditions = "NewRadX"
+
+# =============================================================================
+# Analysis
+# =============================================================================
+
+# Volume Integrals
+VolumeIntegrals_GRMHDX::NumIntegrals = 3
+VolumeIntegrals_GRMHDX::VolIntegral_out_every = 128
+VolumeIntegrals_GRMHDX::enable_file_output = 1
+VolumeIntegrals_GRMHDX::outVolIntegral_dir = "$parfile/volume_integration"
+VolumeIntegrals_GRMHDX::verbose = 2
+
+# Integral #1: unit integrand
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[1] = "one"
+# Integral #2: CoM
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[2] = "centerofmass"
+# Integral #3: rest mass
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[3] = "restmass"
+
+# =============================================================================
+# Checkpoint
+# =============================================================================
+
+IO::checkpoint_dir = "../checkpoints"
+IO::recover_dir    = "../checkpoints"
+IO::checkpoint_ID = no
+IO::checkpoint_every = 20480
+IO::checkpoint_on_terminate = yes
+IO::recover                 = "autoprobe"
+
+CarpetX::checkpoint_method = "openpmd"
+CarpetX::recover_method    = "openpmd"
+
+# =============================================================================
+# Output
+# =============================================================================
+
+CarpetX::out_performance_every = 32
+CarpetX::out_metadata = no
+
+IO::out_dir = $parfile
+IO::out_every = $out_every
+
+CarpetX::out_norm_omit_unstable = yes
+CarpetX::out_norm_vars = "
+HydroBaseX::Bvec
+HydroBaseX::rho
+HydroBaseX::vel
+HydroBaseX::eps
+HydroBaseX::press
+ADMBaseX::lapse
+ADMBaseX::shift
+TmunuBaseX::eTtt
+TmunuBaseX::eTti
+TmunuBaseX::eTij
+Z4c::allC
+Z4c::HC
+Z4c::MtC
+"
+
+CarpetX::out_silo_vars = "
+# AsterX::Avec_x
+# AsterX::Avec_y
+# AsterX::Avec_z
+# AsterX::dB
+HydroBaseX::Bvec
+HydroBaseX::rho
+HydroBaseX::vel
+HydroBaseX::eps
+HydroBaseX::press
+ADMBaseX::lapse
+ADMBaseX::shift
+ADMBaseX::metric
+TmunuBaseX::eTtt
+TmunuBaseX::eTti
+TmunuBaseX::eTij
+Z4c::allC
+Z4c::HC
+Z4c::MtC
+"
+
+TimerReport::out_every = $out_every
+TimerReport::out_filename = "TimerReport"
+TimerReport::output_all_timers_together = yes
+TimerReport::output_all_timers_readable = yes
+TimerReport::n_top_timers = 100

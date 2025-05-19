@@ -80,6 +80,23 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
       **Omega_diff,           /* Diff. ang. vel. */
       J;
 
+  CCTK_REAL eos_k, eos_ideal_fluid_gamma, rnsid_rho_min;
+
+  CCTK_REAL gamma_center; /* central value of 3-determinant of metric,
+                             needed for applying perturbations */
+
+  if ((RNS_K < 0.0) || (RNS_Gamma < 0.0)) {
+    CCTK_WARN(0,
+              "RNS_K and RNS_Gamma must be greater than 0: using 100.0 and 2!");
+    eos_k = 100.0;
+    eos_ideal_fluid_gamma = 2.0;
+  } else {
+    eos_k = RNS_K;
+    eos_ideal_fluid_gamma = RNS_Gamma;
+  }
+
+  rnsid_rho_min = RNS_rho_min;
+
   char *message;
 
   /* These used to be params, but are now only to be read from precomputed RNS */
@@ -168,22 +185,112 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
 
   CCTK_REAL rho0_center;
 
-  CCTK_REAL eos_k, eos_ideal_fluid_gamma, rnsid_rho_min;
+ /*
+ *
+ *  HISTORICAL NOTE ON NAMES OF VARIABLES:
+ *
+ *   old name               new name (from version 1.25 on)
+ *
+ *    pert_amp               pert_amplitude (now a parameter)
+ *     Gamma_P                eos_ideal_fluid_gamma (now a parameter)
+ *      r_ratio                axes_ratio (now a parameter)
+ *       rho                    rho_potential
+ *
+ *        */
 
-  CCTK_REAL gamma_center; /* central value of 3-determinant of metric,
-                             needed for applying perturbations */
 
-  if ((RNS_K < 0.0) || (RNS_Gamma < 0.0)) {
-    CCTK_WARN(0,
-              "RNS_K and RNS_Gamma must be greater than 0: using 100.0 and 2!");
-    eos_k = 100.0;
-    eos_ideal_fluid_gamma = 2.0;
-  } else {
-    eos_k = RNS_K;
-    eos_ideal_fluid_gamma = RNS_Gamma;
+  /* COMPUTE POLYTROPIC INDEX AND CENTRAL ENERGY DENSITY */
+  n_P=1.0/(eos_ideal_fluid_gamma-1.0);
+  e_center = (eos_k*pow(rho_central,eos_ideal_fluid_gamma)/(eos_ideal_fluid_gamma-1.0)+rho_central);
+
+  /* TABULATED EOS OPTION */
+  if(strcmp(eos_type,"tab")==0) {
+    /* --V0-- load_eos( eos_file, log_e_tab, log_p_tab, log_h_tab, log_n0_tab, Gamma_tab, &n_tab ); */
+    int n_nearest;
+    double n0;
+    /* ==================================================== */
+    /* printf(" TAB eos from file: %s\n",eos_file); */
+    message = (char *)malloc(200*sizeof(char));
+    sprintf(message," TAB eos from file: %s",eos_file);
+    CCTK_INFO(message);
+    free(message);
+    /* ==================================================== */
+    load_eos( eos_file, log_e_tab, log_p_tab, log_h_tab, log_n0_tab, &n_tab );
+    n_nearest = 50;
+    n0 = rho_central/(MB*cactusM);
+    e_center = pow(10.0,interp(log_n0_tab, log_e_tab, n_tab,log10(n0), &n_nearest));
   }
 
-  rnsid_rho_min = RNS_rho_min;
+  /* SET UP GRID */
+  s_gp=(double *)malloc((SDIV+1)*sizeof(double));
+  mu=(double *)malloc((MDIV+1)*sizeof(double));
+  make_grid(s_gp, mu);
+
+  /* ALLLOCATE MEMORY */
+
+  rho_potential = array_allocate(1,SDIV,1,MDIV);
+  gama = array_allocate(1,SDIV,1,MDIV);
+  alpha = array_allocate(1,SDIV,1,MDIV);
+  omega = array_allocate(1,SDIV,1,MDIV);
+  energy = array_allocate(1,SDIV,1,MDIV);
+  pressure = array_allocate(1,SDIV,1,MDIV);
+  enthalpy = array_allocate(1,SDIV,1,MDIV);
+  velocity_sq = array_allocate(1,SDIV,1,MDIV);
+  Omega_diff = array_allocate(1,SDIV,1,MDIV);
+
+  /* INITIALIZE VARIABLES WITH ZERO */
+
+  #pragma omp parallel for
+  for(s=1;s<=SDIV;s++)
+    for(m=1;m<=MDIV;m++) {
+      rho_potential[s][m] = 0.0e0;
+      gama[s][m] = 0.0e0;
+      alpha[s][m] = 0.0e0;
+      omega[s][m] = 0.0e0;
+      energy[s][m] = 0.0e0;
+      pressure[s][m] = 0.0e0;
+      enthalpy[s][m] = 0.0e0;
+      velocity_sq[s][m] = 0.0e0;
+      Omega_diff[s][m] = 0.0e0;
+    }
+
+  /* SET DEFAULT EQUILIBRIUM PARAMETERS */
+
+  if(strcmp(eos_type,"tab")==0) {
+    e_surface=7.8e-15;
+    p_surface=1.12379e-28;
+    enthalpy_min=1.0/(CLIGHT*CLIGHT);
+  }
+  else {
+        e_surface=0.0;
+        p_surface=0.0;
+        enthalpy_min=0.0;
+  }
+
+  Omega_e=0.0; /* initialize ang. vel. at equator for diff. rot. */
+
+  print_dif=1;
+
+
+  z_print = nz/4;
+
+  /* CHANGE e_center TO POLYTROPIC DIMENSIONLESS UNITS */
+  /*      e_center /= ( 1.0/pow(eos_k, n_P) ); */
+
+  /* MAKE e_center DIMENSIONLESS FOR TAB. EOS */
+
+  // if(strcmp(eos_type,"tab")==0) 
+  //   e_center *= (C*C*KSCALE);
+
+
+  /* COMPUTE DIMENSIONLESS CENTRAL PRESSURE AND ENTHALPY */
+
+  /*-V0-- make_center( e_center, log_e_tab, log_p_tab, log_h_tab, n_tab,      */
+  /*-V0--             eos_type, eos_ideal_fluid_gamma, &p_center, &h_center); */
+  make_center( e_center, log_e_tab, log_p_tab, log_h_tab, n_tab,
+  eos_type, eos_k,eos_ideal_fluid_gamma, &p_center, &h_center);
+
+  rho0_center =  (e_center+p_center)*exp(-h_center);
 
   /* SET-UP INITIAL DATA */
 

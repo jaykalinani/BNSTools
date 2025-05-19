@@ -1,6 +1,6 @@
 # Schedule definitions for thorn rnsid
 
-if (CCTK_Equals(initial_data,"hydro_rnsid")) 
+if (CCTK_Equals(initial_data,"RNSReader")) 
 {
   STORAGE:ADMBaseX::metric,ADMBaseX::curv,ADMBaseX::lapse,ADMBaseX::shift
 

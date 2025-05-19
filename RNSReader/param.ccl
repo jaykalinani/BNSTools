@@ -117,23 +117,23 @@ INT RNS_lmax "max. term in Legendre poly."
 shares: ADMBaseX
 EXTENDS KEYWORD initial_data ""
 {
-  "hydro_rnsid"	:: "Construnct stationary initial data with rnsid"
+  "RNSReader"	:: "Construnct stationary initial data with rnsid"
 }
 
 EXTENDS KEYWORD initial_lapse ""
 {
-  "hydro_rnsid"	:: "Construnct stationary initial data with rnsid"
+  "RNSReader"	:: "Construnct stationary initial data with rnsid"
 }
 
 EXTENDS KEYWORD initial_shift ""
 {
-  "hydro_rnsid"	:: "Construnct stationary initial data with rnsid"
+  "RNSReader"	:: "Construnct stationary initial data with rnsid"
 }
 
 shares: HydroBaseX
 EXTENDS KEYWORD initial_hydro ""
 {
-  "hydro_rnsid"	:: "Construnct stationary initial data with rnsid"
+  "RNSReader"	:: "Construnct stationary initial data with rnsid"
 }
 
 
