@@ -49,20 +49,20 @@ SCHEDULE GROUP VI_GRMHDX_VolumeIntegralGroup AT CCTK_ANALYSIS BEFORE CarpetLib_p
 
 SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup before DoSum
 {
-  # OPTIONS: GLOBAL,LOOP-LOCAL
   LANG: C
   READS: IntegralCounter(everywhere)
-  READS: BoxInBox::position_x(everywhere)
-  READS: BoxInBox::position_y(everywhere)
-  READS: BoxInBox::position_z(everywhere)
-  READS: HydroBaseX::rho(everywhere)
-  READS: HydroBaseX::vel(everywhere)
+  READS: BoxInBox::position_x(everywhere) BoxInBox::position_y(everywhere) BoxInBox::position_z(everywhere)
+  READS: HydroBaseX::rho(everywhere) HydroBaseX::eps(everywhere) HydroBaseX::press(everywhere) HydroBaseX::entropy(everywhere)
+  READS: HydroBaseX::vel(everywhere) HydroBaseX::Bvec(everywhere)  
+  READS: ADMBaseX::alp(everywhere) ADMBaseX::shift(everywhere)
   READS: ADMBaseX::gxx(everywhere)
   READS: ADMBaseX::gxy(everywhere)
   READS: ADMBaseX::gxz(everywhere)
   READS: ADMBaseX::gyy(everywhere)
   READS: ADMBaseX::gyz(everywhere)
   READS: ADMBaseX::gzz(everywhere)
+  READS: AsterX::w_lorentz(everywhere)
+  #READS: MHD_Diagnostics::smallb2(everywhere)
   WRITES: VolIntegrand1(everywhere) 
   WRITES: VolIntegrand2(everywhere) 
   WRITES: VolIntegrand3(everywhere) 
@@ -73,9 +73,6 @@ SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup before DoSu
   WRITES: volintegral_outside_sphere__center_x(everywhere) 
   WRITES: volintegral_outside_sphere__center_y(everywhere) 
   WRITES: volintegral_outside_sphere__center_z(everywhere)
-  #SYNC: VolIntegrand1 VolIntegrand2 VolIntegrand3 VolIntegrand4
-  #SYNC: volintegral_inside_sphere__center_x volintegral_inside_sphere__center_y volintegral_inside_sphere__center_z
-  #SYNC: volintegral_outside_sphere__center_x volintegral_outside_sphere__center_y volintegral_outside_sphere__center_z
 } "Compute Integrand"
 
 SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup after ComputeIntegrand

@@ -13,6 +13,10 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_VI_GRMHDX_ComputeIntegrand;
   DECLARE_CCTK_PARAMETERS;
 
+  // rhs: m_neutron_MeV * MeV_to_erg * PRESSGF * LENGTHGF^3
+  // TODO: Put in param.ccl
+  constexpr double my_baryon_mass = 939.565379 * 1.60217733e-6 * 1.80123683248503e-39 * (6.77269222552442e-06*6.77269222552442e-06*6.77269222552442e-06);
+
   int which_integral = NumIntegrals - *IntegralCounter + 1;
   if (CCTK_MyProc == 0) {
     CCTK_VINFO("Computing Integrand %d", which_integral);
@@ -25,16 +29,23 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           CoM_integrand(VolIntegrand1, VolIntegrand2, VolIntegrand3,
-                        VolIntegrand4, p, velx, vely, velz, rho, gxx, gxy, gxz,
-                        gyy, gyz, gzz, CoM_integrand_GAMMA_SPEED_LIMIT);
+                        VolIntegrand4, p, w_lorentz, rho, gxx, gxy, gxz,
+                        gyy, gyz, gzz);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "coordvolume")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          CoordVol_integrand(VolIntegrand1, p, rho, dens_atmo);
         });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "restmass")) {
     grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          M0_integrand(VolIntegrand1, p, velx, vely, velz, rho, gxx, gxy, gxz,
-                       gyy, gyz, gzz, CoM_integrand_GAMMA_SPEED_LIMIT);
+          M0_integrand(VolIntegrand1, p, w_lorentz, rho, gxx, gxy, gxz,
+                       gyy, gyz, gzz);
         });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "usepreviousintegrands")) {
@@ -44,6 +55,180 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p)
             CCTK_ATTRIBUTE_ALWAYS_INLINE { VolIntegrand1(p.I) = 1.0; });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "density_weighted_norm_B_field")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          mean_density_weighted_B(VolIntegrand1, VolIntegrand2, p, w_lorentz, rho, Bvecx, Bvecy, Bvecz, gxx, gxy, gxz,
+                       gyy, gyz, gzz);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "kinetic_energy")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+
+          // TODO: Get BNS COM from --BNSTrackerGen-- somewhere
+          // Make sure we have updated values 
+          // before this integral is called!
+
+          double cms_x = 0.0;
+          double cms_y = 0.0;
+
+          kinetic(VolIntegrand1, VolIntegrand2, VolIntegrand3, p, velx, vely, velz, w_lorentz, rho, eps, press, gxx, gxy, gxz,
+                       gyy, gyz, gzz, cms_x, cms_y);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "kinetic_energy_palenzuela")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+
+          // TODO: Get BNS COM from --BNSTrackerGen-- somewhere
+          // Make sure we have updated values 
+          // before this integral is called!
+
+          double cms_x = 0.0;
+          double cms_y = 0.0;
+
+          kinetic_palenzuela(VolIntegrand1, VolIntegrand2, VolIntegrand3, p, velx, vely, velz, w_lorentz, rho, eps, press,
+                       alp, betax, betay, betaz, gxx, gxy, gxz,
+                       gyy, gyz, gzz, cms_x, cms_y);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "kinetic_energy_shibata")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+
+          // TODO: Get BNS COM from --BNSTrackerGen-- somewhere
+          // Make sure we have updated values 
+          // before this integral is called!
+
+          double cms_x = 0.0;
+          double cms_y = 0.0;
+
+          kinetic_shibata(VolIntegrand1, VolIntegrand2, VolIntegrand3, p, velx, vely, velz, w_lorentz, rho, eps, press,
+                       alp, betax, betay, betaz, gxx, gxy, gxz,
+                       gyy, gyz, gzz, cms_x, cms_y);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "kinetic_energy_total")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+
+          kinetic_tot(VolIntegrand1, p, velx, vely, velz, w_lorentz, rho, eps, press,
+                       gxx, gxy, gxz, gyy, gyz, gzz);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "thermal_energy")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+
+          thermal(VolIntegrand1, VolIntegrand2, VolIntegrand3, p, w_lorentz, rho, eps, entropy,
+                       gxx, gxy, gxz, gyy, gyz, gzz, my_baryon_mass);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "magnetic_energy_total")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+
+          // TODO: Get BNS COM from --BNSTrackerGen-- somewhere
+          // Make sure we have updated values 
+          // before this integral is called!
+
+          double cms_x = 0.0;
+          double cms_y = 0.0;
+
+          magnetic_tot(VolIntegrand1, VolIntegrand2, p, velx, vely, velz, Bvecx, Bvecy, Bvecz,
+                       gxx, gxy, gxz, gyy, gyz, gzz, cms_x, cms_y);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "em_energy_ab")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+
+          // TODO: Get BNS COM from --BNSTrackerGen-- somewhere
+          // Make sure we have updated values 
+          // before this integral is called!
+
+          double cms_x = 0.0;
+          double cms_y = 0.0;
+
+          magnetic_tot_12(VolIntegrand1, VolIntegrand2, p, rho, dens_a, dens_b, velx, vely, velz, Bvecx, Bvecy, Bvecz,
+                       gxx, gxy, gxz, gyy, gyz, gzz, cms_x, cms_y);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "em_energy_cd")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+
+          // TODO: Get BNS COM from --BNSTrackerGen-- somewhere
+          // Make sure we have updated values 
+          // before this integral is called!
+
+          double cms_x = 0.0;
+          double cms_y = 0.0;
+
+          magnetic_tot_12(VolIntegrand1, VolIntegrand2, p, rho, dens_c, dens_d, velx, vely, velz, Bvecx, Bvecy, Bvecz,
+                       gxx, gxy, gxz, gyy, gyz, gzz, cms_x, cms_y);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "volume_average_norm_B_ab")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+
+          // TODO: Get BNS COM from --BNSTrackerGen-- somewhere
+          // Make sure we have updated values 
+          // before this integral is called!
+
+          double cms_x = 0.0;
+          double cms_y = 0.0;
+
+          volume_norm_B_12(VolIntegrand1, VolIntegrand2, VolIntegrand3, VolIntegrand4, p, rho, dens_a, dens_b, Bvecx, Bvecy, Bvecz,
+                       gxx, gxy, gxz, gyy, gyz, gzz, cms_x, cms_y);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "volume_average_norm_B_cd")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+
+          // TODO: Get BNS COM from --BNSTrackerGen-- somewhere
+          // Make sure we have updated values 
+          // before this integral is called!
+
+          double cms_x = 0.0;
+          double cms_y = 0.0;
+
+          volume_norm_B_12(VolIntegrand1, VolIntegrand2, VolIntegrand3, VolIntegrand4, p, rho, dens_c, dens_d, Bvecx, Bvecy, Bvecz,
+                       gxx, gxy, gxz, gyy, gyz, gzz, cms_x, cms_y);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "magnetic_energy_comov")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+
+          magnetic_co(VolIntegrand1, p, smallb2, w_lorentz,
+                       gxx, gxy, gxz, gyy, gyz, gzz);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "magnetic_energy_comov")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+
+          magnetic_co(VolIntegrand1, p, smallb2, w_lorentz,
+                       gxx, gxy, gxz, gyy, gyz, gzz);
+        });
   } else {
     /* Print a warning if no integrand is computed because
      * Integration_quantity_keyword unrecognized. */
