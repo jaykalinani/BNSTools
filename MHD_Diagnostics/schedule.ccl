@@ -1,0 +1,76 @@
+# Schedule definitions for thorn MHD_Diagnostics
+# $Header:$
+
+STORAGE: smallb_Poyn, velocity_derivatives_3p1, constraints_derivative_tensors, diagnostics_mhd
+
+STORAGE: ADMBaseX::metric, ADMBaseX::curv, ADMBaseX::lapse, ADMBaseX::shift
+
+STORAGE: HydroBaseX::rho,HydroBaseX::vel,HydroBaseX::Bvec
+
+#SCHEDULE compute_bi_b2_Poyn_fluxET AT CCTK_POSTINITIAL AFTER SetTmunu
+#{
+#  LANG: C
+#} "Set b^mu, b^2, and Poynting flux gridfunctions."
+
+# SCHEDULE init_fields IN Margherita_ID after fix_ID 
+# {
+#   LANG: C
+# } "Set all diagnostic fields to zero in the beginning."
+
+SCHEDULE init_fields IN HydroBaseX_InitialData #after ID_TabEOS_HydroQuantities
+{
+  LANG: C
+  WRITES: smallb_Poyn(everywhere) velocity_derivatives_3p1(everywhere) constraints_derivative_tensors(everywhere) diagnostics_mhd(everywhere) vels_old(everywhere)
+} "Set all diagnostic fields to zero in the beginning."
+
+SCHEDULE compute_mhd_diagnostics AT CCTK_ANALYSIS BEFORE compute_mhd_derivs
+{
+  LANG: C
+  READS: ADMBaseX::metric(everywhere) ADMBaseX::lapse(everywhere) ADMBaseX::shift(everywhere)
+  READS: HydroBaseX::vel(everywhere) HydroBaseX::Bvec(everywhere)
+  READS: AsterX::w_lorentz(everywhere)
+  WRITES: smallb_Poyn(everywhere)
+} "Set b^mu, b^2, and Poynting flux gridfunctions"
+
+SCHEDULE compute_mhd_derivs AT CCTK_ANALYSIS BEFORE VI_GRMHD_InitializeIntegralCounter
+{
+  LANG: C
+  READS: ADMBaseX::lapse(interior) ADMBaseX::shift(interior) ADMBaseX::metric(interior) ADMBaseX::curv(interior) 
+  READS: HydroBaseX::vel(interior) HydroBaseX::rho(interior) HydroBaseX::Bvec(interior)
+  READS: AsterX::Bx_stag(interior) AsterX::By_stag(interior) AsterX::Bz_stag(interior)
+  READS: AsterX::w_lorentz(interior)
+  READS: smallb_Poyn(interior), vels_old(interior)
+  WRITES: velocity_derivatives_3p1(interior) constraints_derivative_tensors(interior) diagnostics_mhd(interior) vels_old(interior)
+  SYNC: velocity_derivatives_3p1 constraints_derivative_tensors diagnostics_mhd vels_old
+} "Set fluid derivatives"
+
+
+#SCHEDULE init_testing AT CCTK_ANALYSIS BEFORE compute_spatial_derivatives_3p1 
+#{
+#  LANG: C
+#  OPTIONS: GLOBAL-EARLY,LOOP-LOCAL
+#} "Set all fields to desired values for testing."
+
+#SCHEDULE compute_bi_b2_Poyn_fluxET AT CCTK_ANALYSIS BEFORE VolumeIntegralGroup
+#{
+#  LANG: C
+#  OPTIONS: GLOBAL-EARLY,LOOP-LOCAL
+#} "Set b^mu, b^2, and Poynting flux gridfunctions."
+
+#SCHEDULE compute_spatial_derivatives_3p1 AT CCTK_ANALYSIS
+#{
+#  LANG: C
+#  OPTIONS: GLOBAL-EARLY,LOOP-LOCAL
+#} "Calculate fluid derivatives based 3p1 split."
+
+#SCHEDULE set_ghostzones AT CCTK_ANALYSIS AFTER compute_mhd_diagnostics BEFORE VI_GRMHD_InitializeIntegralCounter
+#{
+#  LANG: C
+#  OPTIONS: GLOBAL-EARLY,LOOP-LOCAL
+#} "Set ghostzones." 
+
+#SCHEDULE compute_derivatives_4 AT CCTK_ANALYSIS
+#{
+#  LANG: C
+#  OPTIONS: GLOBAL-EARLY,LOOP-LOCAL
+#} "Calculate fluid derivatives based on 4D tensors."

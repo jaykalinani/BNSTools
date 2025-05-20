@@ -1,0 +1,41 @@
+# Interface definition for thorn MHD_Diagnostics
+# $Header:$
+
+implements: MHD_Diagnostics
+inherits: HydroBaseX ADMBaseX AsterX 
+USES INCLUDE HEADER: loop_device.hxx
+
+public:
+
+real smallb_Poyn TYPE=GF CENTERING={ccc} tags='InterpNumTimelevels=1 prolongation="none" Checkpoint="no"'
+{
+  smallbt,smallbx,smallby,smallbz,smallb2,Poynx,Poyny,Poynz,Poyn2x,Poyn2y,Poyn2z,minus_one_minus_u_0,sqrt_gamma,normB
+}
+
+real velocity_derivatives_3p1 TYPE=GF CENTERING={ccc} tags='InterpNumTimelevels=1 prolongation="none" Checkpoint="no"'
+{
+  expansion_scalar,expansion_no_time_der,  
+  shear_spatial_tensor_xx,shear_spatial_tensor_xy,shear_spatial_tensor_xz,
+  shear_spatial_tensor_yy,shear_spatial_tensor_yz,
+  shear_spatial_tensor_zz,
+  kin_vorticity_spatial_xy,kin_vorticity_spatial_xz,kin_vorticity_spatial_yz,
+  kin_acceleration_spatial_x,kin_acceleration_spatial_y,kin_acceleration_spatial_z
+}
+
+real constraints_derivative_tensors TYPE=GF CENTERING={ccc} tags='InterpNumTimelevels=1 prolongation="none" Checkpoint="no"'
+{
+sigma4Ut,sigma4Ux,sigma4Uy,sigma4Uz,
+sigma4Trace,
+omega4Ut,omega4Ux,omega4Uy,omega4Uz 
+}
+
+real diagnostics_mhd TYPE=GF CENTERING={ccc} tags='InterpNumTimelevels=1 prolongation="none" Checkpoint="no"'
+{
+sigma4bb,normcurlB,a4sq,divB
+}
+# divB requires access to AsterX
+
+real vels_old TYPE=GF CENTERING={ccc} tags='InterpNumTimelevels=1 prolongation="none"'
+{
+velxold, velyold, velzold, w_lorentzold
+}

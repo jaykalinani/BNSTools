@@ -16,6 +16,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
   // rhs: m_neutron_MeV * MeV_to_erg * PRESSGF * LENGTHGF^3
   // TODO: Put in param.ccl
   constexpr double my_baryon_mass = 939.565379 * 1.60217733e-6 * 1.80123683248503e-39 * (6.77269222552442e-06*6.77269222552442e-06*6.77269222552442e-06);
+  const CCTK_REAL gamma_lim = CoM_integrand_GAMMA_SPEED_LIMIT;
 
   int which_integral = NumIntegrals - *IntegralCounter + 1;
   if (CCTK_MyProc == 0) {
@@ -30,7 +31,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           CoM_integrand(VolIntegrand1, VolIntegrand2, VolIntegrand3,
                         VolIntegrand4, p, w_lorentz, rho, gxx, gxy, gxz,
-                        gyy, gyz, gzz);
+                        gyy, gyz, gzz, gamma_lim);
         });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "coordvolume")) {
@@ -45,7 +46,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           M0_integrand(VolIntegrand1, p, w_lorentz, rho, gxx, gxy, gxz,
-                       gyy, gyz, gzz);
+                       gyy, gyz, gzz, gamma_lim);
         });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "usepreviousintegrands")) {
@@ -61,7 +62,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           mean_density_weighted_B(VolIntegrand1, VolIntegrand2, p, w_lorentz, rho, Bvecx, Bvecy, Bvecz, gxx, gxy, gxz,
-                       gyy, gyz, gzz);
+                       gyy, gyz, gzz, gamma_lim);
         });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "kinetic_energy")) {
@@ -77,7 +78,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
           double cms_y = 0.0;
 
           kinetic(VolIntegrand1, VolIntegrand2, VolIntegrand3, p, velx, vely, velz, w_lorentz, rho, eps, press, gxx, gxy, gxz,
-                       gyy, gyz, gzz, cms_x, cms_y);
+                       gyy, gyz, gzz, cms_x, cms_y, gamma_lim);
         });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "kinetic_energy_palenzuela")) {
@@ -94,7 +95,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
 
           kinetic_palenzuela(VolIntegrand1, VolIntegrand2, VolIntegrand3, p, velx, vely, velz, w_lorentz, rho, eps, press,
                        alp, betax, betay, betaz, gxx, gxy, gxz,
-                       gyy, gyz, gzz, cms_x, cms_y);
+                       gyy, gyz, gzz, cms_x, cms_y, gamma_lim);
         });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "kinetic_energy_shibata")) {
@@ -111,7 +112,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
 
           kinetic_shibata(VolIntegrand1, VolIntegrand2, VolIntegrand3, p, velx, vely, velz, w_lorentz, rho, eps, press,
                        alp, betax, betay, betaz, gxx, gxy, gxz,
-                       gyy, gyz, gzz, cms_x, cms_y);
+                       gyy, gyz, gzz, cms_x, cms_y, gamma_lim);
         });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "kinetic_energy_total")) {
@@ -120,7 +121,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
 
           kinetic_tot(VolIntegrand1, p, velx, vely, velz, w_lorentz, rho, eps, press,
-                       gxx, gxy, gxz, gyy, gyz, gzz);
+                       gxx, gxy, gxz, gyy, gyz, gzz, gamma_lim);
         });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "thermal_energy")) {
@@ -129,7 +130,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
 
           thermal(VolIntegrand1, VolIntegrand2, VolIntegrand3, p, w_lorentz, rho, eps, entropy,
-                       gxx, gxy, gxz, gyy, gyz, gzz, my_baryon_mass);
+                       gxx, gxy, gxz, gyy, gyz, gzz, my_baryon_mass, gamma_lim);
         });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "magnetic_energy_total")) {
@@ -218,7 +219,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
 
           magnetic_co(VolIntegrand1, p, smallb2, w_lorentz,
-                       gxx, gxy, gxz, gyy, gyz, gzz);
+                       gxx, gxy, gxz, gyy, gyz, gzz, gamma_lim);
         });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "magnetic_energy_comov")) {
@@ -227,7 +228,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
 
           magnetic_co(VolIntegrand1, p, smallb2, w_lorentz,
-                       gxx, gxy, gxz, gyy, gyz, gzz);
+                       gxx, gxy, gxz, gyy, gyz, gzz, gamma_lim);
         });
   } else {
     /* Print a warning if no integrand is computed because

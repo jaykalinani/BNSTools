@@ -59,9 +59,8 @@ compute_rho_star(
     const Loop::GF3D2<const double> rho0GF, const Loop::GF3D2<const double> gxx,
     const Loop::GF3D2<const double> gxy, const Loop::GF3D2<const double> gxz,
     const Loop::GF3D2<const double> gyy, const Loop::GF3D2<const double> gyz,
-    const Loop::GF3D2<const double> gzz) {
+    const Loop::GF3D2<const double> gzz, const CCTK_REAL gamma_lim) {
 
-  DECLARE_CCTK_PARAMETERS;
   // This function computes
   //  rho_* = alpha*u^0*sqrt(gamma)*rho_0
   //        = w_lorentz*sqrt(gamma)*rho_0 ,
@@ -85,8 +84,8 @@ compute_rho_star(
   const CCTK_REAL rho0 = rho0GF(p.I);
 
   CCTK_REAL w_lorentz_limited = w_lorentz;
-  if (w_lorentz > CoM_integrand_GAMMA_SPEED_LIMIT)
-    w_lorentz_limited = CoM_integrand_GAMMA_SPEED_LIMIT;
+  if (w_lorentz > gamma_lim)
+    w_lorentz_limited = gamma_lim;
   /*
    *  Original SymPy expression:
    *  "rhostar = rho0*w_lorentz_limited*sqrt(gammaDD00*gammaDD11*gammaDD22 -
@@ -109,8 +108,6 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline CCTK_REAL compute_sqrt
   const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
   const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz) {
 
-    DECLARE_CCTK_PARAMETERS;
-
     const CCTK_REAL gammaDD00 = gxx(p.I);
     const CCTK_REAL gammaDD01 = gxy(p.I);
     const CCTK_REAL gammaDD02 = gxz(p.I);
@@ -125,7 +122,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline CCTK_REAL compute_sqrt
 
 
 /* Coord Volume: */
-inline void CoordVol_integrand(
+CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void CoordVol_integrand(
     const Loop::GF3D2<double> VolIntegrand1,
     const Loop::PointDesc &p,
     const Loop::GF3D2<const double> rho0, const CCTK_REAL dens_1) {
@@ -148,9 +145,10 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void CoM_integrand(
     const Loop::GF3D2<const double> w_lorentz, const Loop::GF3D2<const double> rho0,
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
-    const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz) {
+    const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
+    const CCTK_REAL gamma_lim) {
   double rho_starL = compute_rho_star(p, w_lorentz, rho0, gxx, gxy, gxz,
-                                      gyy, gyz, gzz);
+                                      gyy, gyz, gzz, gamma_lim);
   VolIntegrand1(p.I) = rho_starL * p.x;
   VolIntegrand2(p.I) = rho_starL * p.y;
   VolIntegrand3(p.I) = rho_starL * p.z;
@@ -163,9 +161,10 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void M0_integrand(
     const Loop::GF3D2<const double> w_lorentz, const Loop::GF3D2<const double> rho0,
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
-    const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz) {
+    const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
+    const CCTK_REAL gamma_lim) {
   double rho_starL = compute_rho_star(p, w_lorentz, rho0, gxx, gxy, gxz,
-                                      gyy, gyz, gzz);
+                                      gyy, gyz, gzz, gamma_lim);
   VolIntegrand1(p.I) = rho_starL;
 }
 
@@ -178,7 +177,8 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void mean_density_weig
     const Loop::GF3D2<const double> rho0,
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
-    const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz) {
+    const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
+    const CCTK_REAL gamma_lim) {
   const CCTK_REAL gammaDD00 = gxx(p.I);
   const CCTK_REAL gammaDD01 = gxy(p.I);
   const CCTK_REAL gammaDD02 = gxz(p.I);
@@ -190,7 +190,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void mean_density_weig
   const CCTK_REAL By        = Bvecy(p.I);
   const CCTK_REAL Bz        = Bvecz(p.I);
 	
-  double rho_starL = compute_rho_star(p, w_lorentz, rho0,gxx,gxy,gxz, gyy,gyz,gzz);
+  double rho_starL = compute_rho_star(p, w_lorentz, rho0,gxx,gxy,gxz, gyy,gyz,gzz, gamma_lim);
 
   double norm_B_sq =    gammaDD00*Bx*Bx+
 	             2.*gammaDD01*Bx*By+
@@ -305,10 +305,8 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void kinetic_shibata(
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
     const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
-    const double cms_x, const double cms_y) {
+    const double cms_x, const double cms_y, const double gamma_lim) {
   
-  DECLARE_CCTK_PARAMETERS;
-
   const CCTK_REAL gammaDD00 = gxx(p.I);
   const CCTK_REAL gammaDD01 = gxy(p.I);
   const CCTK_REAL gammaDD02 = gxz(p.I);
@@ -338,7 +336,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void kinetic_shibata(
 
   CCTK_REAL w_lorentz_limited = lfac;
 
-  if(lfac > CoM_integrand_GAMMA_SPEED_LIMIT) w_lorentz_limited = CoM_integrand_GAMMA_SPEED_LIMIT;
+  if(lfac > gamma_lim) w_lorentz_limited = gamma_lim;
 
 // Covariant 3 velocity
 
@@ -419,10 +417,8 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void kinetic_palenzuel
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
     const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
-    const double cms_x, const double cms_y) {
+    const double cms_x, const double cms_y, const double gamma_lim) {
   
-  DECLARE_CCTK_PARAMETERS;
-
   const CCTK_REAL gammaDD00 = gxx(p.I);
   const CCTK_REAL gammaDD01 = gxy(p.I);
   const CCTK_REAL gammaDD02 = gxz(p.I);
@@ -452,7 +448,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void kinetic_palenzuel
 
   CCTK_REAL w_lorentz_limited = lfac;
 
-  if(lfac > CoM_integrand_GAMMA_SPEED_LIMIT) w_lorentz_limited = CoM_integrand_GAMMA_SPEED_LIMIT;
+  if(lfac > gamma_lim) w_lorentz_limited = gamma_lim;
 
 // Covariant 3 velocity
 
@@ -531,10 +527,8 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void kinetic(
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
     const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
-    const double cms_x, const double cms_y) {
+    const double cms_x, const double cms_y, const double gamma_lim) {
   
-  DECLARE_CCTK_PARAMETERS;
-
   const CCTK_REAL gammaDD00 = gxx(p.I);
   const CCTK_REAL gammaDD01 = gxy(p.I);
   const CCTK_REAL gammaDD02 = gxz(p.I);
@@ -559,7 +553,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void kinetic(
 
   CCTK_REAL w_lorentz_limited = lfac;
 
-  if(lfac > CoM_integrand_GAMMA_SPEED_LIMIT) w_lorentz_limited = CoM_integrand_GAMMA_SPEED_LIMIT;
+  if(lfac > gamma_lim) w_lorentz_limited = gamma_lim;
 
 // Covariant 3 velocity
 
@@ -621,10 +615,9 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void kinetic_tot(
     const Loop::GF3D2<const double> pressGF,
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
-    const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz) {
+    const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
+    const double gamma_lim) {
   
-  DECLARE_CCTK_PARAMETERS;
-
   const CCTK_REAL gammaDD00 = gxx(p.I);
   const CCTK_REAL gammaDD01 = gxy(p.I);
   const CCTK_REAL gammaDD02 = gxz(p.I);
@@ -660,7 +653,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void kinetic_tot(
 
   CCTK_REAL w_lorentz_limited = w_lorentz;
 
-  if(w_lorentz > CoM_integrand_GAMMA_SPEED_LIMIT) w_lorentz_limited = CoM_integrand_GAMMA_SPEED_LIMIT;
+  if(w_lorentz > gamma_lim) w_lorentz_limited = gamma_lim;
 
   CCTK_REAL wm1 = w_lorentz_limited -1.0;
 
@@ -688,9 +681,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void thermal(
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
     const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
-	  const double my_baryon_mass) {
-
-  DECLARE_CCTK_PARAMETERS;
+	  const double my_baryon_mass, const double gamma_lim) {
 
   const CCTK_REAL w_lorentz = w_lorentzGF(p.I);
   const CCTK_REAL rho0      = rho0GF(p.I);
@@ -700,7 +691,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void thermal(
 					      // for now we use neutron mass
 
   CCTK_REAL w_lorentz_limited = w_lorentz;
-  if(w_lorentz > CoM_integrand_GAMMA_SPEED_LIMIT) w_lorentz_limited = CoM_integrand_GAMMA_SPEED_LIMIT;
+  if(w_lorentz > gamma_lim) w_lorentz_limited = gamma_lim;
 
   double sqrtgamma = compute_sqrtgamma(p,gxx,gxy,gxz, gyy,gyz,gzz);
   
@@ -718,16 +709,15 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_co(
     const Loop::GF3D2<const double> smallb2GF, const Loop::GF3D2<const double> w_lorentzGF,
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
-    const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz) {
-
-  DECLARE_CCTK_PARAMETERS;
+    const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
+    const double gamma_lim) {
 
   const CCTK_REAL smallb2 = smallb2GF(p.I);
   const CCTK_REAL w_lorentz = w_lorentzGF(p.I);
 
   CCTK_REAL w_lorentz_limited = w_lorentz;
 
-  if(w_lorentz > CoM_integrand_GAMMA_SPEED_LIMIT) w_lorentz_limited = CoM_integrand_GAMMA_SPEED_LIMIT;
+  if(w_lorentz > gamma_lim) w_lorentz_limited = gamma_lim;
 
   double sqrtgamma = compute_sqrtgamma(p,gxx,gxy,gxz, gyy,gyz,gzz);
   

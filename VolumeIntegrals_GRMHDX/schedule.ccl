@@ -62,7 +62,7 @@ SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup before DoSu
   READS: ADMBaseX::gyz(everywhere)
   READS: ADMBaseX::gzz(everywhere)
   READS: AsterX::w_lorentz(everywhere)
-  #READS: MHD_Diagnostics::smallb2(everywhere)
+  READS: MHD_Diagnostics::smallb2(everywhere)
   WRITES: VolIntegrand1(everywhere) 
   WRITES: VolIntegrand2(everywhere) 
   WRITES: VolIntegrand3(everywhere) 
