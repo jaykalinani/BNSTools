@@ -37,7 +37,7 @@ SCHEDULE compute_mhd_derivs AT CCTK_ANALYSIS BEFORE VI_GRMHD_InitializeIntegralC
   LANG: C
   READS: ADMBaseX::lapse(interior) ADMBaseX::shift(interior) ADMBaseX::metric(interior) ADMBaseX::curv(interior) 
   READS: HydroBaseX::vel(interior) HydroBaseX::rho(interior) HydroBaseX::Bvec(interior)
-  READS: AsterX::Bx_stag(interior) AsterX::By_stag(interior) AsterX::Bz_stag(interior)
+  READS: AsterX::dBx_stag(interior) AsterX::dBy_stag(interior) AsterX::dBz_stag(interior)
   READS: AsterX::w_lorentz(interior)
   READS: smallb_Poyn(interior), vels_old(interior)
   WRITES: velocity_derivatives_3p1(interior) constraints_derivative_tensors(interior) diagnostics_mhd(interior) vels_old(interior)

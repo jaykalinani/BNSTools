@@ -1,11 +1,10 @@
 # q1
-$itlast = 32
-$final_time = 1000
-$xmin = -640
-$xmax = +640
-$ncells = 300
-$ncellsz = 225
-$nlevels = 7
+$itlast = 256
+$final_time = 10000
+$xmin = -160
+$xmax = +160
+$ncells = 128
+$nlevels = 5
 $error_threshold = 0.9
 $dtfac = 0.35
 $out_every = 1024
@@ -24,7 +23,9 @@ ActiveThorns = "
     AsterX
     AsterSeeds
     RNSReader
+    Silo
     Subcycling
+    MHD_Diagnostics
     VolumeIntegrals_GRMHDX
 "
 
@@ -32,7 +33,7 @@ Cactus::cctk_show_schedule = yes
 
 Cactus::presync_mode = "mixed-error"
 
-Cactus::terminate = "iteration"
+Cactus::terminate = "time"
 Cactus::cctk_itlast = $itlast
 Cactus::cctk_final_time = $final_time
 
@@ -55,7 +56,7 @@ CarpetX::zmax = $xmax
 
 CarpetX::ncells_x = $ncells
 CarpetX::ncells_y = $ncells
-CarpetX::ncells_z = $ncellsz
+CarpetX::ncells_z = $ncells
 
 CarpetX::max_tile_size_x = 1024000
 CarpetX::max_tile_size_y = 1024000
@@ -107,10 +108,10 @@ BoxInBox::num_regions = 1
 
 # Region 1
 BoxInBox::shape_1 = "cube"
-BoxInBox::num_levels_1 = 7
-BoxInBox::radius_x_1 = [-1., 320., 160., 80., 40., 20., 10.]
-BoxInBox::radius_y_1 = [-1., 320., 160., 80., 40., 20., 10.]
-BoxInBox::radius_z_1 = [-1., 240., 120., 60., 30., 15., 7.5]
+BoxInBox::num_levels_1 = 5
+BoxInBox::radius_x_1 = [-1., 80., 40., 20., 10.]
+BoxInBox::radius_y_1 = [-1., 80., 40., 20., 10.]
+BoxInBox::radius_z_1 = [-1., 60., 30., 15., 7.5]
 
 # =============================================================================
 # Time integration
@@ -132,17 +133,15 @@ ADMBaseX::initial_dtshift = "zero"
 
 HydroBaseX::initial_hydro = "RNSReader"
 
-RNSReader::RNS_rho_min = 1e-11
+RNSReader::RNS_rho_min = 1e-9
 RNSReader::recover_2Dmodel = "yes"
 RNSReader::model2D_file = "/work/09319/acw6923/vista/EOS/Poly_jconst/solutions/Poly_jconst.hdf5"
 
 AsterSeeds::test_type = "3DTest"
 AsterSeeds::test_case = "magTOV"
-AsterSeeds::Afield_config = "internal dipole"
-AsterSeeds::Ab = 0.0
-AsterSeeds::press_cut = 0.04
-AsterSeeds::press_max = 1.638e-4
-AsterSeeds::Avec_kappa = 2.0
+AsterSeeds::Afield_config = "external dipole"
+AsterSeeds::B0 = 1.197322816117099e-04 # Bmax = 10^16 G
+AsterSeeds::r0 = 13.543563919218386 # r0 = 20 km
 
 # =============================================================================
 # AsterX Evolution
@@ -164,7 +163,7 @@ EOSX::evolution_eos = "IdealGas"
 EOSX::gl_gamma = 2.0
 EOSX::poly_gamma = 2.0
 EOSX::poly_k = 100
-EOSX::rho_min = 1e-11
+EOSX::rho_min = 1e-9
 EOSX::eps_min = 1e-9
 
 Con2PrimFactory::unit_test = "no"
@@ -172,7 +171,7 @@ Con2PrimFactory::c2p_prime = "Noble"
 Con2PrimFactory::c2p_second = "Palenzuela"
 Con2PrimFactory::c2p_tol = 1e-8
 Con2PrimFactory::max_iter = 100
-Con2PrimFactory::rho_abs_min = 1e-11
+Con2PrimFactory::rho_abs_min = 1e-9
 Con2PrimFactory::eps_atmo = EOSX::eps_min
 Con2PrimFactory::p_atmo = EOSX::eps_min * EOSX::rho_min
 Con2PrimFactory::atmo_tol = 1e-3
@@ -197,26 +196,49 @@ Z4c::boundary_conditions = "NewRadX"
 # Analysis
 # =============================================================================
 
+# Parameters of thorn MHD_Diagnostics
+MHD_Diagnostics::diagnostics_compute_every = 128
+MHD_Diagnostics::derivatives_compute_every = 128
+
 # Volume Integrals
-VolumeIntegrals_GRMHDX::NumIntegrals = 3
+VolumeIntegrals_GRMHDX::NumIntegrals = 15
 VolumeIntegrals_GRMHDX::VolIntegral_out_every = 128
 VolumeIntegrals_GRMHDX::enable_file_output = 1
 VolumeIntegrals_GRMHDX::outVolIntegral_dir = "$parfile/volume_integration"
-VolumeIntegrals_GRMHDX::verbose = 2
+VolumeIntegrals_GRMHDX::verbose = 1
 
-# Integral #1: unit integrand
-VolumeIntegrals_GRMHDX::Integration_quantity_keyword[1] = "one"
-# Integral #2: CoM
-VolumeIntegrals_GRMHDX::Integration_quantity_keyword[2] = "centerofmass"
-# Integral #3: rest mass
-VolumeIntegrals_GRMHDX::Integration_quantity_keyword[3] = "restmass"
+VolumeIntegrals_GRMHDX::set_origin_with_VIX = "yes"
+VolumeIntegrals_GRMHDX::mb_VIX = 939.565379
+
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[1] = "centerofmass"
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[2] = "thermal_energy"
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[3] = "kinetic_energy"
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[4] = "kinetic_energy_palenzuela"
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[5] = "kinetic_energy_shibata"
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[6] = "kinetic_energy_total"
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[7] = "magnetic_energy_total"
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[8] = "magnetic_energy_comov"
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[9] = "density_weighted_norm_B_field"
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[10] = "volume_average_norm_B_ab"
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[11]  = "volume_average_norm_B_cd"
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[12]  = "em_energy_ab"
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[13]  = "em_energy_cd"
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[14]  = "restmass"
+VolumeIntegrals_GRMHDX::Integration_quantity_keyword[15]  = "coordvolume"
+
+VolumeIntegrals_GRMHDX::dens_atmo = 1.001e-11
+
+VolumeIntegrals_GRMHDX::dens_a = 1.6193138848638947e-08
+VolumeIntegrals_GRMHDX::dens_b = 1.6193138848638947e-05
+VolumeIntegrals_GRMHDX::dens_c = 1.6193138848638947e-05
+#VolumeIntegrals_GRMHDX::dens_d = 10
 
 # =============================================================================
 # Checkpoint
 # =============================================================================
 
-IO::checkpoint_dir = "../checkpoints"
-IO::recover_dir    = "../checkpoints"
+IO::checkpoint_dir = "./checkpoints"
+IO::recover_dir    = "./checkpoints"
 IO::checkpoint_ID = no
 IO::checkpoint_every = 20480
 IO::checkpoint_on_terminate = yes
@@ -236,6 +258,7 @@ IO::out_dir = $parfile
 IO::out_every = $out_every
 
 CarpetX::out_norm_omit_unstable = yes
+CarpetX::out_norm_every = 128
 CarpetX::out_norm_vars = "
 HydroBaseX::Bvec
 HydroBaseX::rho
@@ -244,6 +267,11 @@ HydroBaseX::eps
 HydroBaseX::press
 ADMBaseX::lapse
 ADMBaseX::shift
+MHD_Diagnostics::normB
+MHD_Diagnostics::normcurlB
+MHD_Diagnostics::smallb2
+MHD_Diagnostics::sigma4Trace
+MHD_Diagnostics::sigma4bb
 TmunuBaseX::eTtt
 TmunuBaseX::eTti
 TmunuBaseX::eTij
@@ -265,6 +293,30 @@ HydroBaseX::press
 ADMBaseX::lapse
 ADMBaseX::shift
 ADMBaseX::metric
+MHD_Diagnostics::smallb2
+MHD_Diagnostics::expansion_scalar
+#
+MHD_Diagnostics::kin_acceleration_spatial_x
+MHD_Diagnostics::kin_acceleration_spatial_y
+MHD_Diagnostics::kin_acceleration_spatial_z
+#
+MHD_Diagnostics::shear_spatial_tensor_xx
+MHD_Diagnostics::shear_spatial_tensor_xy
+MHD_Diagnostics::shear_spatial_tensor_xz
+MHD_Diagnostics::shear_spatial_tensor_yy
+MHD_Diagnostics::shear_spatial_tensor_yz
+MHD_Diagnostics::shear_spatial_tensor_zz
+#
+MHD_Diagnostics::sigma4Trace
+#
+MHD_Diagnostics::kin_vorticity_spatial_xy
+MHD_Diagnostics::kin_vorticity_spatial_xz
+MHD_Diagnostics::kin_vorticity_spatial_yz
+#
+MHD_Diagnostics::sigma4bb
+MHD_Diagnostics::normB
+MHD_Diagnostics::normcurlB
+MHD_Diagnostics::a4sq
 TmunuBaseX::eTtt
 TmunuBaseX::eTti
 TmunuBaseX::eTij

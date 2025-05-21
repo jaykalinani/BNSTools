@@ -25,7 +25,7 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_INITIAL
 {
   LANG: C
   OPTIONS: GLOBAL
-  WRITES: IntegralCounter(everywhere)
+  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere) 
   WRITES: VolIntegral(everywhere)
 } "Initialize IntegralCounter variable to zero"
 
@@ -33,7 +33,7 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLE
 {
   LANG: C
   OPTIONS: GLOBAL
-  WRITES: IntegralCounter(everywhere)
+  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere) 
 } "Initialize IntegralCounter variable to zero"
 
 SCHEDULE VI_GRMHDX_InitializeIntegralCounter before VI_GRMHDX_VolumeIntegralGroup AT CCTK_ANALYSIS
@@ -50,7 +50,7 @@ SCHEDULE GROUP VI_GRMHDX_VolumeIntegralGroup AT CCTK_ANALYSIS BEFORE CarpetLib_p
 SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup before DoSum
 {
   LANG: C
-  READS: IntegralCounter(everywhere)
+  READS: IntegralCounter(everywhere) GlobalCoM(everywhere) 
   READS: BoxInBox::position_x(everywhere) BoxInBox::position_y(everywhere) BoxInBox::position_z(everywhere)
   READS: HydroBaseX::rho(everywhere) HydroBaseX::eps(everywhere) HydroBaseX::press(everywhere) HydroBaseX::entropy(everywhere)
   READS: HydroBaseX::vel(everywhere) HydroBaseX::Bvec(everywhere)  
@@ -91,7 +91,7 @@ SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup after ComputeIntegrand
   READS: BoxInBox::position_x(everywhere)
   READS: BoxInBox::position_y(everywhere)
   READS: BoxInBox::position_z(everywhere)
-  WRITES: VolIntegral(everywhere)
+  WRITES: VolIntegral(everywhere) GlobalCoM(everywhere) 
   WRITES: BoxInBox::position_x(everywhere)
   WRITES: BoxInBox::position_y(everywhere)
   WRITES: BoxInBox::position_z(everywhere)

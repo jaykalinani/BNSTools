@@ -34,6 +34,10 @@ CCTK_INT NumIntegrals "Number of volume integrals to perform" STEERABLE = ALWAYS
   0:1000 :: "zero (disable integration) or some other number"
 } 0
 
+BOOLEAN set_origin_with_VIX "Set origin of toroidal/poloidal decomposition wrt CoM calculated via VIX. Otherwise use (0,0,0)" STEERABLE = ALWAYS
+{
+} "no"
+
 # ------------------------------
 # Density threshold values
 # for volume_average_norm_B_**
@@ -111,6 +115,10 @@ CCTK_REAL CoM_integrand_GAMMA_SPEED_LIMIT "" STEERABLE=ALWAYS
   0:* :: "Any positive number"
 } 1e4 
 
+CCTK_REAL mb_VIX "Baryon mass in MeV" STEERABLE=ALWAYS
+{
+  0:* :: "Any positive number"
+} 939.565379 
 
 ########################################
 CCTK_REAL volintegral_sphere__center_x_initial[101] "Volume integral in a spherical region: x-coord of center(s)" STEERABLE=ALWAYS

@@ -320,17 +320,21 @@ extern "C" void compute_mhd_derivs(CCTK_ARGUMENTS) {
 	double ETvz = velz(p.I);
 	double lfac   = w_lorentz(p.I);
 
+	double sqrtdet = sqrt_gamma(p.I);
+	double det = sqrtdet * sqrtdet;
+	double invdet = 1.0 / det;
+
 // Calculate also divB from AsterX staggered field
 // Use fourth-order ECHO expressions
-// TODO: check if face index is correct
+// TODO: check if face index is correct, how to handle densitized B?
 
-	double Bx_stagg = 13.*Bx_stag(p.I + p.DI[0])/12. - (Bx_stag(p.I)+Bx_stag(p.I + 2 * p.DI[0]))/24.;
-	double By_stagg = 13.*By_stag(p.I + p.DI[1])/12. - (By_stag(p.I)+By_stag(p.I + 2 * p.DI[1]))/24.;
-	double Bz_stagg = 13.*Bz_stag(p.I + p.DI[2])/12. - (Bz_stag(p.I)+Bz_stag(p.I + 2 * p.DI[2]))/24.;
+	double Bx_stagg = 13.*dBx_stag(p.I + p.DI[0])/12. - (dBx_stag(p.I)+dBx_stag(p.I + 2 * p.DI[0]))/24.;
+	double By_stagg = 13.*dBy_stag(p.I + p.DI[1])/12. - (dBy_stag(p.I)+dBy_stag(p.I + 2 * p.DI[1]))/24.;
+	double Bz_stagg = 13.*dBz_stag(p.I + p.DI[2])/12. - (dBz_stag(p.I)+dBz_stag(p.I + 2 * p.DI[2]))/24.;
 
-	double Bx_stagg_m1 = 13.*Bx_stag(p.I)/12. - (Bx_stag(p.I + p.DI[0])+Bx_stag(p.I - p.DI[0]))/24.;
-	double By_stagg_m1 = 13.*By_stag(p.I)/12. - (By_stag(p.I + p.DI[1])+By_stag(p.I - p.DI[1]))/24.;
-	double Bz_stagg_m1 = 13.*Bz_stag(p.I)/12. - (Bz_stag(p.I + p.DI[2])+Bz_stag(p.I - p.DI[2]))/24.;
+	double Bx_stagg_m1 = 13.*dBx_stag(p.I)/12. - (dBx_stag(p.I + p.DI[0])+dBx_stag(p.I - p.DI[0]))/24.;
+	double By_stagg_m1 = 13.*dBy_stag(p.I)/12. - (dBy_stag(p.I + p.DI[1])+dBy_stag(p.I - p.DI[1]))/24.;
+	double Bz_stagg_m1 = 13.*dBz_stag(p.I)/12. - (dBz_stag(p.I + p.DI[2])+dBz_stag(p.I - p.DI[2]))/24.;
 
 	divB(p.I) = dxi[1]*(Bx_stagg-Bx_stagg_m1) + dxi[2]*(By_stagg-By_stagg_m1) + dxi[3]*(Bz_stagg-Bz_stagg_m1);
 
@@ -396,10 +400,7 @@ extern "C" void compute_mhd_derivs(CCTK_ARGUMENTS) {
 
 	// Further geometric quantities -- Much of this is repeated from the previous routine, but doing it this way minimizes syncs
 	// while properly filling ghost zones?
-	double sqrtdet = sqrt_gamma(p.I);
-	double det = sqrtdet * sqrtdet;
-
-	double invdet = 1.0 / det;
+	//
 	double gupxxL=(-gyzL*gyzL + gyyL*gzzL)*invdet;
 	double gupxyL=( gxzL*gyzL - gxyL*gzzL)*invdet;
 	double gupyyL=(-gxzL*gxzL + gxxL*gzzL)*invdet;
