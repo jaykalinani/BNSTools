@@ -1,8 +1,8 @@
-# Main make.code.defn file for thorn smallbPoynET
-# $Header:$
+#Main make.code.defn file for thorn smallbPoynET
+#$Header : $
 
-# Source files in this directory
+#Source files in this directory
 SRCS = master.cxx init_fields.cxx #set_ghostzones.C
 
-# Subdirectories containing source files
-SUBDIRS = 
+#Subdirectories containing source files
+           SUBDIRS =

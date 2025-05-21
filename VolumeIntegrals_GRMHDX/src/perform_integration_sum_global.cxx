@@ -135,12 +135,13 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
   }
 
   /* Set global CoM tracker */
-  if (which_integral == 1 && CCTK_EQUALS(Integration_quantity_keyword[which_integral], "centerofmass")
-        && set_origin_with_VIX ) {
+  if (which_integral == 1 &&
+      CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "centerofmass") &&
+      set_origin_with_VIX) {
     double norm = sym_factor1 * VolIntegral[4 * (which_integral) + 3];
     *comx = sym_factor2 * VolIntegral[4 * (which_integral) + 0] / norm;
     *comy = sym_factor2 * VolIntegral[4 * (which_integral) + 1] / norm;
     *comz = sym_factor3 * VolIntegral[4 * (which_integral) + 2] / norm;
   }
-    
 }

@@ -72,8 +72,10 @@ extern "C" void VI_GRMHDX_file_output_routine_Startup(CCTK_ARGUMENTS) {
     CREATE_OUTDIR(CCTK_PASS_CTOC, outVolIntegral_dir, actual_dir);
   }
 
-  if (set_origin_with_VIX && !CCTK_EQUALS(Integration_quantity_keyword[1], "centerofmass")) {
-    CCTK_VERROR("First integral must be 'centerofmass' to set origin using this thorn!");
+  if (set_origin_with_VIX &&
+      !CCTK_EQUALS(Integration_quantity_keyword[1], "centerofmass")) {
+    CCTK_VERROR("First integral must be 'centerofmass' to set origin using "
+                "this thorn!");
   } else if (!set_origin_with_VIX) {
     CCTK_VWARN(CCTK_WARN_ALERT, "Using origin as center for all integrals.");
   }

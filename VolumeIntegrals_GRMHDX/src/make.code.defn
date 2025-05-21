@@ -2,7 +2,8 @@
 #$Header : $
 
 #Source files in this directory
-SRCS = evaluate_integrands_local.cxx Initialize_or_Decrement_IntegralCounter.cxx perform_integration_sum_global.cxx file_output_routines.cxx
+SRCS = evaluate_integrands_local.cxx Initialize_or_Decrement_IntegralCounter
+           .cxx perform_integration_sum_global.cxx file_output_routines.cxx
 
 #Subdirectories containing source files
-SUBDIRS =
+               SUBDIRS =
