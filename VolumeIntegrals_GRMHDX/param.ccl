@@ -6,7 +6,17 @@ private:
 CCTK_INT enable_file_output "Enable output file" STEERABLE = RECOVER
 {
   0:1 :: "0 = no output; 1 = yes, output to file"
-} 0
+} 1
+
+KEYWORD VIdomain "Domain type"
+{
+  "octant"     :: "Use an octant about the origin"
+  "quadrant"   :: "Use a quadrant in x-y plane"
+  "quadrant_reflect_rotate" :: "Use a quadrant with rotation symmetry about an axis"
+  "bitant"     :: "Use a bitant about the x-y plane"
+  "bitant_rotate"   :: "Use a bitant with rotation symmetry about an axis"
+  "full"       :: "Use the full domain"
+} "full"
 
 STRING outVolIntegral_dir "Output directory for volume integration output files, overrides IO::out_dir" STEERABLE = RECOVER
 {
@@ -24,13 +34,61 @@ CCTK_INT NumIntegrals "Number of volume integrals to perform" STEERABLE = ALWAYS
   0:1000 :: "zero (disable integration) or some other number"
 } 0
 
+BOOLEAN set_origin_with_VIX "Set origin of toroidal/poloidal decomposition wrt CoM calculated via VIX. Otherwise use (0,0,0)" STEERABLE = ALWAYS
+{
+} "no"
+
+# ------------------------------
+# Density threshold values
+# for volume_average_norm_B_**
+
+CCTK_REAL dens_a "lower density threshold for volume_average_norm_B_ab" STEERABLE = ALWAYS
+{
+  0:* :: "must be positive otherwise arbitrary"
+} 0
+
+CCTK_REAL dens_b "upper density threshold for volume_average_norm_B_ab" STEERABLE = ALWAYS
+{
+  0:* :: "must be positive otherwise arbitrary"
+} 100
+
+CCTK_REAL dens_c "lower density threshold for volume_average_norm_B_cd" STEERABLE = ALWAYS
+{
+  0:* :: "must be positive otherwise arbitrary"
+} 0
+
+CCTK_REAL dens_d "upper density threshold for volume_average_norm_B_cd" STEERABLE = ALWAYS
+{
+  0:* :: "must be positive otherwise arbitrary"
+} 100
+
+CCTK_REAL dens_atmo "Used to exclude points in the atmosphere" STEERABLE = ALWAYS
+{
+  0:* :: "must be positive otherwise arbitrary"
+} 1e-13
+
+# ------------------------------
+
 keyword Integration_quantity_keyword[101] "Which quantity to integrate" STEERABLE = ALWAYS
 {
-"nothing"                 :: "Default, null parameter"
-"usepreviousintegrands"   :: "Use integrands from step(s) immediately preceeding. Useful for Swiss-cheese-type volume integrations."
-"centerofmass"            :: "Center of Mass"
-"restmass"                :: "Rest Mass"
-"one"                     :: "Integrand = 1. Useful for debugging"
+"nothing"                       :: "Default, null parameter"
+"usepreviousintegrands"         :: "Use integrands from step(s) immediately preceeding. Useful for Swiss-cheese-type volume integrations."
+"centerofmass"                  :: "Center of Mass"
+"restmass"                      :: "Rest Mass"
+"one"                           :: "Integrand = 1. Useful for debugging"
+"density_weighted_norm_B_field" :: "Norm of magnetic field strength weighted by rhostar"
+"magnetic_energy_total"         :: "Total energy in electro-magnetic sector"
+"magnetic_energy_comov"         :: "Integral over magnetic pressure"
+"kinetic_energy"                :: "Kinetic energy defined using 0.5*rhoh*W^2v^2"
+"kinetic_energy_palenzuela"     :: "Kinetic energy defined using (11) in https://arxiv.org/pdf/2112.08413.pdf"
+"kinetic_energy_shibata"        :: "Kinetic energy defined using (5.4) in https://arxiv.org/pdf/1206.5911.pdf ( see also (2.58) in https://arxiv.org/pdf/2102.01346.pdf )"
+"kinetic_energy_total"          :: "Kinetic energy from subtraction of rest mass and thermal energy"
+"thermal_energy"                :: "Thermal energy"
+"volume_average_norm_B_ab"      :: "Volume average of norm B in density interval (dens_a,dens_b]"       
+"volume_average_norm_B_cd"      :: "Volume average of norm B in density interval (dens_c,dens_d]"
+"em_energy_ab"                  :: "Total energy in electro-magnetic sector in density interval (dens_a,dens_b]"       
+"em_energy_cd"                  :: "Total energy in electro-magnetic sector in density interval (dens_c,dens_d]"
+"coordvolume"                  		:: "Coordinate volume of region with rho > dens_atmo"
 } "nothing"
 
 ########################################
@@ -57,6 +115,10 @@ CCTK_REAL CoM_integrand_GAMMA_SPEED_LIMIT "" STEERABLE=ALWAYS
   0:* :: "Any positive number"
 } 1e4 
 
+CCTK_REAL mb_VIX "Baryon mass in MeV" STEERABLE=ALWAYS
+{
+  0:* :: "Any positive number"
+} 939.565379 
 
 ########################################
 CCTK_REAL volintegral_sphere__center_x_initial[101] "Volume integral in a spherical region: x-coord of center(s)" STEERABLE=ALWAYS

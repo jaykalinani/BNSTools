@@ -13,6 +13,11 @@ extern "C" void VI_GRMHDX_InitializeIntegralCounterToZero(CCTK_ARGUMENTS) {
   // Init Counter
   *IntegralCounter = 0;
 
+  // Init CoM Coord Holders
+  *comx = 0;
+  *comy = 0;
+  *comz = 0;
+
   // Init Array that Holds Results
   for (int ii = 0; ii < 101; ii++) {
     for (int jj = 0; jj < 4; jj++) {

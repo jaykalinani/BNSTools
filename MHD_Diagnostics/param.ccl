@@ -1,0 +1,36 @@
+# Parameter definitions for thorn MHD_Diagnostics
+# $Header:$
+
+#############################################################################
+### import HydroBase & ADMBase parameters
+
+# shares: HydroBase
+# USES CCTK_INT timelevels
+# 
+# shares: ADMBase
+# USES CCTK_INT lapse_timelevels
+# USES CCTK_INT shift_timelevels
+# USES CCTK_INT metric_timelevels
+#############################################################################
+
+private:
+
+CCTK_INT diagnostics_compute_every "How often to compute diagnostics?" STEERABLE=ALWAYS
+{
+  0:100000 :: "zero (disable computation) or some other number (1 = every iteration)"
+} 0
+
+CCTK_INT derivatives_compute_every "How often to compute velocity derivatives?" STEERABLE=ALWAYS
+{
+  0:100000 :: "zero (disable computation) or some other number (1 = every iteration)"
+} 0
+
+CCTK_INT enable_warning "Warn if regrid_every divided by diagnostics_compute_every is not an integer >= 1. You may see AMR artifacts otherwise!" STEERABLE=ALWAYS
+{
+  0:1 :: "zero (disable) or one (enable)"
+} 1
+
+REAL rho_cutoff "Minimum rho below which we set the derivatives to zero" STEERABLE=ALWAYS
+{
+-1:* :: "Positive if active"
+}-1
