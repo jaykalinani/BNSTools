@@ -5,6 +5,12 @@
 #
 #USES CCTK_INT timelevels
 
+SHARES: Con2PrimFactory
+USES CCTK_REAL rho_abs_min
+USES CCTK_REAL atmo_tol
+USES CCTK_REAL r_atmo
+USES CCTK_REAL n_rho_atmo
+
 private:
 
 # NOTE: These params are used to generate an RNS solution and are thus disabled
@@ -111,6 +117,21 @@ INT RNS_lmax "max. term in Legendre poly."
  1: :: "Any positive, non zero number"
 } 10
 
+########## -----------------------------------------------------------------
+
+BOOLEAN corot_atmo "set atmosphere velocity to corotate with RNS"
+{
+} "no"
+
+STRING vel_th_filename "Name of Omega(costh) file"
+{
+ .* :: "file name"
+} "omegath.txt"
+
+CCTK_REAL n_omg_atmo "exponent for radial falloff for vel_atmo"
+{
+  0:  :: "Positive number"
+} 0.0
 
 ########## -----------------------------------------------------------------
 

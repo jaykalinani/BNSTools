@@ -56,5 +56,19 @@ if (CCTK_Equals(initial_data,"RNSReader"))
 
 }
 
+if (corot_atmo) {
+  SCHEDULE RNSReader_Init_VelAtmo IN HydroBaseX_InitialData AFTER Hydro_rnsid_init
+  {
+    LANG: C
+  } "Read Omega(costh) file"
+
+  SCHEDULE RNSReader_Set_VelAtmo IN ODESolvers_PostStep AFTER AsterX_Con2PrimGroup
+  {
+		LANG: C
+    READS: HydroBaseX::vel(everywhere) HydroBaseX::rho(everywhere)
+    READS: ADMBaseX::lapse(everywhere) ADMBaseX::shift(everywhere)
+    WRITES: HydroBaseX::vel(everywhere)
+  } "Set corotating atmosphere from Omega(costh) of RNS surface"
+}
 
 
