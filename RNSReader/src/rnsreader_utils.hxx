@@ -43,7 +43,6 @@ public:
     char *line = NULL;
     char *pEnd;
     size_t len = 0;
-    ssize_t read;
     int which_line = 0;
     if (!(v_th_arr =
         (double *)The_Managed_Arena()->alloc((MDIV - 1) * sizeof(double)))) {
@@ -58,7 +57,7 @@ public:
     }
 
     // Skip header line
-    while ((read = getline(&line, &len, in1D)) != -1) {
+    while ((getline(&line, &len, in1D)) != -1) {
       if (which_line >= num_header_lines) {
         th_arr[which_line] = strtod(line, &pEnd);
         v_th_arr[which_line] = strtod(pEnd, NULL);
