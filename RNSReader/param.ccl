@@ -76,7 +76,6 @@ REAL RNS_atmo_tolerance "A point is set to atmosphere if rho < (1+RNS_atmo_toler
    0.0: :: "Zero or larger. A useful value could be 0.0001"
 }  0.00001
 
-
 REAL accuracy "rnsid accuracy in convergence "
 {
   0: :: "Any positive number"
@@ -132,6 +131,11 @@ CCTK_REAL n_omg_atmo "exponent for radial falloff for vel_atmo"
 {
   0:  :: "Positive number"
 } 0.0
+
+CCTK_REAL r_omg_atmo "radius where radial falloff for vel_atmo begins, should be near stellar surface"
+{
+  0:  :: "Positive number"
+} 15.0
 
 ########## -----------------------------------------------------------------
 

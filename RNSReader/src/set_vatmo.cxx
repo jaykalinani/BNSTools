@@ -64,14 +64,14 @@ extern "C" void RNSReader_Set_VelAtmo(CCTK_ARGUMENTS) {
     const CCTK_REAL rho_atmo_cut = rho_atm * (1 + atmo_tol);
 
     if (rho(p.I) <= rho_atmo_cut) {
-      CCTK_REAL costh = p.y / sqrt(p.x * p.x + p.y * p.y);
+      CCTK_REAL costh = std::abs(p.z) / radial_distance; // cos(theta) on RNS grid runs from 0 to 1
       CCTK_REAL omg_surf;
       vel_th_reader->interpolate_1d_quantity_as_function_of_th(
           MDIV - 1, costh, &omg_surf); // Interp omega to cos(theta) from file
 
       // Grading Omega
-      CCTK_REAL omg_atm = (radial_distance > r_atmo)
-        ? (omg_surf * pow((r_atmo / radial_distance), n_omg_atmo))
+      CCTK_REAL omg_atm = (radial_distance > r_omg_atmo)
+        ? (omg_surf * pow((r_omg_atmo / radial_distance), n_omg_atmo))
         : omg_surf;
       
       double alpL = calc_avg_v2c(alp, p);
