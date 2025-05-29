@@ -132,12 +132,12 @@ CCTK_REAL n_omg_atmo "exponent for radial falloff for vel_atmo"
   0:  :: "Positive number"
 } 0.0
 
-CCTK_REAL r_omg_atmo "radius where radial falloff for vel_atmo begins, should be near stellar surface"
+CCTK_REAL r_corot_min "radius where radial falloff for vel_atmo begins, should be near stellar surface"
 {
   0:  :: "Positive number"
 } 15.0
 
-CCTK_REAL r_corot_atmo "outer radius of corotating atmosphere"
+CCTK_REAL r_corot_max "outer radius of corotating atmosphere"
 {
   0:  :: "Positive number"
 } 500.0

@@ -43,6 +43,13 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
   /* Gridfunctions */
   const vec<GF3D2<const CCTK_REAL>, dim> gf_beta{betax, betay, betaz};
 
+  // Calculate grading of corot. atmo. to match numerical atmo. at r_corot_max
+  const CCTK_REAL rho_atm_r = (r_corot_max > r_atmo)
+    ? (rho_abs_min * pow((r_atmo / r_corot_max), n_rho_atmo))
+    : rho_abs_min;
+  const CCTK_REAL n_corot = (log(rho_atm_r) - log(10 * rho_abs_min)) / (log(r_atmo) - log(r_corot_max));
+  CCTK_VINFO("Calculated n_corot to be %e.", n_corot);
+
   grid.loop_all<1, 1, 1>(grid.nghostzones,
                          [=] CCTK_HOST(const Loop::PointDesc &p)
                              CCTK_ATTRIBUTE_ALWAYS_INLINE {
@@ -57,17 +64,21 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
       : rho_abs_min;
     const CCTK_REAL rho_atmo_cut = rho_atm * (1 + atmo_tol);
 
-    if (rhoL <= rho_atmo_cut && radial_distance < r_corot_atmo) {
+    if (rhoL <= rho_atmo_cut && radial_distance < r_corot_max) {
       CCTK_REAL costh = std::abs(p.z) / radial_distance; // cos(theta) on RNS grid runs from 0 to 1
       CCTK_REAL omg_surf;
       vel_th_reader->interpolate_1d_quantity_as_function_of_th(
           MDIV - 1, costh, &omg_surf); // Interp omega to cos(theta) from file
 
       // Grading Omega
-      CCTK_REAL omg_atm = (radial_distance > r_omg_atmo)
-        ? (omg_surf * pow((r_omg_atmo / radial_distance), n_omg_atmo))
+      CCTK_REAL omg_atm = (radial_distance > r_corot_min)
+        ? (omg_surf * pow((r_corot_min / radial_distance), n_omg_atmo))
         : omg_surf;
       
+      CCTK_REAL rho_corot_atm = (radial_distance > r_atmo)
+        ? (10 * rho_abs_min * pow((r_atmo / radial_distance), n_corot))
+        : 10 * rho_abs_min;
+
       double alpL = calc_avg_v2c(alp, p);
 
       const vec<CCTK_REAL, 3> betas_avg(
@@ -75,7 +86,7 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
 
       velx(p.I) = (-p.y * omg_atm + betas_avg(0)) / alpL;
       vely(p.I) = (p.x * omg_atm + betas_avg(1)) / alpL;
-      rho(p.I) = 10 * rho_atmo_cut;
+      rho(p.I) = rho_corot_atm;
 
     } else {
       velx(p.I) = velxL;

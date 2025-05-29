@@ -70,24 +70,6 @@ CarpetX::max_grid_size_x = 300
 CarpetX::max_grid_size_y = 300 
 CarpetX::max_grid_size_z = 300
 
-# CarpetX::max_grid_size_x = 54 
-# CarpetX::max_grid_size_y = 108 
-# CarpetX::max_grid_size_z = 108
-
-# CarpetX::max_grid_sizes_x[9] = 66 
-# CarpetX::max_grid_sizes_y[9] = 132 
-# CarpetX::max_grid_sizes_z[9] = 132
-
-# CarpetX::max_grid_sizes_x[10] = 108 
-# CarpetX::max_grid_sizes_y[10] = 108 
-# CarpetX::max_grid_sizes_z[10] = 108
-# 
-# CarpetX::max_grid_sizes_x[11] = 160 
-# CarpetX::max_grid_sizes_y[11] = 160
-# CarpetX::max_grid_sizes_z[11] = 160
-
-# CarpetX::refine_grid_layout = "no"
-
 CarpetX::boundary_x = "neumann" #"dirichlet"
 CarpetX::boundary_y = "neumann" #"dirichlet"
 CarpetX::boundary_z = "neumann" #"dirichlet"
@@ -96,7 +78,6 @@ CarpetX::boundary_upper_y = "neumann" #"dirichlet"
 CarpetX::boundary_upper_z = "neumann" #"dirichlet"
 
 CarpetX::ghost_size = 3
-#CarpetX::interpolation_order = 3
 
 CarpetX::max_num_levels = $nlevels
 CarpetX::regrid_every = 0 #64
@@ -111,7 +92,6 @@ BoxInBox::shape_1 = "cube"
 BoxInBox::num_levels_1 = 7
 BoxInBox::radius_x_1 = [-1., 320., 160., 80., 40., 20., 10.]
 BoxInBox::radius_y_1 = [-1., 320., 160., 80., 40., 20., 10.]
-#BoxInBox::radius_z_1 = [-1., 320., 160., 80., 40., 20., 10.]
 BoxInBox::radius_z_1 = [-1., 240., 120., 60., 30., 15., 7.5]
 
 # =============================================================================
@@ -144,13 +124,14 @@ RNSReader::model2D_file = "/work/09319/acw6923/vista/EOS/Poly_jconst/solutions/P
 RNSReader::corot_atmo = "yes"
 RNSReader::vel_th_filename = "/work/09319/acw6923/vista/EOS/Poly_jconst/solutions/omgsurf_atmo1e-8_IGL_jc.txt"
 RNSReader::n_omg_atmo = 1.5
-RNSReader::r_omg_atmo = 9
+RNSReader::r_corot_min = 9
+RNSReader::r_corot_max = 500
 
 AsterSeeds::test_type = "3DTest"
 AsterSeeds::test_case = "magTOV"
 AsterSeeds::Afield_config = "external dipole"
-AsterSeeds::B0 = 0.00019850168119690698 # Emag_{high dens} = 1e50 erg
-AsterSeeds::r0 = 9.855840495739125 # r0 = 14.6 km
+AsterSeeds::B0 = 0.000118455219668218 # Bmax = 10^16 G
+AsterSeeds::r0 = 11.1391355798701454 # r0 = R_e DD2
 
 # =============================================================================
 # AsterX Evolution
@@ -168,8 +149,6 @@ AsterX::use_entropy_fix = "yes"
 AsterX::recon_type = "z_vec"
 
 ReconX::reconstruction_method = "wenoz"
-# ReconX::ppm_zone_flattening = "yes"
-# ReconX::ppm_shock_detection = "no"
 
 EOSX::evolution_eos = "IdealGas"
 EOSX::gl_gamma = 2.0
@@ -190,7 +169,6 @@ Con2PrimFactory::atmo_tol = 1e-3
 Con2PrimFactory::B_lim = 1e8
 Con2PrimFactory::vw_lim = 8
 Con2PrimFactory::Ye_lenient = "yes"
-#Con2PrimFactory::rho_strict = 6.4e-05 #1e8
 
 # Graded atmo params
 Con2PrimFactory::r_atmo = 80
