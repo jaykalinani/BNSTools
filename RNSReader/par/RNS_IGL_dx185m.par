@@ -1,13 +1,13 @@
 # q1
-$itlast = 256
+$itlast = 20480
 $final_time = 10000
-$xmin = -160
-$xmax = +160
-$ncells = 128
-$nlevels = 5
+$xmin = -640
+$xmax = +640
+$ncells = 160
+$nlevels = 7
 $error_threshold = 0.9
 $dtfac = 0.35
-$out_every = 1024
+$out_every = 4096
 
 ActiveThorns = "
     ADMBaseX
@@ -33,7 +33,7 @@ Cactus::cctk_show_schedule = yes
 
 Cactus::presync_mode = "mixed-error"
 
-Cactus::terminate = "time"
+Cactus::terminate = "iteration"
 Cactus::cctk_itlast = $itlast
 Cactus::cctk_final_time = $final_time
 
@@ -70,24 +70,6 @@ CarpetX::max_grid_size_x = 300
 CarpetX::max_grid_size_y = 300 
 CarpetX::max_grid_size_z = 300
 
-# CarpetX::max_grid_size_x = 54 
-# CarpetX::max_grid_size_y = 108 
-# CarpetX::max_grid_size_z = 108
-
-# CarpetX::max_grid_sizes_x[9] = 66 
-# CarpetX::max_grid_sizes_y[9] = 132 
-# CarpetX::max_grid_sizes_z[9] = 132
-
-# CarpetX::max_grid_sizes_x[10] = 108 
-# CarpetX::max_grid_sizes_y[10] = 108 
-# CarpetX::max_grid_sizes_z[10] = 108
-# 
-# CarpetX::max_grid_sizes_x[11] = 160 
-# CarpetX::max_grid_sizes_y[11] = 160
-# CarpetX::max_grid_sizes_z[11] = 160
-
-# CarpetX::refine_grid_layout = "no"
-
 CarpetX::boundary_x = "neumann" #"dirichlet"
 CarpetX::boundary_y = "neumann" #"dirichlet"
 CarpetX::boundary_z = "neumann" #"dirichlet"
@@ -96,7 +78,6 @@ CarpetX::boundary_upper_y = "neumann" #"dirichlet"
 CarpetX::boundary_upper_z = "neumann" #"dirichlet"
 
 CarpetX::ghost_size = 3
-#CarpetX::interpolation_order = 3
 
 CarpetX::max_num_levels = $nlevels
 CarpetX::regrid_every = 0 #64
@@ -108,10 +89,10 @@ BoxInBox::num_regions = 1
 
 # Region 1
 BoxInBox::shape_1 = "cube"
-BoxInBox::num_levels_1 = 5
-BoxInBox::radius_x_1 = [-1., 80., 40., 20., 10.]
-BoxInBox::radius_y_1 = [-1., 80., 40., 20., 10.]
-BoxInBox::radius_z_1 = [-1., 60., 30., 15., 7.5]
+BoxInBox::num_levels_1 = 7
+BoxInBox::radius_x_1 = [-1., 320., 160., 80., 40., 20., 10.]
+BoxInBox::radius_y_1 = [-1., 320., 160., 80., 40., 20., 10.]
+BoxInBox::radius_z_1 = [-1., 240., 120., 60., 30., 15., 7.5]
 
 # =============================================================================
 # Time integration
@@ -133,15 +114,24 @@ ADMBaseX::initial_dtshift = "zero"
 
 HydroBaseX::initial_hydro = "RNSReader"
 
+# I set the cutoff for RNS solution interpolation to the rho floor.
+# However, as the domain will be filled with corotating fluid of density 10 * rho_floor,
+# I use Omega(th) at a density of 10 * rho_floor
 RNSReader::RNS_rho_min = 1e-9
 RNSReader::recover_2Dmodel = "yes"
 RNSReader::model2D_file = "/work/09319/acw6923/vista/EOS/Poly_jconst/solutions/Poly_jconst.hdf5"
 
+RNSReader::corot_atmo = "yes"
+RNSReader::vel_th_filename = "/work/09319/acw6923/vista/EOS/Poly_jconst/solutions/omgsurf_atmo1e-8_IGL_jc.txt"
+RNSReader::n_omg_atmo = 1.5
+RNSReader::r_corot_min = 9
+RNSReader::r_corot_max = 500
+
 AsterSeeds::test_type = "3DTest"
 AsterSeeds::test_case = "magTOV"
 AsterSeeds::Afield_config = "external dipole"
-AsterSeeds::B0 = 1.197322816117099e-04 # Bmax = 10^16 G
-AsterSeeds::r0 = 13.543563919218386 # r0 = 20 km
+AsterSeeds::B0 = 0.000118455219668218 # Bmax = 10^16 G
+AsterSeeds::r0 = 11.1391355798701454 # r0 = R_e DD2
 
 # =============================================================================
 # AsterX Evolution
@@ -149,22 +139,23 @@ AsterSeeds::r0 = 13.543563919218386 # r0 = 20 km
 
 AsterX::debug_mode = "no"
 AsterX::flux_type = "HLLE"
-AsterX::vector_potential_gauge = "algebraic"
+AsterX::use_uct = "yes"
+AsterX::vector_potential_gauge = "generalized Lorentz"
+AsterX::lorenz_damp_fac = 0.5357142857142857
 AsterX::local_spatial_order = 4
 AsterX::update_tmunu = "yes"
 AsterX::local_estimate_error = "no"
 AsterX::use_entropy_fix = "yes"
+AsterX::recon_type = "z_vec"
 
-ReconX::reconstruction_method = "ppm"
-ReconX::ppm_zone_flattening = "yes"
-ReconX::ppm_shock_detection = "no"
+ReconX::reconstruction_method = "wenoz"
 
 EOSX::evolution_eos = "IdealGas"
 EOSX::gl_gamma = 2.0
 EOSX::poly_gamma = 2.0
 EOSX::poly_k = 100
-EOSX::rho_min = 1e-9
-EOSX::eps_min = 1e-9
+EOSX::rho_min = 1e-15
+EOSX::eps_min = 1e-13
 
 Con2PrimFactory::unit_test = "no"
 Con2PrimFactory::c2p_prime = "Noble"
@@ -172,13 +163,16 @@ Con2PrimFactory::c2p_second = "Palenzuela"
 Con2PrimFactory::c2p_tol = 1e-8
 Con2PrimFactory::max_iter = 100
 Con2PrimFactory::rho_abs_min = 1e-9
-Con2PrimFactory::eps_atmo = EOSX::eps_min
-Con2PrimFactory::p_atmo = EOSX::eps_min * EOSX::rho_min
+Con2PrimFactory::eps_atmo = 1e-7
+Con2PrimFactory::p_atmo = Con2PrimFactory::rho_abs_min * Con2PrimFactory::eps_atmo
 Con2PrimFactory::atmo_tol = 1e-3
 Con2PrimFactory::B_lim = 1e8
 Con2PrimFactory::vw_lim = 8
 Con2PrimFactory::Ye_lenient = "yes"
-#Con2PrimFactory::rho_strict = 6.4e-05 #1e8
+
+# Graded atmo params
+Con2PrimFactory::r_atmo = 80
+Con2PrimFactory::n_rho_atmo = 3
 
 # =============================================================================
 # Spacetime Evolution
@@ -190,6 +184,7 @@ Z4c::calc_constraints = yes
 Z4c::chi_floor = 1.0e-6
 Z4c::alphaG_floor = 1.0e-8
 Z4c::epsdiss = 0.32
+Z4c::eta = 1.0 / 1.7199 # 1/M
 Z4c::boundary_conditions = "NewRadX"
 
 # =============================================================================
@@ -226,7 +221,7 @@ VolumeIntegrals_GRMHDX::Integration_quantity_keyword[13]  = "em_energy_cd"
 VolumeIntegrals_GRMHDX::Integration_quantity_keyword[14]  = "restmass"
 VolumeIntegrals_GRMHDX::Integration_quantity_keyword[15]  = "coordvolume"
 
-VolumeIntegrals_GRMHDX::dens_atmo = 1.001e-11
+VolumeIntegrals_GRMHDX::dens_atmo = 1.001e-8
 
 VolumeIntegrals_GRMHDX::dens_a = 1.6193138848638947e-08
 VolumeIntegrals_GRMHDX::dens_b = 1.6193138848638947e-05
@@ -240,7 +235,7 @@ VolumeIntegrals_GRMHDX::dens_c = 1.6193138848638947e-05
 IO::checkpoint_dir = "./checkpoints"
 IO::recover_dir    = "./checkpoints"
 IO::checkpoint_ID = no
-IO::checkpoint_every = 20480
+IO::checkpoint_every = 10240
 IO::checkpoint_on_terminate = yes
 IO::recover                 = "autoprobe"
 
@@ -272,9 +267,9 @@ MHD_Diagnostics::normcurlB
 MHD_Diagnostics::smallb2
 MHD_Diagnostics::sigma4Trace
 MHD_Diagnostics::sigma4bb
-TmunuBaseX::eTtt
-TmunuBaseX::eTti
-TmunuBaseX::eTij
+#TmunuBaseX::eTtt
+#TmunuBaseX::eTti
+#TmunuBaseX::eTij
 Z4c::allC
 Z4c::HC
 Z4c::MtC
@@ -317,15 +312,15 @@ MHD_Diagnostics::sigma4bb
 MHD_Diagnostics::normB
 MHD_Diagnostics::normcurlB
 MHD_Diagnostics::a4sq
-TmunuBaseX::eTtt
-TmunuBaseX::eTti
-TmunuBaseX::eTij
-Z4c::allC
+#TmunuBaseX::eTtt
+#TmunuBaseX::eTti
+#TmunuBaseX::eTij
+#Z4c::allC
 Z4c::HC
-Z4c::MtC
+#Z4c::MtC
 "
 
-TimerReport::out_every = $out_every
+TimerReport::out_every = 64
 TimerReport::out_filename = "TimerReport"
 TimerReport::output_all_timers_together = yes
 TimerReport::output_all_timers_readable = yes

@@ -866,7 +866,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_tot(
         B_cov[1] * B_contra[1] * x2_over_r2;
   B_2 *= sqrtgamma;
 
-  VolIntegrand1(p.I) = (E_2 + B_2) / (8.0 * M_PI);
+  VolIntegrand1(p.I) = (E_2 + B_2) / 2.0;
 
   // Finally, compute E_r*E^r*sqrtgamma and B_r*B_r*sqrtgamma
 
@@ -888,7 +888,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_tot(
   VolIntegrand2(p.I) =
       (E_2 + sqrtgammaE_cov[2] * sqrtgammaE_contra[2] / sqrtgamma + B_2 +
        B_cov[2] * B_contra[2] * sqrtgamma) /
-      (8.0 * M_PI);
+      2.0;
 }
 
 /* Magnetic energy split into azimuthal energy component and rest: */
@@ -1000,7 +1000,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_tot_12(
           B_cov[1] * B_contra[1] * x2_over_r2;
     B_2 *= sqrtgamma;
 
-    VolIntegrand1(p.I) = (E_2 + B_2) / (8.0 * M_PI);
+    VolIntegrand1(p.I) = (E_2 + B_2) / 2.0;
 
     // Finally, compute E_r*E^r*sqrtgamma and B_r*B_r*sqrtgamma
 
@@ -1022,7 +1022,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_tot_12(
     VolIntegrand2(p.I) =
         (E_2 + sqrtgammaE_cov[2] * sqrtgammaE_contra[2] / sqrtgamma + B_2 +
          B_cov[2] * B_contra[2] * sqrtgamma) /
-        (8.0 * M_PI);
+        2.0;
 
   } else {
 

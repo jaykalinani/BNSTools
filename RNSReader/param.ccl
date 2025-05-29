@@ -5,6 +5,12 @@
 #
 #USES CCTK_INT timelevels
 
+SHARES: Con2PrimFactory
+USES CCTK_REAL rho_abs_min
+USES CCTK_REAL atmo_tol
+USES CCTK_REAL r_atmo
+USES CCTK_REAL n_rho_atmo
+
 private:
 
 # NOTE: These params are used to generate an RNS solution and are thus disabled
@@ -70,7 +76,6 @@ REAL RNS_atmo_tolerance "A point is set to atmosphere if rho < (1+RNS_atmo_toler
    0.0: :: "Zero or larger. A useful value could be 0.0001"
 }  0.00001
 
-
 REAL accuracy "rnsid accuracy in convergence "
 {
   0: :: "Any positive number"
@@ -111,6 +116,31 @@ INT RNS_lmax "max. term in Legendre poly."
  1: :: "Any positive, non zero number"
 } 10
 
+########## -----------------------------------------------------------------
+
+BOOLEAN corot_atmo "set atmosphere velocity to corotate with RNS"
+{
+} "no"
+
+STRING vel_th_filename "Name of Omega(costh) file"
+{
+ .* :: "file name"
+} "omegath.txt"
+
+CCTK_REAL n_omg_atmo "exponent for radial falloff for vel_atmo"
+{
+  0:  :: "Positive number"
+} 0.0
+
+CCTK_REAL r_corot_min "radius where radial falloff for vel_atmo begins, should be near stellar surface"
+{
+  0:  :: "Positive number"
+} 15.0
+
+CCTK_REAL r_corot_max "outer radius of corotating atmosphere"
+{
+  0:  :: "Positive number"
+} 500.0
 
 ########## -----------------------------------------------------------------
 
