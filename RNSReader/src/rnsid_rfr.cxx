@@ -561,6 +561,12 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
         /* ATMOSPERE SETTINGs                      */
         /* *************************************** */
         if ((rho(p.I) < (1.0 + RNS_atmo_tolerance) * rho_0_atm)) {
+          const CCTK_REAL radial_distance = sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
+          CCTK_REAL rho_atm = (radial_distance > r_atmo)
+            ? (rho_abs_min * pow((r_atmo / radial_distance), n_rho_atmo))
+            : rho_abs_min;
+          rho(p.I) = rho_atm; // This will be overwritten by C2P anyway
+
           velx(p.I) = 0.0;
           vely(p.I) = 0.0;
           velz(p.I) = 0.0;

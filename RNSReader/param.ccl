@@ -137,6 +137,11 @@ CCTK_REAL r_omg_atmo "radius where radial falloff for vel_atmo begins, should be
   0:  :: "Positive number"
 } 15.0
 
+CCTK_REAL r_corot_atmo "outer radius of corotating atmosphere"
+{
+  0:  :: "Positive number"
+} 500.0
+
 ########## -----------------------------------------------------------------
 
 shares: ADMBaseX

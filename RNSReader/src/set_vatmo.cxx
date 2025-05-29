@@ -16,13 +16,12 @@ using namespace amrex;
 using namespace std;
 using namespace AsterUtils;
 
-Omega_th_reader* vel_th_reader; // storage for vel_atmo(theta)
-
 extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_RNSReader_Init_VelAtmo;
   DECLARE_CCTK_PARAMETERS;
 
-  // Open the Y_e file, which should countain Y_e(rho) for the EOS table slice
+  Omega_th_reader* vel_th_reader = nullptr;
+  // Open the Omega(th) file
   FILE *vel_th_file = fopen(vel_th_filename, "r");
     
   // Check if everything is OK with the file
@@ -40,12 +39,6 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
     // Close the file
     fclose(vel_th_file);
   }
-}
-
-
-extern "C" void RNSReader_Set_VelAtmo(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_RNSReader_Set_VelAtmo;
-  DECLARE_CCTK_PARAMETERS;
 
   /* Gridfunctions */
   const vec<GF3D2<const CCTK_REAL>, dim> gf_beta{betax, betay, betaz};
@@ -55,6 +48,7 @@ extern "C" void RNSReader_Set_VelAtmo(CCTK_ARGUMENTS) {
                              CCTK_ATTRIBUTE_ALWAYS_INLINE {
     const CCTK_REAL velxL = velx(p.I);
     const CCTK_REAL velyL = vely(p.I);
+    const CCTK_REAL rhoL = rho(p.I);
     const CCTK_REAL radial_distance = sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
     
     // Grading rho
@@ -63,7 +57,7 @@ extern "C" void RNSReader_Set_VelAtmo(CCTK_ARGUMENTS) {
       : rho_abs_min;
     const CCTK_REAL rho_atmo_cut = rho_atm * (1 + atmo_tol);
 
-    if (rho(p.I) <= rho_atmo_cut) {
+    if (rhoL <= rho_atmo_cut && radial_distance < r_corot_atmo) {
       CCTK_REAL costh = std::abs(p.z) / radial_distance; // cos(theta) on RNS grid runs from 0 to 1
       CCTK_REAL omg_surf;
       vel_th_reader->interpolate_1d_quantity_as_function_of_th(
@@ -81,13 +75,14 @@ extern "C" void RNSReader_Set_VelAtmo(CCTK_ARGUMENTS) {
 
       velx(p.I) = (-p.y * omg_atm + betas_avg(0)) / alpL;
       vely(p.I) = (p.x * omg_atm + betas_avg(1)) / alpL;
+      rho(p.I) = 10 * rho_atmo_cut;
 
     } else {
       velx(p.I) = velxL;
       vely(p.I) = velyL;
+      rho(p.I) = rhoL;
     }
-                             });
-
+  });
 }
 
 } // namespace RNSReader
