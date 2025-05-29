@@ -1,0 +1,4 @@
+# Don't use inherit since we do not want to have HydroBase's variables pushed
+# into our context. On the other hand we always access them via the
+# interpolator so having Cactus warn if the thorn is not active is useful.
+REQUIRES THORNS: HydroBase

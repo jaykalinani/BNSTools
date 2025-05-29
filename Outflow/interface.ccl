@@ -1,0 +1,33 @@
+# Interface definition for thorn Outflow
+# $Header:$
+
+implements: outflow
+inherits: ADMBase HydroBase SphericalSurface
+
+CCTK_INT FUNCTION IO_TruncateOutputFiles \
+  (CCTK_POINTER_TO_CONST IN GH)
+
+REQUIRES FUNCTION IO_TruncateOutputFiles
+
+# translate SphericalSurface name into ID
+CCTK_INT \
+FUNCTION sf_IdFromName (CCTK_INT IN id, CCTK_POINTER_TO_CONST IN name)
+USES FUNCTION sf_IdFromName
+
+REAL outflow_flux[num_detectors] TYPE=scalar tags='checkpoint="no"' "flux of mass through the detectors"
+
+REAL fluxdens_projected[num_detectors] TYPE=ARRAY DIM=2 SIZE=SphericalSurface::maxntheta,SphericalSurface::maxnphi DISTRIB=CONSTANT tags='checkpoint="no"' "2D (theta,phi) grid arrays for flux density"
+REAL w_lorentz_projected[num_detectors] TYPE=ARRAY DIM=2 SIZE=SphericalSurface::maxntheta,SphericalSurface::maxnphi DISTRIB=CONSTANT tags='checkpoint="no"' "2D (theta,phi) grid arrays for Lorentz factor"
+REAL eninf_projected[num_detectors] TYPE=ARRAY DIM=2 SIZE=SphericalSurface::maxntheta,SphericalSurface::maxnphi DISTRIB=CONSTANT tags='checkpoint="no"' "2D (theta,phi) grid arrays for the specific energy at infinity"
+
+# extra variables projected onto the spherical surfaces
+REAL surface_projections[num_detectors] TYPE=ARRAY DIM=2 SIZE=SphericalSurface::maxntheta,SphericalSurface::maxnphi DISTRIB=CONSTANT tags='checkpoint="no"'
+{
+surface_projection_0, surface_projection_1, surface_projection_2, 
+surface_projection_3, surface_projection_4, surface_projection_5, 
+surface_projection_6, surface_projection_7, surface_projection_8, 
+surface_projection_9, surface_projection_10 surface_projection_11 
+surface_projection_12 surface_projection_13 surface_projection_14 
+surface_projection_15 surface_projection_16, surface_projection_17, 
+surface_projection_18, surface_projection_19
+} "2D (theta,phi) grid arrays for points on the spherical surfaces"

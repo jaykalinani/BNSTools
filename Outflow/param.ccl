@@ -1,0 +1,117 @@
+# Parameter definitions for thorn Outflow
+
+INT compute_every "How frequently to compute the outflow" STEERABLE=always
+{
+  1:* :: "number of iterations"
+} 1
+
+INT compute_every_det[100] "How frequently to compute the outflow" STEERABLE=always
+{
+ -1   :: "take from compute_every"
+  0   :: "do not compute"
+  1:* :: "number of iterations"
+} -1
+
+## Number of detector surfaces
+CCTK_INT num_detectors "how many detectors do we have" STEERABLE = RECOVER
+{
+  0:* :: "number of detectors"
+} 0
+
+## Surface parameters
+CCTK_INT surface_index[100] "the indices of the sphericalsurfaces from which we take the surfaces to compute the outflow on" STEERABLE = ALWAYS
+{
+  -1   :: "Invalid"
+   0:* :: "valid surface" 
+} -1
+
+CCTK_STRING surface_name[100] "the indices of the sphericalsurfaces from which we take the surfaces to compute the outflow on" STEERABLE=always
+{
+  ""  :: "use surface_index"
+  ".*" :: "any string"
+} ""
+
+BOOLEAN override_radius[100] "do not take radius values from spherical surface" STEERABLE = ALWAYS
+{
+} "no"
+
+CCTK_REAL radius[100] "spherical radius for this detector surface" STEERABLE = ALWAYS
+{
+  -1    :: "Invalid"
+  (0:*  :: "any positive value"
+} -1
+
+CCTK_REAL rad_rescale[100] "Factor for scaling radius for this detector surface (e.g. for buffer around AH surface)" STEERABLE = ALWAYS
+{
+  (0:*  :: "Anything positive"
+} 1
+
+CCTK_STRING coord_system "What is the coord system?" STEERABLE = ALWAYS
+{
+  ".*" :: "Any smart string will do"
+} "cart3d"
+
+## Interpolator information
+CCTK_STRING interpolator_name "Which interpolator should I use" STEERABLE = ALWAYS
+{
+  ".+" :: "Any nonempty string"
+} "Hermite polynomial interpolation"
+
+CCTK_STRING interpolator_pars "Parameters for the interpolator" STEERABLE = ALWAYS
+{
+  ".*" :: "Any string that Util_TableSetFromString() will take"
+} "order=3"
+
+## Output
+CCTK_INT verbose "How verbose do you want it?" STEERABLE = ALWAYS
+{
+  0:* :: "0 is nothing, 1 is interesting, >1 is crazy"
+} 1
+
+STRING out_format "Which format for Scalar floating-point number output" STEERABLE = ALWAYS
+{
+  ^(\.[1]?[0-9])?[EGefg]$ :: "output with given precision in exponential / floating point notation"
+} ".19g"
+
+BOOLEAN output_2d_data "output 2d data on spherical surface" STEERABLE = ALWAYS
+{
+} "no"
+
+BOOLEAN output_relative_coordinates "output coordinates on spheroid relative to sf_centroid, absolute coordinates otherwise" STEERABLE = ALWAYS
+{
+} "no"
+
+# currently the maximum number of extras is hard-coded to 20
+CCTK_STRING extra_variables "extra (scalar) variables to project onto the spherical surface" STEERABLE = ALWAYS
+{
+ ".*" :: "Any Cactus variables"
+} ""
+
+KEYWORD threshold_on_var "Which variable to use as threshold"
+{
+    "eninf"     :: "(Approximate) specific energy at infinity, - u_t - 1"
+    "w_lorentz" :: "Lorentz factor"
+} "w_lorentz"
+
+CCTK_INT num_thresholds "how many thresholds to use" STEERABLE = ALWAYS
+{
+  0    :: "ignore thresholds, output only one flux"
+  1:20 :: "how many to use"
+} 0
+
+CCTK_REAL threshold[20] "compute fluxes with Lorentz factors / specific energy at infinity above these levels only" STEERABLE = ALWAYS
+{
+  *:* :: "Any real number"
+} 0
+
+SHARES: SphericalSurface
+
+USES INT maxntheta
+USES INT maxnphi
+USES INT nghoststheta
+USES INT nghostsphi
+USES INT nsurfaces AS sphericalsurfaces_nsurfaces
+
+shares: IO
+
+USES STRING out_dir
