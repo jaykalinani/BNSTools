@@ -444,7 +444,7 @@ static int get_ja_w_eninf_and_extras_onto_detector(CCTK_ARGUMENTS, CCTK_INT det,
   CCTK_REAL th,ph,ct,st,cp,sp,rp;
   CCTK_INT ntheta,nphi,npoints;
   // auxilliary variables used in constructing j
-  static CCTK_REAL *rho0 = NULL, *velx = NULL, *vely = NULL, *velz = NULL;
+  static CCTK_REAL *rho0 = NULL, *velxarr = NULL, *velyarr = NULL, *velzarr = NULL;
   static CCTK_REAL *beta1 = NULL, *beta2 = NULL, *beta3 = NULL, *alpha = NULL;
   static CCTK_REAL *g11 = NULL, *g12 = NULL, *g13 = NULL, *g22 = NULL;
   static CCTK_REAL *g23 =  NULL, *g33 = NULL;
@@ -489,9 +489,9 @@ static int get_ja_w_eninf_and_extras_onto_detector(CCTK_ARGUMENTS, CCTK_INT det,
   ALLOCATE_TEMP(g23);
   ALLOCATE_TEMP(g33);
   ALLOCATE_TEMP(rho0); 
-  ALLOCATE_TEMP(velx);
-  ALLOCATE_TEMP(vely);
-  ALLOCATE_TEMP(velz);
+  ALLOCATE_TEMP(velxarr);
+  ALLOCATE_TEMP(velyarr);
+  ALLOCATE_TEMP(velzarr);
   ALLOCATE_TEMP(beta1);
   ALLOCATE_TEMP(beta2);
   ALLOCATE_TEMP(beta3);
@@ -536,22 +536,22 @@ static int get_ja_w_eninf_and_extras_onto_detector(CCTK_ARGUMENTS, CCTK_INT det,
 
   // 3d input arrays
   CCTK_STRING input_array_names[NUM_INPUT_ARRAYS]
-    = { "ADMBase::gxx",
-        "ADMBase::gxy",
-        "ADMBase::gxz",
-        "ADMBase::gyy",
-        "ADMBase::gyz",
-        "ADMBase::gzz",
+    = { "ADMBaseX::gxx",
+        "ADMBaseX::gxy",
+        "ADMBaseX::gxz",
+        "ADMBaseX::gyy",
+        "ADMBaseX::gyz",
+        "ADMBaseX::gzz",
 
-        "HydroBase::vel[0]",
-        "HydroBase::vel[1]",
-        "HydroBase::vel[2]",
-        "HydroBase::rho",
+        "HydroBaseX::velx",
+        "HydroBaseX::vely",
+        "HydroBaseX::velz",
+        "HydroBaseX::rho",
 
-        "ADMBase::betax",
-        "ADMBase::betay",
-        "ADMBase::betaz",
-        "ADMBase::alp",
+        "ADMBaseX::betax",
+        "ADMBaseX::betay",
+        "ADMBaseX::betaz",
+        "ADMBaseX::alp",
       };
   CCTK_INT input_array_indices[NUM_INPUT_ARRAYS + MAX_NUMBER_EXTRAS];
   for(int i = 0 ; i < NUM_INPUT_ARRAYS ; i++) {
@@ -567,9 +567,11 @@ static int get_ja_w_eninf_and_extras_onto_detector(CCTK_ARGUMENTS, CCTK_INT det,
      input_array_indices[NUM_INPUT_ARRAYS + i] = extras_ind[i];
   }
 
+  // Output Array Types Not Used by CarpetX
   CCTK_INT output_array_types[NUM_OUTPUT_ARRAYS + MAX_NUMBER_EXTRAS];
   for(int i = 0 ; i < NUM_OUTPUT_ARRAYS + num_extras ; i++) {
-    output_array_types[i] = CCTK_VARIABLE_REAL;
+    // output_array_types[i] = CCTK_VARIABLE_REAL;
+    output_array_types[i] = 0;
   }
 
   // 2d output arrays
@@ -581,9 +583,9 @@ static int get_ja_w_eninf_and_extras_onto_detector(CCTK_ARGUMENTS, CCTK_INT det,
         (void *) g23,
         (void *) g33,
 
-        (void *) velx, 
-        (void *) vely,
-        (void *) velz,
+        (void *) velxarr, 
+        (void *) velyarr,
+        (void *) velzarr,
         (void *) rho0, 
 
         (void *) beta1, 
@@ -606,11 +608,14 @@ static int get_ja_w_eninf_and_extras_onto_detector(CCTK_ARGUMENTS, CCTK_INT det,
   }
 
   // handles setup
-  const int operator_handle = CCTK_InterpHandle(interpolator_name);
-  if (operator_handle < 0)
-    CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
-               "couldn't find interpolator \"%s\"!",
-               interpolator_name);
+  
+  // Interp Operator Handle Not Used by CarpetX
+  const int operator_handle = 0;
+  // const int operator_handle = CCTK_InterpHandle(interpolator_name);
+  // if (operator_handle < 0)
+  //   CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
+  //              "couldn't find interpolator \"%s\"!",
+  //              interpolator_name);
 
   int param_table_handle = Util_TableCreateFromString(interpolator_pars);
   if (param_table_handle < 0) {
@@ -625,12 +630,14 @@ static int get_ja_w_eninf_and_extras_onto_detector(CCTK_ARGUMENTS, CCTK_INT det,
   Util_TableSetIntArray(param_table_handle, NUM_OUTPUT_ARRAYS + num_extras, 
                         operation_codes, "operation_codes");
   
-  const int coord_system_handle = CCTK_CoordSystemHandle(coord_system);
-  if (coord_system_handle < 0) {
-    CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
-        "can't get coordinate system handle for coordinate system \"%s\"!",
-               coord_system);
-  }
+  // Coord System Handle Not Used by CarpetX
+  const int coord_system_handle = 0;
+  // const int coord_system_handle = CCTK_CoordSystemHandle(coord_system);
+  // if (coord_system_handle < 0) {
+  //   CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
+  //       "can't get coordinate system handle for coordinate system \"%s\"!",
+  //              coord_system);
+  // }
 
   // actual interpolation call
   ierr = CCTK_InterpGridArrays(cctkGH,
@@ -682,11 +689,11 @@ static int get_ja_w_eninf_and_extras_onto_detector(CCTK_ARGUMENTS, CCTK_INT det,
         detg = 1.;
     }
 
-    vlowx = g11[i]*velx[i] + g12[i]*vely[i] + g13[i]*velz[i];
-    vlowy = g12[i]*velx[i] + g22[i]*vely[i] + g23[i]*velz[i];
-    vlowz = g13[i]*velx[i] + g23[i]*vely[i] + g33[i]*velz[i];
+    vlowx = g11[i]*velxarr[i] + g12[i]*velyarr[i] + g13[i]*velzarr[i];
+    vlowy = g12[i]*velxarr[i] + g22[i]*velyarr[i] + g23[i]*velzarr[i];
+    vlowz = g13[i]*velxarr[i] + g23[i]*velyarr[i] + g33[i]*velzarr[i];
 
-    v2 = vlowx*velx[i] + vlowy*vely[i] + vlowz*velz[i];
+    v2 = vlowx*velxarr[i] + vlowy*velyarr[i] + vlowz*velzarr[i];
 
     my_w_lorentz = sqrt(1. / (1. - v2));
     if( my_w_lorentz < 1. || v2 > 1 ) 
@@ -700,7 +707,7 @@ static int get_ja_w_eninf_and_extras_onto_detector(CCTK_ARGUMENTS, CCTK_INT det,
                 "g = [%15.6g,%15.6g,%15.6g,%15.6g,%15.6g,%15.6g] "
                 "vel = [%15.6g,%15.6g,%15.6g] occured in iteration %d at location [%15.6g,%15.6g,%15.6g]",
                 __func__, my_w_lorentz,v2, g11[i],g12[i],g13[i],g22[i],g23[i],g33[i],
-                velx[i],vely[i],velz[i], cctk_iteration,
+                velxarr[i],velyarr[i],velzarr[i], cctk_iteration,
                 det_x[i],det_y[i],det_z[i]);
           last_warned = cctk_iteration;
         }
@@ -712,9 +719,9 @@ static int get_ja_w_eninf_and_extras_onto_detector(CCTK_ARGUMENTS, CCTK_INT det,
             - alpha[i]) - 1.0;
     dens = sqrt(detg)*rho0[i]*my_w_lorentz;
 
-    jx[i] = dens * (alpha[i]*velx[i] - beta1[i]);
-    jy[i] = dens * (alpha[i]*vely[i] - beta2[i]);
-    jz[i] = dens * (alpha[i]*velz[i] - beta3[i]);
+    jx[i] = dens * (alpha[i]*velxarr[i] - beta1[i]);
+    jy[i] = dens * (alpha[i]*velyarr[i] - beta2[i]);
+    jz[i] = dens * (alpha[i]*velzarr[i] - beta3[i]);
     w[i]  = my_w_lorentz;
     eninf[i] = my_eninf;
   }

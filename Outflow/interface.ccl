@@ -2,7 +2,7 @@
 # $Header:$
 
 implements: outflow
-inherits: ADMBase HydroBase SphericalSurface
+inherits: ADMBaseX HydroBaseX SphericalSurface
 
 CCTK_INT FUNCTION IO_TruncateOutputFiles \
   (CCTK_POINTER_TO_CONST IN GH)
