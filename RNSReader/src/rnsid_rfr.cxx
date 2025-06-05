@@ -43,21 +43,16 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
   /* EQUILIBRIUM VARIABLES */
 
   int n_tab,       /* Number of points in EOS file */
-      a_check = 0, /* if =200, iteration diverges */
-      print_dif,   /* if =1, monitor convergence */
-      i;           /* loop counter */
+      print_dif;   /* if =1, monitor convergence */
 
   double log_e_tab[MAX_NTAB], /* energy dens./c^2 in tab. EOS */
       log_p_tab[MAX_NTAB],    /* pressure in tabulated EOS */
       log_h_tab[MAX_NTAB],    /* enthalpy in EOS file */
       log_n0_tab[MAX_NTAB],   /* number density in EOS file */
-      Gamma_tab[MAX_NTAB],    /* Gamma in tab. EOS file */
       e_center,               /* central energy density */
       p_center,               /* central pressure */
       h_center,               /* central enthalpy */
       e_surface,              /* surface en. density */
-      p_surface,              /* surface pressure */
-      enthalpy_min,           /* minimum enthalpy in EOS */
       *s_gp,                  /* s grid points */
       *mu,                    /* \mu grid points */
       **rho_potential,        /* potential \rho_potential */
@@ -81,9 +76,6 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
       J;
 
   CCTK_REAL eos_k, eos_ideal_fluid_gamma, rnsid_rho_min;
-
-  CCTK_REAL gamma_center; /* central value of 3-determinant of metric,
-                             needed for applying perturbations */
 
   if ((RNS_K < 0.0) || (RNS_Gamma < 0.0)) {
     CCTK_WARN(0,
@@ -110,13 +102,9 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
   /* INITIAL DATA VARIABLES */
 
   CCTK_INT m,  /* counter */
-      s,       /* counter */
-      j,       /* counter */
-      k,       /* counter */
-      z_print; /* z where check is printed */
+      s;       /* counter */
 
   CCTK_REAL
-  n_P,                  /* polytropic index */
       **nu,             /* potential nu */
       **B,              /* potential B */
       **rho_0,          /* rest mass density */
@@ -166,7 +154,6 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
       alpha_dtheta_ijk, /* dalpha/dtheta at ijk */
       omega_dtheta_ijk, /* domega/dtheta at ijk */
       gamma_ijk,        /* gamma = det(3g) */
-      W_ijk,            /* Lorentz factor */
       h_ijk,            /* h = 1 + eps + P/rho_potential */
       distance_ijk = 0, /* Signed distance to surface */
       e_atm,            /* energy density of atmosphere */
@@ -174,10 +161,7 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
       rho_0_atm,        /* rest mass density of atmosphere */
       dens_atm,         /* D of atmosphere */
       tau_atm,          /* tau of atmosphere */
-      temp_a,           /* temporary variables */
-      temp_o, temp_g, temp_r, temp_e, temp_p, temp_h, temp_v, Omega_ijk;
-
-  FILE *file_2D;
+      Omega_ijk;
 
   int nx = cctkGH->cctk_lsh[0];
   int ny = cctkGH->cctk_lsh[1];
@@ -200,7 +184,6 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
 
 
   /* COMPUTE POLYTROPIC INDEX AND CENTRAL ENERGY DENSITY */
-  n_P=1.0/(eos_ideal_fluid_gamma-1.0);
   e_center = (eos_k*pow(rho_central,eos_ideal_fluid_gamma)/(eos_ideal_fluid_gamma-1.0)+rho_central);
 
   /* TABULATED EOS OPTION */
@@ -258,21 +241,14 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
 
   if(strcmp(eos_type,"tab")==0) {
     e_surface=7.8e-15;
-    p_surface=1.12379e-28;
-    enthalpy_min=1.0/(CLIGHT*CLIGHT);
   }
   else {
         e_surface=0.0;
-        p_surface=0.0;
-        enthalpy_min=0.0;
   }
 
   Omega_e=0.0; /* initialize ang. vel. at equator for diff. rot. */
 
   print_dif=1;
-
-
-  z_print = nz/4;
 
   /* CHANGE e_center TO POLYTROPIC DIMENSIONLESS UNITS */
   /*      e_center /= ( 1.0/pow(eos_k, n_P) ); */
@@ -585,6 +561,12 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
         /* ATMOSPERE SETTINGs                      */
         /* *************************************** */
         if ((rho(p.I) < (1.0 + RNS_atmo_tolerance) * rho_0_atm)) {
+          const CCTK_REAL radial_distance = sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
+          CCTK_REAL rho_atm = (radial_distance > r_atmo)
+            ? (rho_abs_min * pow((r_atmo / radial_distance), n_rho_atmo))
+            : rho_abs_min;
+          rho(p.I) = rho_atm; // This will be overwritten by C2P anyway
+
           velx(p.I) = 0.0;
           vely(p.I) = 0.0;
           velz(p.I) = 0.0;
@@ -604,8 +586,6 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
                                                    betaz_cc(p.I) = 0.0;
                                                  });
   }
-
-  gamma_center = SQ(B[1][1]) * exp(4.0 * alpha[1][1] - 2.0 * nu[1][1]);
 
   /* FREE MEMORY */
 

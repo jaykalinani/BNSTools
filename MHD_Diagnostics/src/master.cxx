@@ -32,7 +32,8 @@ extern "C" void compute_mhd_diagnostics(CCTK_ARGUMENTS) {
       cctk_iteration % diagnostics_compute_every != 0)
     return;
 
-  const double ONE_OVER_SQRT_4PI = 1 / sqrt(4 * M_PI);
+  const double SQRT_4PI = sqrt(4 * M_PI);
+  const double ONE_OVER_SQRT_4PI = 1 / SQRT_4PI;
   double dX[3] = {CCTK_DELTA_SPACE(0), CCTK_DELTA_SPACE(1),
                   CCTK_DELTA_SPACE(2)};
   double dxi[4] = {1e100, 1.0 / dX[0], 1.0 / dX[1], 1.0 / dX[2]};
@@ -167,9 +168,11 @@ extern "C" void compute_mhd_diagnostics(CCTK_ARGUMENTS) {
         double alpha_u0 = 1.0 / sqrt(1.0 - one_minus_one_over_alpha_u0_squared);
         double u0L = alpha_u0 * ONE_OVER_LAPSE;
 
-        double Bx_center = Bvecx(p.I);
-        double By_center = Bvecy(p.I);
-        double Bz_center = Bvecz(p.I);
+        // AsterX uses the convention where F^{ab} is scaled by 1/sqrt(4pi).
+        // We will restore this factor here.
+        double Bx_center = Bvecx(p.I) * SQRT_4PI;
+        double By_center = Bvecy(p.I) * SQRT_4PI;
+        double Bz_center = Bvecz(p.I) * SQRT_4PI;
 
         // NOW COMPUTE b^{\mu} and b^2 = b^{\mu} b^{\nu} g_{\mu \nu}
         double ONE_OVER_U0 = 1.0 / u0L;
@@ -341,7 +344,7 @@ extern "C" void compute_mhd_diagnostics(CCTK_ARGUMENTS) {
         double B2 =
             Bcov[0] * Bx_center + Bcov[1] * By_center + Bcov[2] * Bz_center;
 
-        normB(p.I) = sqrt(B2);
+        normB(p.I) = sqrt(B2) * ONE_OVER_SQRT_4PI; // Convert back to AsterX units, we want all output to be consistent
       });
 }
 

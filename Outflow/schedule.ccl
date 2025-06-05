@@ -1,0 +1,21 @@
+# Schedule definitions for thorn Outflow
+
+STORAGE: outflow_flux
+STORAGE: fluxdens_projected
+STORAGE: w_lorentz_projected
+STORAGE: eninf_projected
+STORAGE: surface_projections
+
+schedule outflow at CCTK_ANALYSIS
+{
+  lang: C
+  options: global
+} "compute outflow"
+
+schedule outflow_setup at CCTK_STARTUP
+{
+  lang: C
+  options: global
+} "set up global ompute data structures"
+
+

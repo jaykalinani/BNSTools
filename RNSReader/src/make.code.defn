@@ -2,7 +2,7 @@
 #$Header$
 
 #Source files in this directory
-SRCS = rnsid_rfr.cxx rnsid_util.cxx hdf5_save.cxx equil.cxx equil_util.cxx
+SRCS = rnsid_rfr.cxx rnsid_util.cxx hdf5_save.cxx equil.cxx equil_util.cxx set_vatmo.cxx
 #rnsid.c
 
 #Subdirectories containing source files

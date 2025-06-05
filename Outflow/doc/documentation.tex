@@ -1,0 +1,243 @@
+% *======================================================================*
+%  Cactus Thorn template for ThornGuide documentation
+%  Author: Ian Kelley
+%  Date: Sun Jun 02, 2002
+%  $Header: /cactusdevcvs/Cactus/doc/ThornGuide/template.tex,v 1.12 2004/01/07 20:12:39 rideout Exp $
+%
+%  Thorn documentation in the latex file doc/documentation.tex
+%  will be included in ThornGuides built with the Cactus make system.
+%  The scripts employed by the make system automatically include
+%  pages about variables, parameters and scheduling parsed from the
+%  relevant thorn CCL files.
+%
+%  This template contains guidelines which help to assure that your
+%  documentation will be correctly added to ThornGuides. More
+%  information is available in the Cactus UsersGuide.
+%
+%  Guidelines:
+%   - Do not change anything before the line
+%       % START CACTUS THORNGUIDE",
+%     except for filling in the title, author, date, etc. fields.
+%        - Each of these fields should only be on ONE line.
+%        - Author names should be separated with a \\ or a comma.
+%   - You can define your own macros, but they must appear after
+%     the START CACTUS THORNGUIDE line, and must not redefine standard
+%     latex commands.
+%   - To avoid name clashes with other thorns, 'labels', 'citations',
+%     'references', and 'image' names should conform to the following
+%     convention:
+%       ARRANGEMENT_THORN_LABEL
+%     For example, an image wave.eps in the arrangement CactusWave and
+%     thorn WaveToyC should be renamed to CactusWave_WaveToyC_wave.eps
+%   - Graphics should only be included using the graphicx package.
+%     More specifically, with the "\includegraphics" command.  Do
+%     not specify any graphic file extensions in your .tex file. This
+%     will allow us to create a PDF version of the ThornGuide
+%     via pdflatex.
+%   - References should be included with the latex "\bibitem" command.
+%   - Use \begin{abstract}...\end{abstract} instead of \abstract{...}
+%   - Do not use \appendix, instead include any appendices you need as
+%     standard sections.
+%   - For the benefit of our Perl scripts, and for future extensions,
+%     please use simple latex.
+%
+% *======================================================================*
+%
+% Example of including a graphic image:
+%    \begin{figure}[ht]
+% 	\begin{center}
+%    	   \includegraphics[width=6cm]{MyArrangement_MyThorn_MyFigure}
+% 	\end{center}
+% 	\caption{Illustration of this and that}
+% 	\label{MyArrangement_MyThorn_MyLabel}
+%    \end{figure}
+%
+% Example of using a label:
+%   \label{MyArrangement_MyThorn_MyLabel}
+%
+% Example of a citation:
+%    \cite{MyArrangement_MyThorn_Author99}
+%
+% Example of including a reference
+%   \bibitem{MyArrangement_MyThorn_Author99}
+%   {J. Author, {\em The Title of the Book, Journal, or periodical}, 1 (1999),
+%   1--16. {\tt http://www.nowhere.com/}}
+%
+% *======================================================================*
+
+% If you are using CVS use this line to give version information
+% $Header: /cactusdevcvs/Cactus/doc/ThornGuide/template.tex,v 1.12 2004/01/07 20:12:39 rideout Exp $
+
+\documentclass{article}
+
+% Use the Cactus ThornGuide style file
+% (Automatically used from Cactus distribution, if you have a
+%  thorn without the Cactus Flesh download this from the Cactus
+%  homepage at www.cactuscode.org)
+\usepackage{../../../../doc/latex/cactus}
+
+\begin{document}
+
+% The author of the documentation
+\author{Roland Haas \textless roland.haas@physcis.gatech.edu\textgreater}
+
+% The title of the document (not necessarily the name of the Thorn)
+\title{Outflow}
+
+% the date your document was last changed, if your document is in CVS,
+% please use:
+%    \date{$ $Date: 2004/01/07 20:12:39 $ $}
+\date{August 15 2009}
+
+\maketitle
+
+% Do not delete next line
+% START CACTUS THORNGUIDE
+
+% Add all definitions used in this documentation here
+%   \def\mydef etc
+
+% Add an abstract for this thorn's documentation
+\begin{abstract}
+    Outflow calculates the flow of rest mass density  across a
+    SphericalSurface, eg. and apparent horizon or a sphere at ``infinity''.
+\end{abstract}
+
+% The following sections are suggestive only.
+% Remove them or add your own.
+
+\section{Introduction}
+Hydrodynamic simulations should conserve eg. the total rest mass in the system
+(outside he event horizon, that is). This thorn allow to measure the flux of
+rest mass across a given SphericalSurface.
+
+\section{Physical System}
+The Valencia formalism defines its $D = \rho W$ variable such that one can define a 
+total rest mass density as:
+\begin{displaymath}
+    M = \int \sqrt{\gamma} D d^3x
+\end{displaymath}
+and from the EOM of $D$ (see~\cite{lrr-font})
+\begin{displaymath}
+    \frac{\partial }{\partial x^0} (\sqrt{\gamma}D )+ 
+    \frac{\partial }{\partial x^i} (\sqrt(\gamma) \alpha D (v^i- 
+      \beta^i/\alpha) = 0
+\end{displaymath}
+one obtains:
+\begin{eqnarray}
+\dot M
+&=& - \int_V \frac{\partial }{\partial x^i} 
+   (\sqrt\gamma \alpha D(v^i - \beta^i/\alpha) d^3x \\
+&=& -\int_{\partial V} \sqrt\gamma \alpha D (v^i-\beta^i/\alpha) d\sigma_i
+\end{eqnarray}
+where $\sigma_i$ is the ordinary flat space directed surface element of 
+the enclosing surface, eg.\
+\begin{displaymath}
+d\sigma_i = \hat r_i r^2 \sin\theta d\theta d\phi
+\end{displaymath}
+with $\hat r_i = [\cos\phi\sin\theta, \sin\phi\sin\theta,
+\cos(\theta)]$ 
+for a sphere of radius r.
+
+For a generic SphericalSurface parametrized by $\theta$ and $\phi$ one has:
+\begin{eqnarray}
+    x &=& \bar r(\theta, \phi) \cos\phi \sin\theta \\
+    y &=& \bar r(\theta, \phi) \sin\phi \sin\theta \\
+    z &=& \bar r(\theta, \phi)          \cos\theta
+\end{eqnarray}
+where $\bar r$ is the isotropic radius.
+Consequently the surface element is
+\begin{eqnarray}
+    d \sigma_i 
+    &=& \left( 
+        \frac{\partial\vec{\bar r}}{\partial\theta} \times
+        \frac{\partial\vec{\bar r}}{\partial\phi}
+        \right)_i \\
+    &=& \bar r^2 \sin\theta \hat{\bar r}_i 
+        - \frac{\partial\bar r}{\partial\theta} \bar r \sin \theta \hat \theta_i
+        - \frac{\partial\bar r}{\partial\phi} \bar r \hat \phi_i
+\end{eqnarray}
+where $\hat{\bar r}$, $\hat \theta$ and $\hat \phi$ are the flat space
+standard unit vectors on the sphere~\cite{mtw:73}. 
+
+\section{Numerical Implementation}
+We implement the surface integral by interpolating the required quantities
+($g_{ij}$, $\rho$, $v^i$, $\beta^i$, $\alpha$) onto the spherical surface and
+then integrate using a fourth order convergent Newton-Cotes formula. 
+
+For the
+$\theta$ direction SphericalSurfaces defines grid points such that
+\begin{displaymath}
+    \theta_i = -(n_\theta - 1/2) \Delta_\theta + i \Delta_\theta \qquad
+    0 \le i < N_\theta-1
+\end{displaymath}
+where $N_\theta$ is the total number of intervals (\verb|sf_ntheta|),
+$n_\theta$ is the number of ghost zones in the $\theta$ direction
+(\verb|nghosttheta|) and $\Delta_\theta = \frac{\pi}{N_\theta-2n\theta}$.
+Since with this 
+\begin{displaymath}
+    \theta_i \in [\Delta_\theta/2, \pi - \Delta_\theta/2] \qquad 
+    \mbox{for $i \in [n_\theta, N_\theta-n_\theta-1]$}
+\end{displaymath}
+we do not have grid points at the end of the interval $\{0,\pi\}$ we derive
+an open extended Newton-Cotes formula from Eq.~4.1.14 of~\cite{nr-cpp-2nd} and
+a third order accurate extrapolative rule (see Maple worksheet). We find
+\begin{eqnarray}
+    \int_{x_0}^{x_{N-1}} f(x) dx &\approx& h \Bigl\{ 
+    \frac{13}{12} f_{1/2} + \frac{7}{8} f_{3/2} + \frac{25}{24} f_{5/2} +
+    f_{7/2} + f_{9/2} + \cdots + f_{N-1-7/2} \nonumber \\
+    && + f_{N-1-9/2}
+    + \frac{25}{24} f_{N-1-5/2} + \frac{7}{8} f_{N-1-3/2} + \frac{13}{12} f_{N-1-1/2}
+    \Bigr\} + O(1/N^4)
+\end{eqnarray}.
+
+For the
+$\phi$ direction SphericalSurfaces defines grid points such that
+\begin{displaymath}
+    \phi_i = -n_\phi \Delta_\phi + i \Delta_\phi \qquad
+    0 \le i < N_\phi-1
+\end{displaymath}
+where $N_\phi$ is the total number of intervals (\verb|sf_nphi|),
+$n_\phi$ is the number of ghost zones in the $\phi$ direction
+(\verb|nghostphi|) and $\Delta_\phi = \frac{\pi}{N_\phi-2n\phi}$.
+With this 
+\begin{displaymath}
+    \phi_i \in [0, 2 \pi - \Delta_\phi] \qquad 
+    \mbox{for $i \in [n_\phi, N_\phi-n_\phi-1]$}
+\end{displaymath}
+we use a simple extended trapezoid rule to achieve spectral convergence due to
+the periodic nature of $\phi$ (note: $x_N = x_0$)
+\begin{eqnarray}
+    \int_{x_0}^{x_N} f(x) dx  \approx& h \sum_{i=0}^{N-1} f_i
+\end{eqnarray}.
+
+The derivatives of $\vec{\bar r}$ along $\theta$ and $\phi$ are obtained
+numerically and require at least two ghost zones in $\theta$ and $\phi$.
+
+\section{Using This Thorn}
+Right now surface can only be prescribed by SphericalSurfaces, the flux through
+each surface is output in in a file \verb|outflow_det_%d.asc|
+
+\subsection{Interaction With Other Thorns}
+Takes care to schedule itself after \verb|SphericalSurfaces_HasBeenSet|.
+
+\subsection{Examples}
+See the parameter file in the test directory. For spherical symmetric infall
+the flux through all detectors should be equal (since rest mass must be
+conserved).
+
+\begin{thebibliography}{9}
+    \bibitem{lrr-font} Jos\'e A. Font,
+    ``Numerical Hydrodynamics and Magnetohydrodynamics in General Relativity'',
+    Living Rev. Relativity 11,  (2008),  7. URL (cited on August 15. 2009):
+    http://www.livingreviews.org/lrr-2008-7
+
+    \bibitem{nr-cpp-2nd} Press, W. H. (2002). Numerical recipes in C++: the
+        art of scientific computing. Array Cambridge, UK: Cambridge University
+        Press. 
+\end{thebibliography}
+
+% Do not delete next line
+% END CACTUS THORNGUIDE
+
+\end{document}
