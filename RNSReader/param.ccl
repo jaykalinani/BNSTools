@@ -13,8 +13,8 @@ USES CCTK_REAL n_rho_atmo
 
 private:
 
-# NOTE: These params are used to generate an RNS solution and are thus disabled
-# for this stripped-down reader. CarpetX doesn't like treating parameters as non-consts?
+# NOTE: These params are used to generate an RNS solution. They are disabled
+# for this stripped-down reader and read from the RNS file instead.
 
 # KEYWORD rotation_type "Specify type of rotation law"
 # {
@@ -32,16 +32,16 @@ private:
 #   0: :: "Any positive number"
 # } 1
 
-# KEYWORD eos_type "Specify type of equation of state"
-# {
-#  "poly" :: "Polytropic EOS"
-#  "tab"  :: "Tabulated EOS"
-# } "poly"
+KEYWORD load_eos_type "Specify type of equation of state"
+{
+ "poly" :: "Polytropic EOS"
+ "tab"  :: "Tabulated EOS"
+} "poly"
 
-# STRING eos_file "Equation of state table"
-# {
-#  .* :: "EOS table file"
-# } ""
+STRING load_eos_file "Equation of state table"
+{
+ .* :: "EOS table file"
+} ""
 
 
 ########## -----------------------------------------------------------------

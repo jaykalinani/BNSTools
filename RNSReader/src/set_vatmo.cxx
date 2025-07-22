@@ -56,6 +56,8 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
     const CCTK_REAL velxL = velx(p.I);
     const CCTK_REAL velyL = vely(p.I);
     const CCTK_REAL rhoL = rho(p.I);
+    const CCTK_REAL epsL = eps(p.I);
+    const CCTK_REAL pressL = press(p.I);
     const CCTK_REAL radial_distance = sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
     
     // Grading rho
@@ -79,6 +81,11 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
         ? (10 * rho_abs_min * pow((r_atmo / radial_distance), n_corot))
         : 10 * rho_abs_min;
 
+      // TODO: This assumes simple polytrope! properly use EOS calls pls
+      assert(load_eos_type == "poly");
+      CCTK_REAL eps_corot_atm = rho_corot_atm * 100;
+      CCTK_REAL press_corot_atm = rho_corot_atm * eps_corot_atm;
+
       double alpL = calc_avg_v2c(alp, p);
 
       const vec<CCTK_REAL, 3> betas_avg(
@@ -87,11 +94,15 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
       velx(p.I) = (-p.y * omg_atm + betas_avg(0)) / alpL;
       vely(p.I) = (p.x * omg_atm + betas_avg(1)) / alpL;
       rho(p.I) = rho_corot_atm;
+      eps(p.I) = eps_corot_atm;
+      press(p.I) = press_corot_atm;
 
     } else {
       velx(p.I) = velxL;
       vely(p.I) = velyL;
       rho(p.I) = rhoL;
+      eps(p.I) = epsL;
+      press(p.I) = pressL;
     }
   });
 }

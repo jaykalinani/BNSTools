@@ -99,6 +99,9 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
   rotation_type = (char *)malloc(200 * sizeof(char));
   double A_diff, axes_ratio;
 
+  strcpy(eos_type, load_eos_type);
+  strcpy(eos_file, load_eos_file);
+
   /* INITIAL DATA VARIABLES */
 
   CCTK_INT m,  /* counter */
@@ -287,7 +290,7 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
     /* RECOVER FROM 2D FILE */
     /* ==================================================== */
     message = (char *)malloc(200 * sizeof(char));
-    sprintf(message, " Recovering 2D model form file %s", model2D_file);
+    sprintf(message, " Recovering 2D model from file %s", model2D_file);
     CCTK_INFO(message);
     free(message);
     /* ==================================================== */
@@ -574,6 +577,10 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
         /* *************************************** */
         /* ATMOSPERE SETTINGs                      */
         /* *************************************** */
+        // if (rho(p.I) > 1e-10) {
+        //   printf("Post RNSRead: rho = %e; eps = %e; press = %e;\n", rho(p.I), eps(p.I), press(p.I));
+        // }
+
       }); /* END GRID LOOP */
 
   if (strcmp(zero_shift, "yes") == 0) {
@@ -609,6 +616,10 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
 
   free(s_gp);
   free(mu);
+
+  free(eos_type);
+  free(eos_file);
+  free(rotation_type);
 
   /* Add code for filling time levels here if needed in the future. */
 

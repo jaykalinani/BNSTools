@@ -60,9 +60,9 @@ if (corot_atmo) {
   SCHEDULE RNSReader_Init_VelAtmo IN HydroBaseX_InitialData AFTER Hydro_rnsid_init
   {
     LANG: C
-    READS: HydroBaseX::vel(everywhere) HydroBaseX::rho(everywhere)
+    READS: HydroBaseX::vel(everywhere) HydroBaseX::rho(everywhere) HydroBaseX::eps(everywhere) HydroBaseX::press(everywhere)
     READS: ADMBaseX::lapse(everywhere) ADMBaseX::shift(everywhere)
-    WRITES: HydroBaseX::vel(everywhere) HydroBaseX::rho(everywhere)
+    WRITES: HydroBaseX::vel(everywhere) HydroBaseX::rho(everywhere) HydroBaseX::eps(everywhere) HydroBaseX::press(everywhere)
   } "Set corotating atmosphere from Omega(costh) of RNS surface"
 }
 
