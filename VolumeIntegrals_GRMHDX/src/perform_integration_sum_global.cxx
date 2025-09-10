@@ -20,25 +20,19 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
   /* FIXME: Add this symmetry stuff... Should be straightforward. */
   CCTK_REAL sym_factor1, sym_factor2, sym_factor3;
 
-  /*
-    if (CCTK_EQUALS(domain,"bitant")){
-      sym_factor1 = 2.0e0;
-      sym_factor2 = 2.0e0;
-      sym_factor3 = 0.0e0;
-    } else if (CCTK_EQUALS(domain,"octant")){
-      sym_factor1 = 8.0e0;
-      sym_factor2 = 0.0e0;
-      sym_factor3 = 0.0e0;
-    } else {
-      sym_factor1 = 1.0e0;
-      sym_factor2 = 1.0e0;
-      sym_factor3 = 1.0e0;
-    }
-  */
-
-  sym_factor1 = 1.0e0;
-  sym_factor2 = 1.0e0;
-  sym_factor3 = 1.0e0;
+  if (CCTK_EQUALS(VIdomain,"bitant")){
+    sym_factor1 = 2.0e0;
+    sym_factor2 = 2.0e0;
+    sym_factor3 = 0.0e0;
+  } else if (CCTK_EQUALS(VIdomain,"octant")){
+    sym_factor1 = 8.0e0;
+    sym_factor2 = 0.0e0;
+    sym_factor3 = 0.0e0;
+  } else {
+    sym_factor1 = 1.0e0;
+    sym_factor2 = 1.0e0;
+    sym_factor3 = 1.0e0;
+  }
 
   // CarpetX reductions currently include the cell volume in the sum. Keeping
   // this code here in case that ever changes. const amrex::Geometry &geom =
