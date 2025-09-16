@@ -250,6 +250,86 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
                            Bvecz, gxx, gxy, gxz, gyy, gyz, gzz, cms_x, cms_y);
         });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "volume_average_norm_B_m1_cd")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          // TODO: Get BNS COM from --BNSTrackerGen-- somewhere
+          // Make sure we have updated values
+          // before this integral is called!
+
+          double cms_x = 0.0;
+          double cms_y = 0.0;
+          if (set_origin_with_VIX) {
+            cms_x = *comx;
+            cms_y = *comy;
+          }
+
+          volume_norm_B_m_12(VolIntegrand1, VolIntegrand2, VolIntegrand3,
+                           VolIntegrand4, p, rho, dens_c, dens_d, Bvecx, Bvecy,
+                           Bvecz, gxx, gxy, gxz, gyy, gyz, gzz, cms_x, cms_y, 1);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "volume_average_norm_B_m2_cd")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          // TODO: Get BNS COM from --BNSTrackerGen-- somewhere
+          // Make sure we have updated values
+          // before this integral is called!
+
+          double cms_x = 0.0;
+          double cms_y = 0.0;
+          if (set_origin_with_VIX) {
+            cms_x = *comx;
+            cms_y = *comy;
+          }
+
+          volume_norm_B_m_12(VolIntegrand1, VolIntegrand2, VolIntegrand3,
+                           VolIntegrand4, p, rho, dens_c, dens_d, Bvecx, Bvecy,
+                           Bvecz, gxx, gxy, gxz, gyy, gyz, gzz, cms_x, cms_y, 2);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "volume_average_norm_B_m3_cd")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          // TODO: Get BNS COM from --BNSTrackerGen-- somewhere
+          // Make sure we have updated values
+          // before this integral is called!
+
+          double cms_x = 0.0;
+          double cms_y = 0.0;
+          if (set_origin_with_VIX) {
+            cms_x = *comx;
+            cms_y = *comy;
+          }
+
+          volume_norm_B_m_12(VolIntegrand1, VolIntegrand2, VolIntegrand3,
+                           VolIntegrand4, p, rho, dens_c, dens_d, Bvecx, Bvecy,
+                           Bvecz, gxx, gxy, gxz, gyy, gyz, gzz, cms_x, cms_y, 3);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "volume_average_norm_B_m4_cd")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          // TODO: Get BNS COM from --BNSTrackerGen-- somewhere
+          // Make sure we have updated values
+          // before this integral is called!
+
+          double cms_x = 0.0;
+          double cms_y = 0.0;
+          if (set_origin_with_VIX) {
+            cms_x = *comx;
+            cms_y = *comy;
+          }
+
+          volume_norm_B_m_12(VolIntegrand1, VolIntegrand2, VolIntegrand3,
+                           VolIntegrand4, p, rho, dens_c, dens_d, Bvecx, Bvecy,
+                           Bvecz, gxx, gxy, gxz, gyy, gyz, gzz, cms_x, cms_y, 4);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "magnetic_energy_comov")) {
     grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,

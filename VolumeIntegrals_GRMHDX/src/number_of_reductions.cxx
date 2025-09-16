@@ -34,6 +34,18 @@ VI_GRMHDX_number_of_reductions(int which_integral) {
                   "volume_average_norm_B_cd"))
     return 4;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "volume_average_norm_B_m1_cd"))
+    return 4;
+  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "volume_average_norm_B_m2_cd"))
+    return 4;
+  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "volume_average_norm_B_m3_cd"))
+    return 4;
+  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "volume_average_norm_B_m4_cd"))
+    return 4;
+  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                   "kinetic_energy"))
     return 3;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
