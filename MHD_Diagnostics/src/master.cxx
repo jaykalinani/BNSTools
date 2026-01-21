@@ -390,6 +390,11 @@ extern "C" void compute_mhd_derivs(CCTK_ARGUMENTS) {
     // Use fourth-order ECHO expressions
     // TODO: check if face index is correct, how to handle densitized B?
 
+    divB(p.I) = calc_fd_forward_midpoint<mag_correction_order, 0>(dBx_stag, p) +
+      calc_fd_forward_midpoint<mag_correction_order, 1>(dBy_stag, p) +
+      calc_fd_forward_midpoint<mag_correction_order, 2>(dBz_stag, p);
+
+    /*
     double Bx_stagg = 13. * dBx_stag(p.I + p.DI[0]) / 12. -
                       (dBx_stag(p.I) + dBx_stag(p.I + 2 * p.DI[0])) / 24.;
     double By_stagg = 13. * dBy_stag(p.I + p.DI[1]) / 12. -
@@ -410,6 +415,7 @@ extern "C" void compute_mhd_derivs(CCTK_ARGUMENTS) {
     divB(p.I) = dxi[1] * (Bx_stagg - Bx_stagg_m1) +
                 dxi[2] * (By_stagg - By_stagg_m1) +
                 dxi[3] * (Bz_stagg - Bz_stagg_m1);
+    */
 
     // ===========================================
 

@@ -316,7 +316,12 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void volume_norm_B_m_1
 
   const CCTK_REAL my_rho = rho0(p.I);
 
-  if (my_rho > dens_1 && my_rho <= dens_2) {
+  CCTK_REAL posx = p.x - cms_x;
+  CCTK_REAL posy = p.y - cms_y;
+  CCTK_REAL posz = p.z;
+  const CCTK_REAL rcyl = posx*posx + posy*posy; // ignore pts close to axis as m>0 modes are discontinuous
+
+  if (my_rho > dens_1 && my_rho <= dens_2 && rcyl > 0.1) {
 
     const CCTK_REAL gammaDD00 = gxx(p.I);
     const CCTK_REAL gammaDD01 = gxy(p.I);
@@ -326,10 +331,6 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void volume_norm_B_m_1
     const CCTK_REAL gammaDD22 = gzz(p.I);
 
     const CCTK_REAL B_contra[3]{Bvecx(p.I), Bvecy(p.I), Bvecz(p.I)};
-
-    CCTK_REAL posx = p.x - cms_x;
-    CCTK_REAL posy = p.y - cms_y;
-    CCTK_REAL posz = p.z;
 
     // Cylindrical coordinates and some
     // quantities for transformation of vectors.
