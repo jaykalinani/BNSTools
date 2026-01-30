@@ -5,6 +5,7 @@
 #include "rnsreader_utils.hxx"
 #include "consts.h"
 #include "aster_utils.hxx"
+#include "setup_eos.hxx"
 
 #include <loop.hxx>
 #include <loop_device.hxx>
@@ -15,10 +16,18 @@ using namespace Loop;
 using namespace amrex;
 using namespace std;
 using namespace AsterUtils;
+using namespace EOSX;
 
 extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_RNSReader_Init_VelAtmo;
   DECLARE_CCTK_PARAMETERS;
+
+  auto eos_3p_tab3d = global_eos_3p_tab3d;
+  if (not CCTK_EQUALS(evolution_eos, "Tabulated3d")) {
+    CCTK_VERROR("Invalid evolution EOS type '%s'. Please, set "
+                "EOSX::evolution_eos = \"Tabulated3d\" in your parameter file.",
+                evolution_eos);
+  }
 
   Omega_th_reader* vel_th_reader = nullptr;
   // Open the Omega(th) file
@@ -56,6 +65,8 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
     const CCTK_REAL velxL = velx(p.I);
     const CCTK_REAL velyL = vely(p.I);
     const CCTK_REAL rhoL = rho(p.I);
+    const CCTK_REAL tempL = temperature(p.I);
+    const CCTK_REAL YeL = Ye(p.I);
     const CCTK_REAL epsL = eps(p.I);
     const CCTK_REAL pressL = press(p.I);
     const CCTK_REAL radial_distance = sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
@@ -77,14 +88,13 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
         ? (omg_surf * pow((r_corot_min / radial_distance), n_omg_atmo))
         : omg_surf;
       
+      // Pad density and recalculate primitives
       CCTK_REAL rho_corot_atm = (radial_distance > r_atmo)
         ? (10 * rho_abs_min * pow((r_atmo / radial_distance), n_corot))
         : 10 * rho_abs_min;
 
-      // TODO: This assumes simple polytrope! properly use EOS calls pls
-      assert(load_eos_type == "poly");
-      CCTK_REAL eps_corot_atm = rho_corot_atm * 100;
-      CCTK_REAL press_corot_atm = rho_corot_atm * eps_corot_atm;
+      CCTK_REAL eps_corot_atm = eos_3p_tab3d->eps_from_valid_rho_temp_ye(rho_corot_atm, tempL, YeL);
+      CCTK_REAL press_corot_atm = eos_3p_tab3d->press_from_valid_rho_temp_ye(rho_corot_atm, tempL, YeL); 
 
       double alpL = calc_avg_v2c(alp, p);
 

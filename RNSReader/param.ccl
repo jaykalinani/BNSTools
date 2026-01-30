@@ -5,6 +5,9 @@
 #
 #USES CCTK_INT timelevels
 
+SHARES:EOSX
+USES KEYWORD evolution_eos
+
 SHARES: Con2PrimFactory
 USES CCTK_REAL rho_abs_min
 USES CCTK_REAL atmo_tol
