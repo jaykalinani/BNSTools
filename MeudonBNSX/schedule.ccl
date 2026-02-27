@@ -24,22 +24,22 @@ if (CCTK_EQUALS (initial_data,    "MeudonBNSX") ||
  
   SCHEDULE MeudonBNSX_Interpolation_C2V IN HydroBaseX_InitialData AFTER MeudonBNSX_initialise 
   {
-  LANG: C
-  READS: metric_cc(everywhere)
-  READS: lapse_cc(everywhere)
-  READS: shift_cc(everywhere)
-  READS: curv_cc(everywhere)
-  READS: dtlapse_cc(everywhere)
-  READS: dtshift_cc(everywhere)
+    LANG: C
+    READS: metric_cc(everywhere)
+    READS: lapse_cc(everywhere)
+    READS: shift_cc(everywhere)
+    READS: curv_cc(everywhere)
+    READS: dtlapse_cc(everywhere)
+    READS: dtshift_cc(everywhere)
 
-  WRITES: ADMBaseX::metric(interior)
-  WRITES: ADMBaseX::lapse(interior)
-  WRITES: ADMBaseX::shift(interior)
-  WRITES: ADMBaseX::curv(interior)
-  WRITES: ADMBaseX::dtlapse(interior)
-  WRITES: ADMBaseX::dtshift(interior)
+    WRITES: ADMBaseX::metric(interior)
+    WRITES: ADMBaseX::lapse(interior)
+    WRITES: ADMBaseX::shift(interior)
+    WRITES: ADMBaseX::curv(interior)
+    WRITES: ADMBaseX::dtlapse(interior)
+    WRITES: ADMBaseX::dtshift(interior)
 
-  SYNC: ADMBaseX::metric ADMBaseX::lapse ADMBaseX::shift ADMBaseX::curv
-  SYNC: ADMBaseX::dtlapse ADMBaseX::dtshift
+    SYNC: ADMBaseX::metric ADMBaseX::lapse ADMBaseX::shift ADMBaseX::curv
+    SYNC: ADMBaseX::dtlapse ADMBaseX::dtshift
   } "Interpolate metric from cell center to vertex" 
 }

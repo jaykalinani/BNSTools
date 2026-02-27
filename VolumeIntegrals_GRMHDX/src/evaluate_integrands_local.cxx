@@ -23,8 +23,12 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
       (6.77269222552442e-06 * 6.77269222552442e-06 * 6.77269222552442e-06);
   const double gamma_lim = CoM_integrand_GAMMA_SPEED_LIMIT;
 
-  int which_integral = NumIntegrals - *IntegralCounter + 1;
-  if (CCTK_MyProc == 0) {
+  const int which_integral = NumIntegrals - static_cast<int>(*IntegralCounter) + 1;
+  if (which_integral < 1 || which_integral > NumIntegrals || which_integral > 100) {
+    CCTK_VERROR("Invalid integral index: which_integral=%d NumIntegrals=%d IntegralCounter=%d",
+                which_integral, NumIntegrals, static_cast<int>(*IntegralCounter));
+  }
+  if (CCTK_MyProc(cctkGH) == 0) {
     CCTK_VINFO("Computing Integrand %d", which_integral);
   }
 
@@ -254,7 +258,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
     grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          magnetic_co(VolIntegrand1, p, smallb2, w_lorentz, gxx, gxy, gxz, gyy,
+          magnetic_co(VolIntegrand1, p, b2small, w_lorentz, gxx, gxy, gxz, gyy,
                       gyz, gzz, gamma_lim);
         });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
@@ -262,7 +266,7 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
     grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          magnetic_co(VolIntegrand1, p, smallb2, w_lorentz, gxx, gxy, gxz, gyy,
+          magnetic_co(VolIntegrand1, p, b2small, w_lorentz, gxx, gxy, gxz, gyy,
                       gyz, gzz, gamma_lim);
         });
   } else {
@@ -290,7 +294,12 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
   }
 
   if (volintegral_sphere__tracks__amr_centre[which_integral] != -1) {
-    int which_centre = volintegral_sphere__tracks__amr_centre[which_integral];
+    const int which_centre =
+        volintegral_sphere__tracks__amr_centre[which_integral];
+    if (which_centre < 0 || which_centre > 2) {
+      CCTK_VERROR("Invalid BoxInBox centre index %d for integral %d; valid range is [0,2]",
+                  which_centre, which_integral);
+    }
 
     volintegral_inside_sphere__center_x[which_integral] =
         position_x[which_centre];
