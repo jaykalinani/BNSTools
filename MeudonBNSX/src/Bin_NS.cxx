@@ -27,7 +27,7 @@ using namespace Arith;
 using namespace Loop;
 
 // define namespace here for old versions of Lorene that don't do so
-// namespace Lorene {}
+namespace Lorene {}
 using namespace Lorene;
 
 extern "C" void MeudonBNSX_initialise(CCTK_ARGUMENTS) {
