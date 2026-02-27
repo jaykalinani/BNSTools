@@ -88,14 +88,25 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
     // Perform reduction. We only want the summed integrands.
     const CarpetX::reduction<CCTK_REAL, 3> red = CarpetX::reduce(gi, vi, 0);
 
-    VolIntegral[4 * (which_integral) + i] =
-        red.sum; // * d3x; // <- Multiply the integrand by d3x
+    const CCTK_REAL redsum = red.sum;
+    if (std::isfinite(redsum)) {
+      VolIntegral[4 * (which_integral) + i] =
+          redsum; // * d3x; // <- Multiply the integrand by d3x
+    } else {
+      VolIntegral[4 * (which_integral) + i] = 0.0;
+      if (myproc == 0 && verbose >= 1) {
+        printf("VolumeIntegrals_GRMHDX: Replaced non-finite reduction with 0: integral=%d reduction=%d/%d keyword=%s sum=%e min=%e max=%e vol=%e\n",
+               which_integral, i + 1, num_reductions,
+               Integration_quantity_keyword[which_integral], redsum, red.min,
+               red.max, red.vol);
+      }
+    }
     // Minimal diagnostics for stalled/invalid reductions.
     if (myproc == 0 && verbose >= 1 &&
-        (!std::isfinite(red.sum) || red.sum == 0.0)) {
+        (!std::isfinite(redsum) || redsum == 0.0)) {
       printf("VolumeIntegrals_GRMHDX: DoSum diagnostic: integral=%d reduction=%d/%d keyword=%s sum=%e min=%e max=%e vol=%e\n",
              which_integral, i + 1, num_reductions,
-             Integration_quantity_keyword[which_integral], red.sum, red.min,
+             Integration_quantity_keyword[which_integral], redsum, red.min,
              red.max, red.vol);
     }
 

@@ -86,18 +86,26 @@ compute_rho_star(
   CCTK_REAL w_lorentz_limited = w_lorentz;
   if (w_lorentz > gamma_lim)
     w_lorentz_limited = gamma_lim;
+  const CCTK_REAL detgamma =
+      gammaDD00 * gammaDD11 * gammaDD22 -
+      gammaDD00 * (gammaDD12 * gammaDD12) -
+      (gammaDD01 * gammaDD01) * gammaDD22 +
+      2 * gammaDD01 * gammaDD02 * gammaDD12 -
+      (gammaDD02 * gammaDD02) * gammaDD11;
+
+  // Guard against non-finite or unphysical values that would contaminate
+  // global reductions with NaNs.
+  if (!std::isfinite(rho0) || !std::isfinite(w_lorentz_limited) ||
+      !std::isfinite(detgamma) || detgamma <= 0.0) {
+    return 0.0;
+  }
   /*
    *  Original SymPy expression:
    *  "rhostar = rho0*w_lorentz_limited*sqrt(gammaDD00*gammaDD11*gammaDD22 -
    * gammaDD00*gammaDD12**2 - gammaDD01**2*gammaDD22 +
    * 2*gammaDD01*gammaDD02*gammaDD12 - gammaDD02**2*gammaDD11)"
    */
-  const CCTK_REAL rhostar = rho0 * w_lorentz_limited *
-                            sqrt(gammaDD00 * gammaDD11 * gammaDD22 -
-                                 gammaDD00 * (gammaDD12 * gammaDD12) -
-                                 (gammaDD01 * gammaDD01) * gammaDD22 +
-                                 2 * gammaDD01 * gammaDD02 * gammaDD12 -
-                                 (gammaDD02 * gammaDD02) * gammaDD11);
+  const CCTK_REAL rhostar = rho0 * w_lorentz_limited * sqrt(detgamma);
 
   return rhostar;
 }
