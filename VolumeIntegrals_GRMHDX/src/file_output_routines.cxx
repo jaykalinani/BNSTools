@@ -84,7 +84,11 @@ extern "C" void VI_GRMHDX_file_output_routine_Startup(CCTK_ARGUMENTS) {
 extern "C" void VI_GRMHDX_file_output(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_VI_GRMHDX_file_output;
   DECLARE_CCTK_PARAMETERS;
-  if (CCTK_MyProc(cctkGH) == 0 && cctk_iteration % VolIntegral_out_every == 0 &&
+  // physical_time is WRITES(everywhere); initialize on all ranks and every
+  // call, even when this rank does not perform file I/O.
+  *physical_time = cctk_time;
+  if (CCTK_MyProc(cctkGH) == 0 && VolIntegral_out_every > 0 &&
+      cctk_iteration % VolIntegral_out_every == 0 &&
       enable_file_output == 1) {
     char *actual_dir;
     OUTDIR_NAME(CCTK_PASS_CTOC, outVolIntegral_dir, actual_dir);
@@ -112,12 +116,10 @@ extern "C" void VI_GRMHDX_file_output(CCTK_ARGUMENTS) {
         sprintf(header_buffer, "# Col. 1: Time (cctk_time)\n");
 
         int which_col = 2;
-
-        if (enable_time_reparameterization) {
-          sprintf(header_buffer, "%s# Col. 2: Physical Time (physical_time)\n",
-                  header_buffer);
-          which_col++;
-        }
+        // Keep header/data columns aligned: physical_time is always written.
+        sprintf(header_buffer, "%s# Col. 2: Physical Time (physical_time)\n",
+                header_buffer);
+        which_col++;
 
         for (int which_integral = 1; which_integral <= NumIntegrals;
              which_integral++) {
@@ -178,7 +180,7 @@ extern "C" void VI_GRMHDX_file_output(CCTK_ARGUMENTS) {
       sprintf(buffer, "%e ", cctk_time);
       if (enable_time_reparameterization) {
         double xx = cctk_time;
-        // Mathematica input:  CForm[Integrate[((1/2)*(Erf[((t) - (10))/(5)] +
+        // Mathematica input: CForm[Integrate[((1/2)*(Erf[((t) - (10))/(5)] +
         // 1)), {t, 0, xx}]]
         //  Output: (((-Power(E,-Power(t0,2)/Power(w,2)) + Power(E,-Power(t0 -
         //  xx,2)/Power(w,2)))*w)/Sqrt(Pi) + xx - t0*Erf(t0/w) + (-t0 +
@@ -205,9 +207,8 @@ extern "C" void VI_GRMHDX_file_output(CCTK_ARGUMENTS) {
 
         if (fabs(cctk_time) < 1e-8 * cctk_delta_time)
           *physical_time = 0.0;
-
-        sprintf(buffer, "%s%e ", buffer, *physical_time);
       }
+      sprintf(buffer, "%s%e ", buffer, *physical_time);
       for (int which_integral = 1; which_integral <= NumIntegrals;
            which_integral++) {
         int num_reductions = VI_GRMHDX_number_of_reductions(which_integral);

@@ -744,14 +744,14 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void thermal(
 
 CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_co(
     const Loop::GF3D2<double> VolIntegrand1, const Loop::PointDesc &p,
-    const Loop::GF3D2<const double> smallb2GF,
+    const Loop::GF3D2<const double> b2smallGF,
     const Loop::GF3D2<const double> w_lorentzGF,
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
     const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
     const double gamma_lim) {
 
-  const CCTK_REAL smallb2 = smallb2GF(p.I);
+  const CCTK_REAL b2small = b2smallGF(p.I);
   const CCTK_REAL w_lorentz = w_lorentzGF(p.I);
 
   CCTK_REAL w_lorentz_limited = w_lorentz;
@@ -761,7 +761,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_co(
 
   double sqrtgamma = compute_sqrtgamma(p, gxx, gxy, gxz, gyy, gyz, gzz);
 
-  VolIntegrand1(p.I) = sqrtgamma * w_lorentz_limited * smallb2 / 2.0;
+  VolIntegrand1(p.I) = sqrtgamma * w_lorentz_limited * b2small / 2.0;
 }
 
 /* Magnetic energy split into azimuthal energy component and rest: */

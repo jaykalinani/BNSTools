@@ -2,7 +2,7 @@
 # $Header:$
 
 implements: VolumeIntegrals_GRMHDX
-inherits: ADMBaseX HydroBaseX AsterX MHD_Diagnostics BoxInBox
+inherits: ADMBaseX HydroBaseX AsterX BoxInBox
 
 USES INCLUDE HEADER: loop_device.hxx
 

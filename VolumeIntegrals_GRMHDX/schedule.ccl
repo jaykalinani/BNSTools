@@ -27,27 +27,41 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_INITIAL
   OPTIONS: GLOBAL
   WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere) 
   WRITES: VolIntegral(everywhere)
+  WRITES: volintegral_inside_sphere__center_x(everywhere)
+  WRITES: volintegral_inside_sphere__center_y(everywhere)
+  WRITES: volintegral_inside_sphere__center_z(everywhere)
+  WRITES: volintegral_outside_sphere__center_x(everywhere)
+  WRITES: volintegral_outside_sphere__center_y(everywhere)
+  WRITES: volintegral_outside_sphere__center_z(everywhere)
 } "Initialize IntegralCounter variable to zero"
 
 SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLES
 {
   LANG: C
   OPTIONS: GLOBAL
-  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere) 
+  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere)
+  WRITES: VolIntegral(everywhere)
+  WRITES: volintegral_inside_sphere__center_x(everywhere)
+  WRITES: volintegral_inside_sphere__center_y(everywhere)
+  WRITES: volintegral_inside_sphere__center_z(everywhere)
+  WRITES: volintegral_outside_sphere__center_x(everywhere)
+  WRITES: volintegral_outside_sphere__center_y(everywhere)
+  WRITES: volintegral_outside_sphere__center_z(everywhere)
 } "Initialize IntegralCounter variable to zero"
 
-SCHEDULE VI_GRMHDX_InitializeIntegralCounter before VI_GRMHDX_VolumeIntegralGroup AT CCTK_ANALYSIS
+# BoxInBox_Setup is scheduled AS EstimateError; order against the alias name.
+SCHEDULE VI_GRMHDX_InitializeIntegralCounter before VI_GRMHDX_VolumeIntegralGroup AT poststep BEFORE EstimateError
 {
   LANG: C
   OPTIONS: GLOBAL
   WRITES: IntegralCounter(everywhere)
 } "Initialize IntegralCounter variable"
 ##################
-SCHEDULE GROUP VI_GRMHDX_VolumeIntegralGroup AT CCTK_ANALYSIS BEFORE CarpetLib_printtimestats BEFORE CarpetLib_printmemstats WHILE VolumeIntegrals_GRMHDX::IntegralCounter
+SCHEDULE GROUP VI_GRMHDX_VolumeIntegralGroup AT poststep BEFORE EstimateError WHILE VolumeIntegrals_GRMHDX::IntegralCounter
 {
 } "Evaluate all volume integrals"
 
-SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup before DoSum
+SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_GRMHDX_DoSum
 {
   LANG: C
   READS: IntegralCounter(everywhere) GlobalCoM(everywhere) 
@@ -62,7 +76,7 @@ SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup before DoSu
   READS: ADMBaseX::gyz(everywhere)
   READS: ADMBaseX::gzz(everywhere)
   READS: AsterX::w_lorentz(everywhere)
-  READS: MHD_Diagnostics::smallb2(everywhere)
+  READS: AsterX::b2small(everywhere)
   WRITES: VolIntegrand1(everywhere) 
   WRITES: VolIntegrand2(everywhere) 
   WRITES: VolIntegrand3(everywhere) 
@@ -75,7 +89,7 @@ SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup before DoSu
   WRITES: volintegral_outside_sphere__center_z(everywhere)
 } "Compute Integrand"
 
-SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup after ComputeIntegrand
+SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup AFTER VI_GRMHDX_ComputeIntegrand
 {
   OPTIONS: GLOBAL
   LANG: C
@@ -101,7 +115,7 @@ SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup after ComputeIntegrand
   WRITES: volintegral_inside_sphere__center_z(everywhere)
 } "Do Sum"
 #######
-SCHEDULE VI_GRMHDX_DecrementIntegralCounter in VI_GRMHDX_VolumeIntegralGroup after DoSum
+SCHEDULE VI_GRMHDX_DecrementIntegralCounter in VI_GRMHDX_VolumeIntegralGroup AFTER VI_GRMHDX_DoSum
 {
   LANG: C
   OPTIONS: GLOBAL

@@ -31,7 +31,7 @@ CCTK_INT VolIntegral_out_every "How often to compute volume integrals?" STEERABL
 
 CCTK_INT NumIntegrals "Number of volume integrals to perform" STEERABLE = ALWAYS
 {
-  0:1000 :: "zero (disable integration) or some other number"
+  0:100 :: "zero (disable integration) or some other number"
 } 0
 
 BOOLEAN set_origin_with_VIX "Set origin of toroidal/poloidal decomposition wrt CoM calculated via VIX. Otherwise use (0,0,0)" STEERABLE = ALWAYS
@@ -151,13 +151,13 @@ CCTK_REAL volintegral_outside_sphere__radius[101] "Volume integral outside a sph
 
 CCTK_INT amr_centre__tracks__volintegral_inside_sphere[101] "Use output from volume integral to move AMR box centre N." STEERABLE = ALWAYS
 {
-  -1:100 :: "-1 = do not track an AMR box centre. Otherwise track AMR box centre number N = [0,100]"
+  -1:100 :: "-1 = do not track an AMR box centre. Runtime check enforces BoxInBox-supported index range."
 } -1
 
 
 CCTK_INT volintegral_sphere__tracks__amr_centre[101] "Volume integral tracks AMR box centre N." STEERABLE = ALWAYS
 {
-  -1:100 :: "-1 = do not track an AMR box centre. Otherwise track AMR box centre number N = [0,100]"
+  -1:100 :: "-1 = do not track an AMR box centre. Runtime check enforces BoxInBox-supported index range."
 } -1
 
 
