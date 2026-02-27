@@ -1,0 +1,146 @@
+# Schedule definitions for thorn VolumeIntegrals_vacuumX
+# $Header:$
+
+STORAGE: VolIntegrands,VolIntegrals,MovingSphRegionIntegrals,IntegralCounterVar,VolIntegrals_vacuum_time
+
+
+##### FILE OUTPUT STUFF #####
+if(enable_file_output) {
+
+SCHEDULE VI_vacuumX_file_output_routine_Startup AT CCTK_INITIAL
+{
+  LANG: C
+} "Create directory for VI vacuumX file output."
+
+# In case we change our mind about disabling file output, at a checkpoint.
+SCHEDULE VI_vacuumX_file_output_routine_Startup AT CCTK_POST_RECOVER_VARIABLES
+{
+  LANG: C
+} "Create directory for VI vacuumX file output."
+
+}
+
+#############################
+SCHEDULE VI_vacuumX_InitializeIntegralCounterToZero AT CCTK_INITIAL
+{
+  LANG: C
+  OPTIONS: GLOBAL
+  WRITES: IntegralCounter(everywhere)
+  WRITES: VolIntegral(everywhere)
+  WRITES: physical_time(everywhere)
+  WRITES: volintegral_inside_sphere__center_x(everywhere)
+  WRITES: volintegral_inside_sphere__center_y(everywhere)
+  WRITES: volintegral_inside_sphere__center_z(everywhere)
+  WRITES: volintegral_outside_sphere__center_x(everywhere)
+  WRITES: volintegral_outside_sphere__center_y(everywhere)
+  WRITES: volintegral_outside_sphere__center_z(everywhere)
+} "Initialize IntegralCounter variable to zero"
+
+SCHEDULE VI_vacuumX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLES
+{
+  LANG: C
+  OPTIONS: GLOBAL
+  WRITES: IntegralCounter(everywhere)
+  WRITES: VolIntegral(everywhere)
+  WRITES: physical_time(everywhere)
+  WRITES: volintegral_inside_sphere__center_x(everywhere)
+  WRITES: volintegral_inside_sphere__center_y(everywhere)
+  WRITES: volintegral_inside_sphere__center_z(everywhere)
+  WRITES: volintegral_outside_sphere__center_x(everywhere)
+  WRITES: volintegral_outside_sphere__center_y(everywhere)
+  WRITES: volintegral_outside_sphere__center_z(everywhere)
+} "Initialize IntegralCounter variable to zero"
+
+# Z4c and CanudaX_BSSNMoL constraints are computed at analysis.
+# Run VI_vacuumX in analysis so H/M constraint integrals use up-to-date data.
+SCHEDULE VI_vacuumX_InitializeIntegralCounter before VI_vacuumX_VolumeIntegralGroup AT CCTK_ANALYSIS
+{
+  LANG: C
+  OPTIONS: GLOBAL
+  WRITES: IntegralCounter(everywhere)
+} "Initialize IntegralCounter variable"
+##################
+SCHEDULE GROUP VI_vacuumX_VolumeIntegralGroup AT CCTK_ANALYSIS WHILE VolumeIntegrals_vacuumX::IntegralCounter
+{
+} "Evaluate all volume integrals"
+
+SCHEDULE VI_vacuumX_ComputeIntegrand in VI_vacuumX_VolumeIntegralGroup BEFORE VI_vacuumX_DoSum
+{
+  STORAGE: VolIntegrands,VolIntegrals,MovingSphRegionIntegrals
+  LANG: C
+  READS: IntegralCounter(everywhere)
+  READS: BoxInBox::position_x(everywhere) BoxInBox::position_y(everywhere) BoxInBox::position_z(everywhere)
+  READS: ADMBaseX::alp(everywhere)
+  READS: ADMBaseX::gxx(everywhere)
+  READS: ADMBaseX::gxy(everywhere)
+  READS: ADMBaseX::gxz(everywhere)
+  READS: ADMBaseX::gyy(everywhere)
+  READS: ADMBaseX::gyz(everywhere)
+  READS: ADMBaseX::gzz(everywhere)
+  READS: ADMBaseX::kxx(everywhere)
+  READS: ADMBaseX::kxy(everywhere)
+  READS: ADMBaseX::kxz(everywhere)
+  READS: ADMBaseX::kyy(everywhere)
+  READS: ADMBaseX::kyz(everywhere)
+  READS: ADMBaseX::kzz(everywhere)
+  WRITES: VolIntegrand1(everywhere)
+  WRITES: VolIntegrand2(everywhere)
+  WRITES: VolIntegrand3(everywhere)
+  WRITES: VolIntegrand4(everywhere)
+  WRITES: volintegral_inside_sphere__center_x(everywhere)
+  WRITES: volintegral_inside_sphere__center_y(everywhere)
+  WRITES: volintegral_inside_sphere__center_z(everywhere)
+  WRITES: volintegral_outside_sphere__center_x(everywhere)
+  WRITES: volintegral_outside_sphere__center_y(everywhere)
+  WRITES: volintegral_outside_sphere__center_z(everywhere)
+} "Compute Integrand"
+
+SCHEDULE VI_vacuumX_DoSum in VI_vacuumX_VolumeIntegralGroup AFTER VI_vacuumX_ComputeIntegrand
+{
+  OPTIONS: GLOBAL
+  LANG: C
+  READS: IntegralCounter(everywhere)
+  READS: volintegral_inside_sphere__center_x(everywhere)
+  READS: volintegral_inside_sphere__center_y(everywhere)
+  READS: volintegral_inside_sphere__center_z(everywhere)
+  READS: volintegral_outside_sphere__center_x(everywhere)
+  READS: volintegral_outside_sphere__center_y(everywhere)
+  READS: volintegral_outside_sphere__center_z(everywhere)
+  READS: VolIntegral(everywhere)
+  READS: VolIntegrands(everywhere)
+  READS: BoxInBox::position_x(everywhere)
+  READS: BoxInBox::position_y(everywhere)
+  READS: BoxInBox::position_z(everywhere)
+  WRITES: VolIntegral(everywhere)
+  WRITES: BoxInBox::position_x(everywhere)
+  WRITES: BoxInBox::position_y(everywhere)
+  WRITES: BoxInBox::position_z(everywhere)
+  WRITES: BoxInBox::active(everywhere)
+  WRITES: volintegral_inside_sphere__center_x(everywhere)
+  WRITES: volintegral_inside_sphere__center_y(everywhere)
+  WRITES: volintegral_inside_sphere__center_z(everywhere)
+} "Do Sum"
+#######
+SCHEDULE VI_vacuumX_DecrementIntegralCounter in VI_vacuumX_VolumeIntegralGroup AFTER VI_vacuumX_DoSum
+{
+  LANG: C
+  OPTIONS: GLOBAL
+  WRITES: IntegralCounter(everywhere)
+} "Decrement IntegralCounter variable"
+##################
+
+if(enable_file_output) {
+  SCHEDULE VI_vacuumX_file_output after VI_vacuumX_VolumeIntegralGroup AT CCTK_ANALYSIS
+  {
+    LANG: C
+    OPTIONS: GLOBAL
+    READS: volintegral_inside_sphere__center_x(everywhere)
+    READS: volintegral_inside_sphere__center_y(everywhere)
+    READS: volintegral_inside_sphere__center_z(everywhere)
+    READS: volintegral_outside_sphere__center_x(everywhere)
+    READS: volintegral_outside_sphere__center_y(everywhere)
+    READS: volintegral_outside_sphere__center_z(everywhere)
+    READS: VolIntegral(everywhere)
+    WRITES: physical_time(everywhere)
+  } "Output VolumeIntegral results to disk"
+}

@@ -1,0 +1,99 @@
+Cactus Code Thorn VolumeIntegrals_vacuumX
+Author(s)    : Zachariah B. Etienne
+               Leonardo Werneck
+               Ian Ruchlin
+Note         : Thorn for integration of spacetime quantities, in
+               integration volumes consisting of spherical shells,
+               regions with hollowed balls, and simple spheres.
+
+Usage example: Except for the definition of integrands, the
+               behavior of this thorn is almost completely driven
+               by the parameter file.
+
+               Here's an example of a parameter file that performs
+               a total of 10 integrals, computed every 64 timesteps:
+               1. Integral of Hamiltonian & momentum constraints,
+                  over the entire grid volume.
+               2. Exactly the same as (1), but excising the region
+                  inside a sphere of radius 2.2 tracking the center
+                  of the *ZEROTH* AMR grid (initially at
+                  (x,y,z)=(-5.9,0,0)).
+               3. Exactly the same as (2), but additionally excising the region
+                  inside a sphere of radius 2.2 tracking the center
+                  of the *FIRST* AMR grid (initially at
+                  (x,y,z)=(+5.9,0,0)).
+               4. Integral of Hamiltonian & momentum constraints,
+                  over the entire grid volume, minus the spherical
+                  region inside coordinate radius 8.2.
+               5. Integral of Hamiltonian & momentum constraints,
+                  over the entire grid volume, minus the spherical
+                  region inside coordinate radius 12.0
+               6. Integral of Hamiltonian & momentum constraints,
+                  over the entire grid volume, minus the spherical
+                  region inside coordinate radius 16.0
+               7. Integral of Hamiltonian & momentum constraints,
+                  over the entire grid volume, minus the spherical
+                  region inside coordinate radius 24.0
+               8. Integral of Hamiltonian & momentum constraints,
+                  over the entire grid volume, minus the spherical
+                  region inside coordinate radius 48.0
+               9. Integral of Hamiltonian & momentum constraints,
+                  over the entire grid volume, minus the spherical
+                  region inside coordinate radius 96.0
+              10. Integral of Hamiltonian & momentum constraints,
+                  over the entire grid volume, minus the spherical
+                  region inside coordinate radius 192.0
+
+ActiveThorns = "VolumeIntegrals_vacuumX"
+VolumeIntegrals_vacuumX::NumIntegrals = 10
+VolumeIntegrals_vacuumX::VolIntegral_out_every = 64
+VolumeIntegrals_vacuumX::enable_file_output = 1
+VolumeIntegrals_vacuumX::outVolIntegral_dir = "volume_integration"
+VolumeIntegrals_vacuumX::verbose = 1
+# The AMR centre will only track the first referenced integration quantities that track said centre.
+#   Thus, centeroflapse output will not feed back into the AMR centre positions.
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[1] = "H_M_CnstraintsL2"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[2] = "usepreviousintegrands"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[3] = "usepreviousintegrands"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[4] = "H_M_CnstraintsL2"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[5] = "H_M_CnstraintsL2"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[6] = "H_M_CnstraintsL2"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[7] = "H_M_CnstraintsL2"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[8] = "H_M_CnstraintsL2"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[9] = "H_M_CnstraintsL2"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[10]= "H_M_CnstraintsL2"
+
+# Second integral takes the first integral integrand, then excises the region around the first BH
+VolumeIntegrals_vacuumX::volintegral_sphere__center_x_initial            [2] = -5.9
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius              [2] =  2.2
+VolumeIntegrals_vacuumX::volintegral_sphere__tracks__amr_centre          [2] =  0
+VolumeIntegrals_vacuumX::volintegral_usepreviousintegrands_num_integrands[2] =  4
+
+# Third integral takes the second integral integrand, then excises the region around the second BH
+VolumeIntegrals_vacuumX::volintegral_sphere__center_x_initial            [3] =  5.9
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius              [3] =  2.2
+VolumeIntegrals_vacuumX::volintegral_sphere__tracks__amr_centre          [3] =  1
+VolumeIntegrals_vacuumX::volintegral_usepreviousintegrands_num_integrands[3] =  4
+
+# Just an outer region
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius[4] = 8.2
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius[5] =12.0
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius[6] =16.0
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius[7] =24.0
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius[8] =48.0
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius[9] =96.0
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius[10]=192.0
+
+
+TODO/FIXME   : This thorn currently depends on ML_BSSN. There is a bit
+               of code duplication and duplicated functionality between
+               VolumeIntegrals_vacuumX and VolumeIntegrals_GRMHDX, to
+               ensure that VolumeIntegrals_vacuumX can be used without
+               requiring a GRMHD code. For this thorn to make use of
+               gridfunctions either in ML_BSSN/ADMBase *or* Hydrobase
+               does not seem to be possible within the ETK at this time.
+
+
+Maintainer(s): Zachariah B. Etienne
+License      : BSD 2-Clause (FreeBSD license)
+--------------------------------------------------------------------------

@@ -1,0 +1,37 @@
+# Interface definition for thorn VolumeIntegrals_vacuumX
+# $Header:$
+
+implements: VolumeIntegrals_vacuumX
+inherits: ADMBaseX BoxInBox
+
+USES INCLUDE HEADER: loop_device.hxx
+
+private:
+
+CCTK_REAL VolIntegrands TYPE=GF CENTERING={ccc} tags='InterpNumTimelevels=1 prolongation="none" Checkpoint="no"'
+{
+  VolIntegrand1,VolIntegrand2,VolIntegrand3,VolIntegrand4
+}
+
+CCTK_REAL VolIntegrals TYPE=ARRAY DISTRIB=CONSTANT DIM=2 SIZE=101,4
+{
+  VolIntegral
+} "Volume integrals, post-sum. The first dimension denotes which integral(s), and the second denotes the values of the integral(s). E.g., a center of mass volume integral will have 3 outputs."
+
+CCTK_REAL MovingSphRegionIntegrals TYPE=ARRAY DISTRIB=CONSTANT DIM=1 SIZE=101
+{
+  volintegral_inside_sphere__center_x, volintegral_inside_sphere__center_y, volintegral_inside_sphere__center_z,
+  volintegral_outside_sphere__center_x, volintegral_outside_sphere__center_y, volintegral_outside_sphere__center_z
+} "Specify regions for volume integrals inside/outside spheres THAT MOVE."
+
+public:
+
+CCTK_INT IntegralCounterVar type = SCALAR tags='checkpoint="no"'
+{
+  IntegralCounter
+} "Counter that keeps track of which integral we are calculating."
+
+CCTK_REAL VolIntegrals_vacuum_time type = SCALAR tags='checkpoint="no"'
+{
+  physical_time
+} "keeps track of the physical time, in case time coordinate is reparameterized, a la http://arxiv.org/abs/1404.6523"
