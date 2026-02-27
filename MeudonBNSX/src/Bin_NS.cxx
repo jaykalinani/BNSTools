@@ -8,6 +8,7 @@
 #include <vector>
 #include <ios>
 #include <iostream>
+#include <mutex>
 #include <stdlib.h>
 
 #include <cctk.h>
@@ -30,9 +31,14 @@ using namespace Loop;
 namespace Lorene {}
 using namespace Lorene;
 
+namespace {
+std::mutex meudon_init_mutex;
+}
+
 extern "C" void MeudonBNSX_initialise(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_MeudonBNSX_initialise;
   DECLARE_CCTK_PARAMETERS;
+  std::lock_guard<std::mutex> lock(meudon_init_mutex);
 
   CCTK_INFO("Setting up LORENE Bin_NS initial data");
 
