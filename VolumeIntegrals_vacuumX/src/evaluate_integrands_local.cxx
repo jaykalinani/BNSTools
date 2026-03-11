@@ -265,20 +265,13 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
     const CCTK_REAL idz = 1.0 / CCTK_DELTA_SPACE(2);
 
     grid.loop_allmn_device<1, 1, 1>(
-        grid.nghostzones, 1,
-        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          VI_vacuumX_ADM_Momentum_integrand_eval_derivs(
-              VolIntegrand2, VolIntegrand3, VolIntegrand4, p, idx, idy, idz,
-              alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz, kyy, kyz,
-              kzz);
-        });
-
-    grid.loop_allmn_device<1, 1, 1>(
         grid.nghostzones, 2,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          VI_vacuumX_ADM_Momentum_integrand(VolIntegrand1, p, idx, idy, idz,
-                                            VolIntegrand2, VolIntegrand3,
-                                            VolIntegrand4);
+          VI_vacuumX_ADM_Momentum_integrand(
+              VolIntegrand1, VolIntegrand2, VolIntegrand3, p, idx, idy, idz,
+              alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz, kyy, kyz,
+              kzz);
+          VolIntegrand4(p.I) = 0.0;
         });
 
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
@@ -289,20 +282,13 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
     const CCTK_REAL idz = 1.0 / CCTK_DELTA_SPACE(2);
 
     grid.loop_allmn_device<1, 1, 1>(
-        grid.nghostzones, 1,
-        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          VI_vacuumX_ADM_Angular_Momentum_integrand_eval_derivs(
-              VolIntegrand2, VolIntegrand3, VolIntegrand4, p, idx, idy, idz,
-              alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz, kyy, kyz,
-              kzz);
-        });
-
-    grid.loop_allmn_device<1, 1, 1>(
         grid.nghostzones, 2,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           VI_vacuumX_ADM_Angular_Momentum_integrand(
-              VolIntegrand1, p, idx, idy, idz, VolIntegrand2, VolIntegrand3,
-              VolIntegrand4);
+              VolIntegrand1, VolIntegrand2, VolIntegrand3, p, idx, idy, idz,
+              alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz, kyy, kyz,
+              kzz);
+          VolIntegrand4(p.I) = 0.0;
         });
 
   } else {

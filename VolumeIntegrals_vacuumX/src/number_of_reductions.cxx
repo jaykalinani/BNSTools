@@ -32,10 +32,10 @@ VI_vacuumX_number_of_reductions(int which_integral) {
     return 1;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                   "ADM_Momentum"))
-    return 1;
+    return 3;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                   "ADM_Angular_Momentum"))
-    return 1;
+    return 3;
 
   CCTK_VError(__LINE__, __FILE__, CCTK_THORNSTRING,
               "VolumeIntegrals_vacuumX ERROR: You forgot to specify the number of reductions for Integration_quantity_keyword=%s!\n",

@@ -4,6 +4,7 @@
 #include <cctk.h>
 #include <loop_device.hxx>
 
+#include <array>
 #include <cmath>
 
 using namespace Loop;
@@ -237,23 +238,17 @@ VI_vacuumX_ADM_Mass_integrand(
 }
 
 /* ADM Momentum */
-CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void
-VI_vacuumX_ADM_Momentum_integrand_eval_derivs(
-    const GF3D2<double> ADM_Py_integrand_x,
-    const GF3D2<double> ADM_Py_integrand_y,
-    const GF3D2<double> ADM_Py_integrand_z, const PointDesc &p,
-    const CCTK_REAL idx, const CCTK_REAL idy, const CCTK_REAL idz,
+CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline bool
+VI_vacuumX_ADM_surface_data_at(
+    const PointDesc &p, const vect<int, dim> &index,
     const GF3D2<const CCTK_REAL> alp, const GF3D2<const CCTK_REAL> gxx,
     const GF3D2<const CCTK_REAL> gxy, const GF3D2<const CCTK_REAL> gxz,
     const GF3D2<const CCTK_REAL> gyy, const GF3D2<const CCTK_REAL> gyz,
     const GF3D2<const CCTK_REAL> gzz, const GF3D2<const CCTK_REAL> kxx,
     const GF3D2<const CCTK_REAL> kxy, const GF3D2<const CCTK_REAL> kxz,
     const GF3D2<const CCTK_REAL> kyy, const GF3D2<const CCTK_REAL> kyz,
-    const GF3D2<const CCTK_REAL> kzz) {
-
-  const auto index = p.I;
-
-  // Read in gamma_{i j} (vertex-centered -> cell-centered average)
+    const GF3D2<const CCTK_REAL> kzz, CCTK_REAL &alp_cc, CCTK_REAL &detgL,
+    CCTK_REAL ginv[3][3], CCTK_REAL Kup[3][3], CCTK_REAL &K) {
   const CCTK_REAL g11L = VI_vacuumX_avg_v2c_at(gxx, p, index);
   const CCTK_REAL g12L = VI_vacuumX_avg_v2c_at(gxy, p, index);
   const CCTK_REAL g13L = VI_vacuumX_avg_v2c_at(gxz, p, index);
@@ -261,20 +256,12 @@ VI_vacuumX_ADM_Momentum_integrand_eval_derivs(
   const CCTK_REAL g23L = VI_vacuumX_avg_v2c_at(gyz, p, index);
   const CCTK_REAL g33L = VI_vacuumX_avg_v2c_at(gzz, p, index);
 
-  // Metric determinant
-  const CCTK_REAL detgL =
-      -g13L * g13L * g22L + 2 * g12L * g13L * g23L - g11L * g23L * g23L -
-      g12L * g12L * g33L + g11L * g22L * g33L;
+  detgL = -g13L * g13L * g22L + 2 * g12L * g13L * g23L -
+          g11L * g23L * g23L - g12L * g12L * g33L + g11L * g22L * g33L;
   if (!std::isfinite(detgL) || detgL <= 0.0) {
-    ADM_Py_integrand_x(index) = 0.0;
-    ADM_Py_integrand_y(index) = 0.0;
-    ADM_Py_integrand_z(index) = 0.0;
-    return;
+    return false;
   }
 
-  CCTK_REAL ginv[3][3];
-
-  // Calculate inverse metric gamma^{i j}
   ginv[0][0] = (g22L * g33L - g23L * g23L) / detgL;
   ginv[0][1] = (g13L * g23L - g12L * g33L) / detgL;
   ginv[0][2] = (g12L * g23L - g13L * g22L) / detgL;
@@ -287,8 +274,6 @@ VI_vacuumX_ADM_Momentum_integrand_eval_derivs(
   ginv[2][1] = ginv[1][2];
 
   CCTK_REAL Kdown[3][3];
-
-  // Read in covariant extrinsic curvature K_{i j}
   Kdown[0][0] = VI_vacuumX_avg_v2c_at(kxx, p, index);
   Kdown[0][1] = VI_vacuumX_avg_v2c_at(kxy, p, index);
   Kdown[0][2] = VI_vacuumX_avg_v2c_at(kxz, p, index);
@@ -300,73 +285,56 @@ VI_vacuumX_ADM_Momentum_integrand_eval_derivs(
   Kdown[2][0] = Kdown[0][2];
   Kdown[2][1] = Kdown[1][2];
 
-  CCTK_REAL Kup[3][3];
-
-  // Calculate contravariant extrinsic curvature K^{i j}
-  for (int i2 = 0; i2 < 3; i2++) {
-    for (int j2 = 0; j2 < 3; j2++) {
-      Kup[i2][j2] = 0;
-
-      for (int k2 = 0; k2 < 3; k2++) {
-        for (int l2 = 0; l2 < 3; l2++) {
+  for (int i2 = 0; i2 < 3; ++i2) {
+    for (int j2 = 0; j2 < 3; ++j2) {
+      Kup[i2][j2] = 0.0;
+      for (int k2 = 0; k2 < 3; ++k2) {
+        for (int l2 = 0; l2 < 3; ++l2) {
           Kup[i2][j2] += ginv[i2][k2] * ginv[j2][l2] * Kdown[k2][l2];
         }
       }
     }
   }
 
-  CCTK_REAL K = 0;
-
-  // Calculate mean curvature K = g^{i j} K_{i j}
-  for (int i2 = 0; i2 < 3; i2++) {
-    for (int j2 = 0; j2 < 3; j2++) {
+  K = 0.0;
+  for (int i2 = 0; i2 < 3; ++i2) {
+    for (int j2 = 0; j2 < 3; ++j2) {
       K += ginv[i2][j2] * Kdown[i2][j2];
     }
   }
 
-  CCTK_REAL surface_integrand[3][3];
+  alp_cc = VI_vacuumX_avg_v2c_at(alp, p, index);
+  return true;
+}
 
-  const CCTK_REAL alp_cc = VI_vacuumX_avg_v2c_at(alp, p, index);
-  for (int i2 = 0; i2 < 3; i2++) {
-    for (int j2 = 0; j2 < 3; j2++) {
-      surface_integrand[i2][j2] =
-          alp_cc * sqrt(detgL) * (Kup[i2][j2] - ginv[i2][j2] * K);
-    }
+CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline std::array<CCTK_REAL, 3>
+VI_vacuumX_ADM_Momentum_surface_integrand(
+    const PointDesc &p, const vect<int, dim> &index,
+    const GF3D2<const CCTK_REAL> alp, const GF3D2<const CCTK_REAL> gxx,
+    const GF3D2<const CCTK_REAL> gxy, const GF3D2<const CCTK_REAL> gxz,
+    const GF3D2<const CCTK_REAL> gyy, const GF3D2<const CCTK_REAL> gyz,
+    const GF3D2<const CCTK_REAL> gzz, const GF3D2<const CCTK_REAL> kxx,
+    const GF3D2<const CCTK_REAL> kxy, const GF3D2<const CCTK_REAL> kxz,
+    const GF3D2<const CCTK_REAL> kyy, const GF3D2<const CCTK_REAL> kyz,
+    const GF3D2<const CCTK_REAL> kzz, const int component) {
+  CCTK_REAL alp_cc, detgL, ginv[3][3], Kup[3][3], K;
+  if (!VI_vacuumX_ADM_surface_data_at(p, index, alp, gxx, gxy, gxz, gyy, gyz,
+                                      gzz, kxx, kxy, kxz, kyy, kyz, kzz,
+                                      alp_cc, detgL, ginv, Kup, K)) {
+    return {0.0, 0.0, 0.0};
   }
 
-  ADM_Py_integrand_x(index) = surface_integrand[1][0];
-  ADM_Py_integrand_y(index) = surface_integrand[1][1];
-  ADM_Py_integrand_z(index) = surface_integrand[1][2];
+  const CCTK_REAL prefactor = alp_cc * sqrt(detgL);
+  return {prefactor * (Kup[component][0] - ginv[component][0] * K),
+          prefactor * (Kup[component][1] - ginv[component][1] * K),
+          prefactor * (Kup[component][2] - ginv[component][2] * K)};
 }
 
 CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void
 VI_vacuumX_ADM_Momentum_integrand(
-    const GF3D2<double> ADM_Py_integrand, const PointDesc &p,
-    const CCTK_REAL idx, const CCTK_REAL idy, const CCTK_REAL idz,
-    const GF3D2<CCTK_REAL> ADM_Py_integrand_x,
-    const GF3D2<CCTK_REAL> ADM_Py_integrand_y,
-    const GF3D2<CCTK_REAL> ADM_Py_integrand_z) {
-  const CCTK_REAL cm1 = -0.5;
-
-  ADM_Py_integrand(p.I) =
-      0.125 / M_PI *
-      ((cm1 * (ADM_Py_integrand_x(p.I - p.DI[0]) -
-               ADM_Py_integrand_x(p.I + p.DI[0]))) *
-           idx +
-       (cm1 * (ADM_Py_integrand_y(p.I - p.DI[1]) -
-               ADM_Py_integrand_y(p.I + p.DI[1]))) *
-           idy +
-       (cm1 * (ADM_Py_integrand_z(p.I - p.DI[2]) -
-               ADM_Py_integrand_z(p.I + p.DI[2]))) *
-           idz);
-}
-
-/* ADM Angular Momentum */
-CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void
-VI_vacuumX_ADM_Angular_Momentum_integrand_eval_derivs(
-    const GF3D2<double> ADM_Jz_integrand_x,
-    const GF3D2<double> ADM_Jz_integrand_y,
-    const GF3D2<double> ADM_Jz_integrand_z, const PointDesc &p,
+    const GF3D2<double> ADM_Px_integrand,
+    const GF3D2<double> ADM_Py_integrand,
+    const GF3D2<double> ADM_Pz_integrand, const PointDesc &p,
     const CCTK_REAL idx, const CCTK_REAL idy, const CCTK_REAL idz,
     const GF3D2<const CCTK_REAL> alp, const GF3D2<const CCTK_REAL> gxx,
     const GF3D2<const CCTK_REAL> gxy, const GF3D2<const CCTK_REAL> gxz,
@@ -375,132 +343,133 @@ VI_vacuumX_ADM_Angular_Momentum_integrand_eval_derivs(
     const GF3D2<const CCTK_REAL> kxy, const GF3D2<const CCTK_REAL> kxz,
     const GF3D2<const CCTK_REAL> kyy, const GF3D2<const CCTK_REAL> kyz,
     const GF3D2<const CCTK_REAL> kzz) {
+  const CCTK_REAL cm1 = -0.5;
 
-  const auto index = p.I;
+  for (int component = 0; component < 3; ++component) {
+    const auto sxm = VI_vacuumX_ADM_Momentum_surface_integrand(
+        p, p.I - p.DI[0], alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz,
+        kyy, kyz, kzz, component);
+    const auto sxp = VI_vacuumX_ADM_Momentum_surface_integrand(
+        p, p.I + p.DI[0], alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz,
+        kyy, kyz, kzz, component);
+    const auto sym = VI_vacuumX_ADM_Momentum_surface_integrand(
+        p, p.I - p.DI[1], alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz,
+        kyy, kyz, kzz, component);
+    const auto syp = VI_vacuumX_ADM_Momentum_surface_integrand(
+        p, p.I + p.DI[1], alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz,
+        kyy, kyz, kzz, component);
+    const auto szm = VI_vacuumX_ADM_Momentum_surface_integrand(
+        p, p.I - p.DI[2], alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz,
+        kyy, kyz, kzz, component);
+    const auto szp = VI_vacuumX_ADM_Momentum_surface_integrand(
+        p, p.I + p.DI[2], alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz,
+        kyy, kyz, kzz, component);
 
-  // Read in gamma_{i j} (vertex-centered -> cell-centered average)
-  const CCTK_REAL g11L = VI_vacuumX_avg_v2c_at(gxx, p, index);
-  const CCTK_REAL g12L = VI_vacuumX_avg_v2c_at(gxy, p, index);
-  const CCTK_REAL g13L = VI_vacuumX_avg_v2c_at(gxz, p, index);
-  const CCTK_REAL g22L = VI_vacuumX_avg_v2c_at(gyy, p, index);
-  const CCTK_REAL g23L = VI_vacuumX_avg_v2c_at(gyz, p, index);
-  const CCTK_REAL g33L = VI_vacuumX_avg_v2c_at(gzz, p, index);
+    const CCTK_REAL value =
+        0.125 / M_PI *
+        ((cm1 * (sxm[0] - sxp[0])) * idx + (cm1 * (sym[1] - syp[1])) * idy +
+         (cm1 * (szm[2] - szp[2])) * idz);
 
-  // Metric determinant
-  const CCTK_REAL detgL =
-      -g13L * g13L * g22L + 2 * g12L * g13L * g23L - g11L * g23L * g23L -
-      g12L * g12L * g33L + g11L * g22L * g33L;
-  if (!std::isfinite(detgL) || detgL <= 0.0) {
-    ADM_Jz_integrand_x(index) = 0.0;
-    ADM_Jz_integrand_y(index) = 0.0;
-    ADM_Jz_integrand_z(index) = 0.0;
-    return;
+    if (component == 0) {
+      ADM_Px_integrand(p.I) = value;
+    } else if (component == 1) {
+      ADM_Py_integrand(p.I) = value;
+    } else {
+      ADM_Pz_integrand(p.I) = value;
+    }
+  }
+}
+
+/* ADM Angular Momentum */
+CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline std::array<CCTK_REAL, 3>
+VI_vacuumX_ADM_Angular_Momentum_surface_integrand(
+    const PointDesc &p, const vect<int, dim> &index, const CCTK_REAL xcoord,
+    const CCTK_REAL ycoord, const CCTK_REAL zcoord,
+    const GF3D2<const CCTK_REAL> alp, const GF3D2<const CCTK_REAL> gxx,
+    const GF3D2<const CCTK_REAL> gxy, const GF3D2<const CCTK_REAL> gxz,
+    const GF3D2<const CCTK_REAL> gyy, const GF3D2<const CCTK_REAL> gyz,
+    const GF3D2<const CCTK_REAL> gzz, const GF3D2<const CCTK_REAL> kxx,
+    const GF3D2<const CCTK_REAL> kxy, const GF3D2<const CCTK_REAL> kxz,
+    const GF3D2<const CCTK_REAL> kyy, const GF3D2<const CCTK_REAL> kyz,
+    const GF3D2<const CCTK_REAL> kzz, const int component) {
+  CCTK_REAL alp_cc, detgL, ginv[3][3], Kup[3][3], K;
+  if (!VI_vacuumX_ADM_surface_data_at(p, index, alp, gxx, gxy, gxz, gyy, gyz,
+                                      gzz, kxx, kxy, kxz, kyy, kyz, kzz,
+                                      alp_cc, detgL, ginv, Kup, K)) {
+    return {0.0, 0.0, 0.0};
   }
 
-  CCTK_REAL ginv[3][3];
+  const CCTK_REAL LCT[3][3][3] = {
+      {{0.0, 0.0, 0.0}, {0.0, 0.0, 1.0}, {0.0, -1.0, 0.0}},
+      {{0.0, 0.0, -1.0}, {0.0, 0.0, 0.0}, {1.0, 0.0, 0.0}},
+      {{0.0, 1.0, 0.0}, {-1.0, 0.0, 0.0}, {0.0, 0.0, 0.0}}};
+  const CCTK_REAL xx[3] = {xcoord, ycoord, zcoord};
 
-  // Calculate inverse metric gamma^{i j}
-  ginv[0][0] = (g22L * g33L - g23L * g23L) / detgL;
-  ginv[0][1] = (g13L * g23L - g12L * g33L) / detgL;
-  ginv[0][2] = (g12L * g23L - g13L * g22L) / detgL;
-  ginv[1][1] = (g11L * g33L - g13L * g13L) / detgL;
-  ginv[1][2] = (g12L * g13L - g11L * g23L) / detgL;
-  ginv[2][2] = (g11L * g22L - g12L * g12L) / detgL;
-
-  ginv[1][0] = ginv[0][1];
-  ginv[2][0] = ginv[0][2];
-  ginv[2][1] = ginv[1][2];
-
-  CCTK_REAL Kdown[3][3];
-
-  // Read in covariant extrinsic curvature K_{i j}
-  Kdown[0][0] = VI_vacuumX_avg_v2c_at(kxx, p, index);
-  Kdown[0][1] = VI_vacuumX_avg_v2c_at(kxy, p, index);
-  Kdown[0][2] = VI_vacuumX_avg_v2c_at(kxz, p, index);
-  Kdown[1][1] = VI_vacuumX_avg_v2c_at(kyy, p, index);
-  Kdown[1][2] = VI_vacuumX_avg_v2c_at(kyz, p, index);
-  Kdown[2][2] = VI_vacuumX_avg_v2c_at(kzz, p, index);
-
-  Kdown[1][0] = Kdown[0][1];
-  Kdown[2][0] = Kdown[0][2];
-  Kdown[2][1] = Kdown[1][2];
-
-  CCTK_REAL Kup[3][3];
-
-  // Calculate contravariant extrinsic curvature K^{i j}
-  for (int i2 = 0; i2 < 3; i2++) {
-    for (int j2 = 0; j2 < 3; j2++) {
-      Kup[i2][j2] = 0;
-
-      for (int k2 = 0; k2 < 3; k2++) {
-        for (int l2 = 0; l2 < 3; l2++) {
-          Kup[i2][j2] += ginv[i2][k2] * ginv[j2][l2] * Kdown[k2][l2];
-        }
+  std::array<CCTK_REAL, 3> result{0.0, 0.0, 0.0};
+  const CCTK_REAL prefactor = alp_cc * sqrt(detgL);
+  for (int j2 = 0; j2 < 3; ++j2) {
+    for (int k2 = 0; k2 < 3; ++k2) {
+      for (int l2 = 0; l2 < 3; ++l2) {
+        result[j2] +=
+            LCT[component][k2][l2] * xx[k2] * (Kup[l2][j2] - ginv[l2][j2] * K);
       }
     }
+    result[j2] *= prefactor;
   }
-
-  CCTK_REAL K = 0;
-
-  // Calculate mean curvature K = g^{i j} K_{i j}
-  for (int i2 = 0; i2 < 3; i2++) {
-    for (int j2 = 0; j2 < 3; j2++) {
-      K += ginv[i2][j2] * Kdown[i2][j2];
-    }
-  }
-
-  // Levi-Civita tensor
-  CCTK_REAL LCT[3][3][3] = {
-      {{0, 0, 0}, {0, 0, 1}, {0, -1, 0}},
-      {{0, 0, -1}, {0, 0, 0}, {1, 0, 0}},
-      {{0, 1, 0}, {-1, 0, 0}, {0, 0, 0}}};
-
-  // Coordinate vector
-  CCTK_REAL xx[3] = {p.x, p.y, p.z};
-
-  CCTK_REAL surface_integrand[3][3];
-
-  const CCTK_REAL alp_cc = VI_vacuumX_avg_v2c_at(alp, p, index);
-  for (int i2 = 0; i2 < 3; i2++) {
-    for (int j2 = 0; j2 < 3; j2++) {
-      surface_integrand[i2][j2] = 0;
-
-      for (int k2 = 0; k2 < 3; k2++) {
-        for (int l2 = 0; l2 < 3; l2++) {
-          surface_integrand[i2][j2] +=
-              LCT[i2][k2][l2] * xx[k2] * (Kup[l2][j2] - ginv[l2][j2] * K);
-        }
-      }
-
-      surface_integrand[i2][j2] *= alp_cc * sqrt(detgL);
-    }
-  }
-
-  ADM_Jz_integrand_x(index) = surface_integrand[2][0];
-  ADM_Jz_integrand_y(index) = surface_integrand[2][1];
-  ADM_Jz_integrand_z(index) = surface_integrand[2][2];
+  return result;
 }
 
 CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void
 VI_vacuumX_ADM_Angular_Momentum_integrand(
+    const GF3D2<double> ADM_Jx_integrand,
+    const GF3D2<double> ADM_Jy_integrand,
     const GF3D2<double> ADM_Jz_integrand, const PointDesc &p,
     const CCTK_REAL idx, const CCTK_REAL idy, const CCTK_REAL idz,
-    const GF3D2<CCTK_REAL> ADM_Jz_integrand_x,
-    const GF3D2<CCTK_REAL> ADM_Jz_integrand_y,
-    const GF3D2<CCTK_REAL> ADM_Jz_integrand_z) {
+    const GF3D2<const CCTK_REAL> alp, const GF3D2<const CCTK_REAL> gxx,
+    const GF3D2<const CCTK_REAL> gxy, const GF3D2<const CCTK_REAL> gxz,
+    const GF3D2<const CCTK_REAL> gyy, const GF3D2<const CCTK_REAL> gyz,
+    const GF3D2<const CCTK_REAL> gzz, const GF3D2<const CCTK_REAL> kxx,
+    const GF3D2<const CCTK_REAL> kxy, const GF3D2<const CCTK_REAL> kxz,
+    const GF3D2<const CCTK_REAL> kyy, const GF3D2<const CCTK_REAL> kyz,
+    const GF3D2<const CCTK_REAL> kzz) {
   const CCTK_REAL cm1 = -0.5;
+  const CCTK_REAL dx = 1.0 / idx;
+  const CCTK_REAL dy = 1.0 / idy;
+  const CCTK_REAL dz = 1.0 / idz;
 
-  ADM_Jz_integrand(p.I) =
-      0.125 / M_PI *
-      ((cm1 * (ADM_Jz_integrand_x(p.I - p.DI[0]) -
-               ADM_Jz_integrand_x(p.I + p.DI[0]))) *
-           idx +
-       (cm1 * (ADM_Jz_integrand_y(p.I - p.DI[1]) -
-               ADM_Jz_integrand_y(p.I + p.DI[1]))) *
-           idy +
-       (cm1 * (ADM_Jz_integrand_z(p.I - p.DI[2]) -
-               ADM_Jz_integrand_z(p.I + p.DI[2]))) *
-           idz);
+  for (int component = 0; component < 3; ++component) {
+    const auto sxm = VI_vacuumX_ADM_Angular_Momentum_surface_integrand(
+        p, p.I - p.DI[0], p.x - dx, p.y, p.z, alp, gxx, gxy, gxz, gyy, gyz,
+        gzz, kxx, kxy, kxz, kyy, kyz, kzz, component);
+    const auto sxp = VI_vacuumX_ADM_Angular_Momentum_surface_integrand(
+        p, p.I + p.DI[0], p.x + dx, p.y, p.z, alp, gxx, gxy, gxz, gyy, gyz,
+        gzz, kxx, kxy, kxz, kyy, kyz, kzz, component);
+    const auto sym = VI_vacuumX_ADM_Angular_Momentum_surface_integrand(
+        p, p.I - p.DI[1], p.x, p.y - dy, p.z, alp, gxx, gxy, gxz, gyy, gyz,
+        gzz, kxx, kxy, kxz, kyy, kyz, kzz, component);
+    const auto syp = VI_vacuumX_ADM_Angular_Momentum_surface_integrand(
+        p, p.I + p.DI[1], p.x, p.y + dy, p.z, alp, gxx, gxy, gxz, gyy, gyz,
+        gzz, kxx, kxy, kxz, kyy, kyz, kzz, component);
+    const auto szm = VI_vacuumX_ADM_Angular_Momentum_surface_integrand(
+        p, p.I - p.DI[2], p.x, p.y, p.z - dz, alp, gxx, gxy, gxz, gyy, gyz,
+        gzz, kxx, kxy, kxz, kyy, kyz, kzz, component);
+    const auto szp = VI_vacuumX_ADM_Angular_Momentum_surface_integrand(
+        p, p.I + p.DI[2], p.x, p.y, p.z + dz, alp, gxx, gxy, gxz, gyy, gyz,
+        gzz, kxx, kxy, kxz, kyy, kyz, kzz, component);
+
+    const CCTK_REAL value =
+        0.125 / M_PI *
+        ((cm1 * (sxm[0] - sxp[0])) * idx + (cm1 * (sym[1] - syp[1])) * idy +
+         (cm1 * (szm[2] - szp[2])) * idz);
+
+    if (component == 0) {
+      ADM_Jx_integrand(p.I) = value;
+    } else if (component == 1) {
+      ADM_Jy_integrand(p.I) = value;
+    } else {
+      ADM_Jz_integrand(p.I) = value;
+    }
+  }
 }
 
 #endif // INTEGRANDS__VOLUMEINTEGRALS_VACUUMX__
