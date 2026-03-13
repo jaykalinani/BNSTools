@@ -63,6 +63,7 @@ VI_vacuumX_ADM_Mass_integrand_eval_derivs(
     const GF3D2<const CCTK_REAL> gyy, const GF3D2<const CCTK_REAL> gyz,
     const GF3D2<const CCTK_REAL> gzz) {
   const CCTK_REAL cm1 = -0.5;
+  (void)alp;
 
   const auto index = p.I;
 
@@ -208,10 +209,9 @@ VI_vacuumX_ADM_Mass_integrand_eval_derivs(
     }
   }
 
-  const CCTK_REAL alp_cc = VI_vacuumX_avg_v2c_at(alp, p, index);
-  ADM_M_integrand_x(index) *= alp_cc * sqrt(detgL);
-  ADM_M_integrand_y(index) *= alp_cc * sqrt(detgL);
-  ADM_M_integrand_z(index) *= alp_cc * sqrt(detgL);
+  // The documented ADM expressions are coordinate surface integrals in
+  // asymptotically Cartesian coordinates. After converting them to a volume
+  // divergence, do not densitize the flux by lapse or sqrt(det(gamma)).
 }
 
 CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void
@@ -252,6 +252,7 @@ VI_vacuumX_ADM_Momentum_integrand_eval_derivs(
     const GF3D2<const CCTK_REAL> kzz) {
 
   const auto index = p.I;
+  (void)alp;
 
   // Read in gamma_{i j} (vertex-centered -> cell-centered average)
   const CCTK_REAL g11L = VI_vacuumX_avg_v2c_at(gxx, p, index);
@@ -326,11 +327,9 @@ VI_vacuumX_ADM_Momentum_integrand_eval_derivs(
 
   CCTK_REAL surface_integrand[3][3];
 
-  const CCTK_REAL alp_cc = VI_vacuumX_avg_v2c_at(alp, p, index);
   for (int i2 = 0; i2 < 3; i2++) {
     for (int j2 = 0; j2 < 3; j2++) {
-      surface_integrand[i2][j2] =
-          alp_cc * sqrt(detgL) * (Kup[i2][j2] - ginv[i2][j2] * K);
+      surface_integrand[i2][j2] = Kup[i2][j2] - ginv[i2][j2] * K;
     }
   }
 
@@ -377,6 +376,7 @@ VI_vacuumX_ADM_Angular_Momentum_integrand_eval_derivs(
     const GF3D2<const CCTK_REAL> kzz) {
 
   const auto index = p.I;
+  (void)alp;
 
   // Read in gamma_{i j} (vertex-centered -> cell-centered average)
   const CCTK_REAL g11L = VI_vacuumX_avg_v2c_at(gxx, p, index);
@@ -460,7 +460,6 @@ VI_vacuumX_ADM_Angular_Momentum_integrand_eval_derivs(
 
   CCTK_REAL surface_integrand[3][3];
 
-  const CCTK_REAL alp_cc = VI_vacuumX_avg_v2c_at(alp, p, index);
   for (int i2 = 0; i2 < 3; i2++) {
     for (int j2 = 0; j2 < 3; j2++) {
       surface_integrand[i2][j2] = 0;
@@ -472,7 +471,6 @@ VI_vacuumX_ADM_Angular_Momentum_integrand_eval_derivs(
         }
       }
 
-      surface_integrand[i2][j2] *= alp_cc * sqrt(detgL);
     }
   }
 
