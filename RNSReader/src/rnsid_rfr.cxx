@@ -431,6 +431,11 @@ extern "C" void Hydro_rnsid_init(CCTK_ARGUMENTS) {
 
         alp_cc(p.I) = exp_nu_ijk;
 
+        dtalp_cc(p.I) = 0.0;
+        dtbetax_cc(p.I) = 0.0;
+        dtbetay_cc(p.I) = 0.0;
+        dtbetaz_cc(p.I) = 0.0;
+
         if (x_i == 0.0 && y_j == 0.0) {
 
           gxx_cc(p.I) = SQ(exp_alpha_ijk);

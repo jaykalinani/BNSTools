@@ -91,4 +91,3 @@
 #define MAX_NTAB 16001     /* MAX ELEMENTS IN EOS TAB                     */
 #define MAX_ITERATION 2000 /* max number of iteration in iterate (euil.c) */
 #define ITMAX 2000         /* MAX ITERATION IN BRENT  (equil_util.c)      */
-#define EPS DBL_EPSILON

@@ -29,8 +29,8 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
                 evolution_eos);
   }
 
+  // Open the Omega(r_cyl) file. Everything still says vel(theta) because I am a lazy asshole
   Omega_th_reader* vel_th_reader = nullptr;
-  // Open the Omega(th) file
   FILE *vel_th_file = fopen(vel_th_filename, "r");
     
   // Check if everything is OK with the file
@@ -53,11 +53,11 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
   const vec<GF3D2<const CCTK_REAL>, dim> gf_beta{betax, betay, betaz};
 
   // Calculate grading of corot. atmo. to match numerical atmo. at r_corot_max
-  const CCTK_REAL rho_atm_r = (r_corot_max > r_atmo)
-    ? (rho_abs_min * pow((r_atmo / r_corot_max), n_rho_atmo))
-    : rho_abs_min;
-  const CCTK_REAL n_corot = (log(rho_atm_r) - log(10 * rho_abs_min)) / (log(r_atmo) - log(r_corot_max));
-  CCTK_VINFO("Calculated n_corot to be %e.", n_corot);
+  // const CCTK_REAL rho_atm_r = (r_corot_max > r_atmo)
+  //   ? (rho_abs_min * pow((r_atmo / r_corot_max), n_rho_atmo))
+  //   : rho_abs_min;
+  // const CCTK_REAL n_corot = (log(rho_atm_r) - log(10 * rho_abs_min)) / (log(r_atmo) - log(r_corot_max));
+  // CCTK_VINFO("Calculated n_corot to be %e.", n_corot);
 
   grid.loop_all<1, 1, 1>(grid.nghostzones,
                          [=] CCTK_HOST(const Loop::PointDesc &p)
@@ -69,6 +69,7 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
     const CCTK_REAL YeL = Ye(p.I);
     const CCTK_REAL epsL = eps(p.I);
     const CCTK_REAL pressL = press(p.I);
+    const CCTK_REAL cyl_distance = sqrt(p.x * p.x + p.y * p.y);
     const CCTK_REAL radial_distance = sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
     
     // Grading rho
@@ -78,10 +79,10 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
     const CCTK_REAL rho_atmo_cut = rho_atm * (1 + atmo_tol);
 
     if (rhoL <= rho_atmo_cut && radial_distance < r_corot_max) {
-      CCTK_REAL costh = std::abs(p.z) / radial_distance; // cos(theta) on RNS grid runs from 0 to 1
+      // CCTK_REAL costh = std::abs(p.z) / radial_distance; // cos(theta) on RNS grid runs from 0 to 1
       CCTK_REAL omg_surf;
       vel_th_reader->interpolate_1d_quantity_as_function_of_th(
-          MDIV - 1, costh, &omg_surf); // Interp omega to cos(theta) from file
+          MDIV - 1, cyl_distance, &omg_surf); // This used to be tabulated in cos(th), now I tabulate in r_cyl
 
       // Grading Omega
       CCTK_REAL omg_atm = (radial_distance > r_corot_min)
@@ -89,12 +90,13 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
         : omg_surf;
       
       // Pad density and recalculate primitives
-      CCTK_REAL rho_corot_atm = (radial_distance > r_atmo)
-        ? (10 * rho_abs_min * pow((r_atmo / radial_distance), n_corot))
-        : 10 * rho_abs_min;
+      // CCTK_REAL rho_corot_atm = (radial_distance > r_atmo)
+      //   ? (10 * rho_abs_min * pow((r_atmo / radial_distance), n_corot))
+      //   : 10 * rho_abs_min;
+      CCTK_REAL rho_corot_atm = 10.0 * rho_atm;
 
-      CCTK_REAL eps_corot_atm = eos_3p_tab3d->eps_from_valid_rho_temp_ye(rho_corot_atm, tempL, YeL);
-      CCTK_REAL press_corot_atm = eos_3p_tab3d->press_from_valid_rho_temp_ye(rho_corot_atm, tempL, YeL); 
+      CCTK_REAL eps_corot_atm = eos_3p_tab3d->eps_from_rho_temp_ye(rho_corot_atm, tempL, YeL);
+      CCTK_REAL press_corot_atm = eos_3p_tab3d->press_from_rho_temp_ye(rho_corot_atm, tempL, YeL); 
 
       double alpL = calc_avg_v2c(alp, p);
 
