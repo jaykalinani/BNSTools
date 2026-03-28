@@ -1,0 +1,449 @@
+% *======================================================================*
+%  Cactus Thorn template for ThornGuide documentation
+%  Author: Ian Kelley
+%  Date: Sun Jun 02, 2002
+%  $Header$
+%
+%  Thorn documentation in the latex file doc/documentation.tex
+%  will be included in ThornGuides built with the Cactus make system.
+%  The scripts employed by the make system automatically include
+%  pages about variables, parameters and scheduling parsed from the
+%  relevant thorn CCL files.
+%
+%  This template contains guidelines which help to assure that your
+%  documentation will be correctly added to ThornGuides. More
+%  information is available in the Cactus UsersGuide.
+%
+%  Guidelines:
+%   - Do not change anything before the line
+%       % START CACTUS THORNGUIDE",
+%     except for filling in the title, author, date, etc. fields.
+%        - Each of these fields should only be on ONE line.
+%        - Author names should be separated with a \\ or a comma.
+%   - You can define your own macros, but they must appear after
+%     the START CACTUS THORNGUIDE line, and must not redefine standard
+%     latex commands.
+%   - To avoid name clashes with other thorns, 'labels', 'citations',
+%     'references', and 'image' names should conform to the following
+%     convention:
+%       ARRANGEMENT_THORN_LABEL
+%     For example, an image wave.eps in the arrangement CactusWave and
+%     thorn WaveToyC should be renamed to CactusWave_WaveToyC_wave.eps
+%   - Graphics should only be included using the graphicx package.
+%     More specifically, with the "\includegraphics" command.  Do
+%     not specify any graphic file extensions in your .tex file. This
+%     will allow us to create a PDF version of the ThornGuide
+%     via pdflatex.
+%   - References should be included with the latex "\bibitem" command.
+%   - Use \begin{abstract}...\end{abstract} instead of \abstract{...}
+%   - Do not use \appendix, instead include any appendices you need as
+%     standard sections.
+%   - For the benefit of our Perl scripts, and for future extensions,
+%     please use simple latex.
+%
+% *======================================================================*
+%
+% Example of including a graphic image:
+%    \begin{figure}[ht]
+% 	\begin{center}
+%    	   \includegraphics[width=6cm]{MyArrangement_MyThorn_MyFigure}
+% 	\end{center}
+% 	\caption{Illustration of this and that}
+% 	\label{MyArrangement_MyThorn_MyLabel}
+%    \end{figure}
+%
+% Example of using a label:
+%   \label{MyArrangement_MyThorn_MyLabel}
+%
+% Example of a citation:
+%    \cite{MyArrangement_MyThorn_Author99}
+%
+% Example of including a reference
+%   \bibitem{MyArrangement_MyThorn_Author99}
+%   {J. Author, {\em The Title of the Book, Journal, or periodical}, 1 (1999),
+%   1--16. {\tt http://www.nowhere.com/}}
+%
+% *======================================================================*
+
+% If you are using CVS use this line to give version information
+% $Header$
+
+\documentclass{article}
+
+% Use the Cactus ThornGuide style file
+% (Automatically used from Cactus distribution, if you have a
+%  thorn without the Cactus Flesh download this from the Cactus
+%  homepage at www.cactuscode.org)
+\usepackage{../../../../doc/latex/cactus}
+%% \usepackage{cactus}
+
+\begin{document}
+
+% The author of the documentation
+\author{Zachariah B.~Etienne \textless zachetie *at* gmail *dot* com \textgreater\\
+  Leonardo R.~Werneck \textless wernecklr *at* gmail *dot* com \textgreater\\
+  Ian Ruchlin \textless ianruchlin *at* gmail *dot* com \textgreater
+}
+
+% The title of the document (not necessarily the name of the Thorn)
+\title{\texttt{VolumeIntegrals\_vacuum}: An Einstein Toolkit thorn for volume integrations in vacuum spacetimes}
+
+% the date your document was last changed, if your document is in CVS,
+% please use:
+\date{May 20, 2021}
+
+\maketitle
+
+% Do not delete next line
+% START CACTUS THORNGUIDE
+
+% Add all definitions used in this documentation here
+%   \def\mydef etc
+\newcommand{\beq}{\begin{equation}}
+\newcommand{\eeq}{\end{equation}}
+\newcommand{\beqn}{\begin{eqnarray}}
+\newcommand{\eeqn}{\end{eqnarray}}
+\newcommand{\half} {{1\over 2}}
+\newcommand{\sgam} {\sqrt{\gamma}}
+\newcommand{\tB}{\tilde{B}}
+\newcommand{\tS}{\tilde{S}}
+\newcommand{\tF}{\tilde{F}}
+\newcommand{\tf}{\tilde{f}}
+\newcommand{\tT}{\tilde{T}}
+\newcommand{\sg}{\sqrt{\gamma}\,}
+\newcommand{\ve}[1]{\mbox{\boldmath $#1$}}
+\newcommand{\Madm}{M_{\rm ADM}}
+\newcommand{\Padm}{P_{\rm ADM}}
+\newcommand{\Jadm}{J_{\rm ADM}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+
+\newcommand{\GiR}{{\texttt{GiRaFFE}}}
+\newcommand{\IGM}{{\texttt{IllinoisGRMHD}}}
+
+\linespread{1.0}
+
+\newenvironment{packed_itemize}{
+\begin{itemize}
+  \setlength{\itemsep}{0.0pt}
+  \setlength{\parskip}{0.0pt}
+  \setlength{\parsep}{ 0.0pt}
+}{\end{itemize}}
+
+\newenvironment{packed_enumerate}{
+\begin{enumerate}
+  \setlength{\itemsep}{0.0pt}
+  \setlength{\parskip}{0.0pt}
+  \setlength{\parsep}{ 0.0pt}
+}{\end{enumerate}}
+
+% Add an abstract for this thorn's documentation
+\begin{abstract}
+  \texttt{VolumeIntegrals\_vacuum} is a thorn for integration of
+  spacetime quantities, accepting integration volumes consisting of
+  spherical shells, regions with hollowed balls, and simple spheres.
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Volume Integrals %%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Volume integrals}
+\label{sec:volume_integrals}
+
+We now briefly describe the volume integrals that can be performed
+using the \texttt{VolumeIntegrals\_vacuum} thorn.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% L^2-norm %%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{$L^{2}$-norm}
+\label{sec:L2_norm_integral}
+
+For a given field $f$, the $L^{2}$-norm of the field, $\norm{f}_{2}$,
+is computed using the volume integral
+%%
+\beq
+\boxed{\norm{f}_{2} = \int f^{2}dV}\; ,
+\eeq
+%%
+where $dV$ is the volume element.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Center of lapse %%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Center of the lapse}
+\label{sec:center_of_lapse}
+
+The \emph{center of the lapse}, $C_{\alpha}$, volume integral yields
+results which are pretty consistent with the center of mass volume
+integral. We compute it using
+%%
+\beq
+\boxed{ C_{\alpha}^{i} = \int \left[\left(1-\alpha\right)^{80}x^{i}\right]dV }\; ,
+\eeq
+%%
+where $\alpha$ is the lapse function, $x^{i}$ is the position vector
+and $dV$ is the volume element.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% ADM mass %%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ADM mass}
+\label{sec:ADM_mass_integral}
+
+The ADM mass, $\Madm$ is computed using equation (A.5) in~\cite{alcubierre2008introduction}
+(see also eq. (7.15) in~\cite{gourgoulhon20073+})
+%%
+\beq
+\Madm = \frac{1}{16\pi}\lim_{r\to\infty}\oint_{S}\left[
+  \delta^{ij}\left(\partial_{i}h_{jk} - \partial_{k}h_{ij}\right)dS^{k}
+  \right],
+\eeq
+%%
+where $S$ is the surface of integration and $dS^{i} = s^{i}dA$, with
+$s^{i}$ the unit outward-pointing normal vector to the surface and
+$dA$ the area element. To obtain the equation above, the physical
+spatial metric, $\gamma_{ij}$, has been decomposed using
+%%
+\beq
+\gamma_{ij} = \delta_{ij} + h_{ij},
+\eeq
+%%
+where $\delta_{ij}$ is the Kronecker delta and represents the flat
+space metric in Cartesian coordinates, while $h_{ij}$ is a small
+perturbation around flat space physical spatial metric. In practice,
+we do not take the integration surface to be at infinity, and therefore
+we implement the expression
+%%
+\beq
+\boxed{
+\Madm = \frac{1}{16\pi}\oint_{S}\left[
+  \gamma^{ij}\left(\partial_{i}\gamma_{jk} - \partial_{k}\gamma_{ij}\right)dS^{k}
+  \right]
+}\; .
+\eeq
+%%
+where $\gamma^{ij}$ is the inverse spatial metric.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%% ADM momentum %%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ADM momentum}
+\label{sec:ADM_momentum_integral}
+
+The ADM momentum, $\Padm^{i}$, is obtained from equation (A.6) in
+\cite{alcubierre2008introduction} (see also eq. (7.56) in
+\cite{gourgoulhon20073+})
+%%
+\beq
+\Padm^{i} = \frac{1}{8\pi}\lim_{r\to\infty}\oint_{S}\left[
+  \left(K^{i}_{\ j}-\delta^{i}_{\ j}K\right)dS^{j}
+  \right],
+\eeq
+%%
+where $K_{ij}$ is the extrinsic curvature and $K\equiv\gamma^{ij}K_{ij}$
+is the mean curvature. Like the ADM mass, the integration is not performed
+at infinity, and the implemented equation is
+%%
+\beq
+\boxed{
+\Padm^{i} = \frac{1}{8\pi}\oint_{S}\left[
+  \left(K^{ij}-\gamma^{ij}K\right)dS_{j}
+  \right]
+}\; .
+\eeq
+%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% ADM angular momentum %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{ADM angular momentum}
+\label{sec:ADM_angular_momentum_integral}
+
+The ADM angular momentum, $\Jadm^{i}$, follows from equation (A.7) in
+\cite{alcubierre2008introduction} (see also eq. (7.63) in
+\cite{gourgoulhon20073+})
+%%
+\beq
+\Jadm^{i} = \frac{1}{8\pi}\lim_{r\to\infty}\oint_{S}\left[
+  \epsilon^{ijk}x_{j}\left(K_{kl} - \delta_{kl}K\right)dS^{l}
+  \right],
+\eeq
+%%
+where $\epsilon^{ijk}$ is the three-dimensional Levi-Civita tensor and
+$x^{i}$ are the components of the position vector in Cartesian coordinates.
+At a finite distance from the origin this equation is written as
+%%
+\beq
+\boxed{
+\Jadm^{i} = \frac{1}{8\pi}\oint_{S}\left[
+  \epsilon^{ijk}x_{j}\left(K_{kl} - \gamma_{kl}K\right)dS^{l}
+  \right]
+}\; .
+\eeq
+%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%% Basic usage %%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Basic usage}
+\label{sec:basic_usage}
+
+Except for the definition of the integrands, the behavior of this thorn
+is almost completely driver by the configuration of the parameter file.
+We present here an example of such a parameter file, which performs the
+following tasks:
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% Evolution thorns %%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Specifying the BSSN evolution thorn}
+\label{sec:evolution_thorn}
+
+The \texttt{VolumeIntegrals\_vacuum} thorn requires information about the
+Hamiltonian and momentum constraint variables in order to perform certain
+volume integrals. For maximum flexibility, one can specify which variables
+to use, making \texttt{VolumeIntegrals\_vacuum} compatible with any BSSN
+evolution thorn. This is achieved by setting the following variables:
+%%
+\begin{packed_enumerate}
+\item \verb|VolumeIntegrals_vacuumX::HamiltonianVarString|;
+\item \verb|VolumeIntegrals_vacuumX::Momentum0VarString|;
+\item \verb|VolumeIntegrals_vacuumX::Momentum1VarString|;
+\item \verb|VolumeIntegrals_vacuumX::Momentum2VarString|;
+\end{packed_enumerate}
+%%
+The default values for these variables are the variables from the
+\texttt{ML\_BSSN} thorn, but you can use any thorn you want. For example,
+to use the variables \verb|Ham|, \verb|MU0|, \verb|MU1|, and \verb|MU2| from
+an evolution thorn called \texttt{MyBSSNthorn}, one would add the following
+lines to the parameter file:
+%%
+\begin{verbatim}
+VolumeIntegrals_vacuumX::HamiltonianVarString = "MyBSSNthorn::Ham"
+VolumeIntegrals_vacuumX::Momentum0VarString   = "MyBSSNthorn::MU0"
+VolumeIntegrals_vacuumX::Momentum1VarString   = "MyBSSNthorn::MU1"
+VolumeIntegrals_vacuumX::Momentum2VarString   = "MyBSSNthorn::MU2"
+\end{verbatim}
+%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%% Full example %%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Full parameter file configuration example}
+\label{sec:full_parfileexample}
+
+We now provide an example of a parameter file configuration which uses
+the Hamiltonian and momentum constraint variables of the \texttt{Baikal}
+thorn and performs the following tasks:
+%%
+\begin{packed_enumerate}
+\item Integral of Hamiltonian \& momentum constraints, over the entire
+  grid volume.
+  \label{int1}
+\item Exactly the same as~\ref{int1}, but excising the region inside a
+  sphere of radius 2.2 tracking the zeroth AMR grid (initially at
+  $(x,y,z) = (-5.9,0,0)$);
+  \label{int2}
+\item Exactly the same as \ref{int2}, but additionally excising the
+  region inside a sphere of radius 2.2 tracking the center of the first
+  AMR grid (initially at $(x,y,z)=(+5.9,0,0)$);
+  \label{int3}
+\item Integral of Hamiltonian \& momentum constraints, over the entire
+  grid volume, minus the spherical region inside coordinate radius 8.2;
+  \label{int4}
+\item Integral of Hamiltonian \& momentum constraints, over the entire
+  grid volume, minus the spherical region inside coordinate radius 12.0;
+  \label{int5}
+\item Integral of Hamiltonian \& momentum constraints, over the entire
+  grid volume, minus the spherical region inside coordinate radius 16.0;
+  \label{int6}
+\item Integral of Hamiltonian \& momentum constraints, over the entire
+  grid volume, minus the spherical region inside coordinate radius 24.0;
+  \label{int7}
+\item Integral of Hamiltonian \& momentum constraints, over the entire
+  grid volume, minus the spherical region inside coordinate radius 48.0;
+  \label{int8}
+\item Integral of Hamiltonian \& momentum constraints, over the entire
+  grid volume, minus the spherical region inside coordinate radius 96.0;
+  \label{int9}
+\item Integral of Hamiltonian \& momentum constraints, over the entire
+  grid volume, minus the spherical region inside coordinate radius 192.0;
+  \label{int10}
+\end{packed_enumerate}
+%%
+To achieve this, add the following configuration to your parameter file:
+%%
+\begin{verbatim}
+ActiveThorns = "VolumeIntegrals_vacuumX"
+# Set the Hamiltonian and momentum constraint variables to Baikal's
+VolumeIntegrals_vacuumX::HamiltonianVarString = "Baikal::HGF"
+VolumeIntegrals_vacuumX::Momentum0VarString   = "Baikal::MU0GF"
+VolumeIntegrals_vacuumX::Momentum1VarString   = "Baikal::MU1GF"
+VolumeIntegrals_vacuumX::Momentum2VarString   = "Baikal::MU2GF"
+
+# Now setup basic information about the integrals
+VolumeIntegrals_vacuumX::NumIntegrals = 10
+VolumeIntegrals_vacuumX::VolIntegral_out_every = 64
+VolumeIntegrals_vacuumX::enable_file_output = 1
+VolumeIntegrals_vacuumX::outVolIntegral_dir = "volume_integration"
+VolumeIntegrals_vacuumX::verbose = 1
+# The AMR centre will only track the first referenced integration
+# quantities that track said centre. Thus, centeroflapse output will
+# not feed back into the AMR centre positions.
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[1] = "H_M_CnstraintsL2"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[2] = "usepreviousintegrands"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[3] = "usepreviousintegrands"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[4] = "H_M_CnstraintsL2"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[5] = "H_M_CnstraintsL2"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[6] = "H_M_CnstraintsL2"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[7] = "H_M_CnstraintsL2"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[8] = "H_M_CnstraintsL2"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[9] = "H_M_CnstraintsL2"
+VolumeIntegrals_vacuumX::Integration_quantity_keyword[10]= "H_M_CnstraintsL2"
+
+# Second integral takes the first integral integrand,
+# then excises the region around the first BH
+VolumeIntegrals_vacuumX::volintegral_sphere__center_x_initial            [2] = -5.9
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius              [2] =  2.2
+VolumeIntegrals_vacuumX::volintegral_sphere__tracks__amr_centre          [2] =  0
+VolumeIntegrals_vacuumX::volintegral_usepreviousintegrands_num_integrands[2] =  4
+
+# Third integral takes the second integral integrand,
+# then excises the region around the first BH
+VolumeIntegrals_vacuumX::volintegral_sphere__center_x_initial            [3] =  5.9
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius              [3] =  2.2
+VolumeIntegrals_vacuumX::volintegral_sphere__tracks__amr_centre          [3] =  1
+VolumeIntegrals_vacuumX::volintegral_usepreviousintegrands_num_integrands[3] =  4
+
+# Just an outer region
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius[4] = 8.2
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius[5] =12.0
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius[6] =16.0
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius[7] =24.0
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius[8] =48.0
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius[9] =96.0
+VolumeIntegrals_vacuumX::volintegral_outside_sphere__radius[10]=192.0
+\end{verbatim}
+%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% References %%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{thebibliography}{2}
+
+\bibitem{alcubierre2008introduction}
+  Alcubierre, M.
+  \newblock {\em Introduction to 3+ 1 numerical relativity\/}, Vol 140. Oxford University Press (2008).
+
+\bibitem{gourgoulhon20073+}
+  Gourgoulhon, E.
+  \newblock {\em 3+ 1 formalism and bases of numerical relativity\/}, arXiv preprint gr-qc/0703035 (2007).
+
+\end{thebibliography}
+
+% Do not delete next line
+% END CACTUS THORNGUIDE
+
+\end{document}

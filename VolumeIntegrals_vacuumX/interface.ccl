@@ -1,16 +1,17 @@
-# Interface definition for thorn VolumeIntegrals_GRMHDX
+# Interface definition for thorn VolumeIntegrals_vacuumX
 # $Header:$
 
-implements: VolumeIntegrals_GRMHDX
-inherits: ADMBaseX HydroBaseX AsterX BoxInBox
+implements: VolumeIntegrals_vacuumX
+inherits: ADMBaseX BoxInBox
 
 USES INCLUDE HEADER: loop_device.hxx
 
 private:
-CCTK_REAL VolIntegrands TYPE=GF CENTERING={ccc} tags='checkpoint="no"'
+
+CCTK_REAL VolIntegrands TYPE=GF CENTERING={ccc} tags='InterpNumTimelevels=1 prolongation="none" Checkpoint="no"'
 {
   VolIntegrand1,VolIntegrand2,VolIntegrand3,VolIntegrand4
-} "Volume integrands."
+}
 
 CCTK_REAL VolIntegrals TYPE=ARRAY DISTRIB=CONSTANT DIM=2 SIZE=101,4
 {
@@ -23,17 +24,14 @@ CCTK_REAL MovingSphRegionIntegrals TYPE=ARRAY DISTRIB=CONSTANT DIM=1 SIZE=101
   volintegral_outside_sphere__center_x, volintegral_outside_sphere__center_y, volintegral_outside_sphere__center_z
 } "Specify regions for volume integrals inside/outside spheres THAT MOVE."
 
-CCTK_INT IntegralCounterVar type=SCALAR tags='checkpoint="no"'
+public:
+
+CCTK_INT IntegralCounterVar type = SCALAR tags='checkpoint="no"'
 {
   IntegralCounter
 } "Counter that keeps track of which integral we are calculating."
 
-CCTK_REAL VolIntegrals_vacuum_time type=SCALAR tags='checkpoint="no"'
+CCTK_REAL VolIntegrals_vacuum_time type = SCALAR tags='checkpoint="no"'
 {
   physical_time
 } "keeps track of the physical time, in case time coordinate is reparameterized, a la http://arxiv.org/abs/1404.6523"
-
-CCTK_REAL GlobalCoM type=SCALAR tags='checkpoint="no"'
-{
-  comx, comy, comz
-} "Record CoM to set origin for toroidal/poloidal decompositions"
