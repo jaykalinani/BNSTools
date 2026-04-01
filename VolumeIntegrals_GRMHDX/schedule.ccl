@@ -21,11 +21,11 @@ SCHEDULE VI_GRMHDX_file_output_routine_Startup AT CCTK_POST_RECOVER_VARIABLES
 }
 
 #############################
-SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_INITIAL
+SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_INITIAL BEFORE AsterX_InitialGroup
 {
   LANG: C
   OPTIONS: GLOBAL
-  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere) 
+  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere) CoM1(everywhere) CoM2(everywhere) 
   WRITES: VolIntegral(everywhere)
   WRITES: volintegral_inside_sphere__center_x(everywhere)
   WRITES: volintegral_inside_sphere__center_y(everywhere)
@@ -39,7 +39,7 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLE
 {
   LANG: C
   OPTIONS: GLOBAL
-  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere)
+  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere) CoM1(everywhere) CoM2(everywhere) 
   WRITES: VolIntegral(everywhere)
   WRITES: volintegral_inside_sphere__center_x(everywhere)
   WRITES: volintegral_inside_sphere__center_y(everywhere)
@@ -57,7 +57,7 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounter before VI_GRMHDX_VolumeIntegralGrou
   WRITES: IntegralCounter(everywhere)
 } "Initialize IntegralCounter variable"
 ##################
-SCHEDULE GROUP VI_GRMHDX_VolumeIntegralGroup AT poststep BEFORE EstimateError WHILE VolumeIntegrals_GRMHDX::IntegralCounter
+SCHEDULE GROUP VI_GRMHDX_VolumeIntegralGroup AT poststep BEFORE (EstimateError Seed_During_Evolution) WHILE VolumeIntegrals_GRMHDX::IntegralCounter
 {
 } "Evaluate all volume integrals"
 
@@ -105,7 +105,7 @@ SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup AFTER VI_GRMHDX_Comput
   READS: BoxInBox::position_x(everywhere)
   READS: BoxInBox::position_y(everywhere)
   READS: BoxInBox::position_z(everywhere)
-  WRITES: VolIntegral(everywhere) GlobalCoM(everywhere) 
+  WRITES: VolIntegral(everywhere) GlobalCoM(everywhere) CoM1(everywhere) CoM2(everywhere) 
   WRITES: BoxInBox::position_x(everywhere)
   WRITES: BoxInBox::position_y(everywhere)
   WRITES: BoxInBox::position_z(everywhere)

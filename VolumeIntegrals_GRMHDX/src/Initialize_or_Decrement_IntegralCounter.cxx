@@ -17,6 +17,12 @@ extern "C" void VI_GRMHDX_InitializeIntegralCounterToZero(CCTK_ARGUMENTS) {
   *comx = 0;
   *comy = 0;
   *comz = 0;
+  *comx1 = 0;
+  *comy1 = 0;
+  *comz1 = 0;
+  *comx2 = 0;
+  *comy2 = 0;
+  *comz2 = 0;
 
   // Init Array that Holds Results
   for (int ii = 0; ii < 101; ii++) {
