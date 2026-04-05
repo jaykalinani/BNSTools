@@ -57,13 +57,12 @@ if (CCTK_Equals(initial_data,"RNSReader"))
 }
 
 if (corot_atmo) {
-  SCHEDULE RNSReader_Init_VelAtmo IN HydroBaseX_PostInitial AFTER ID_TabEOS_init
+  SCHEDULE RNSReader_Init_VelAtmo IN HydroBaseX_InitialData AFTER Hydro_rnsid_init
   {
     LANG: C
-    READS: HydroBaseX::velx(everywhere) HydroBaseX::vely(everywhere) HydroBaseX::rho(everywhere) HydroBaseX::eps(everywhere) HydroBaseX::press(everywhere)
-    READS: HydroBaseX::temperature(everywhere) HydroBaseX::Ye(everywhere)
+    READS: HydroBaseX::vel(everywhere) HydroBaseX::rho(everywhere)
     READS: ADMBaseX::lapse(everywhere) ADMBaseX::shift(everywhere)
-    WRITES: HydroBaseX::velx(everywhere) HydroBaseX::vely(everywhere) HydroBaseX::rho(everywhere) HydroBaseX::eps(everywhere) HydroBaseX::press(everywhere)
+    WRITES: HydroBaseX::vel(everywhere) HydroBaseX::rho(everywhere)
   } "Set corotating atmosphere from Omega(costh) of RNS surface"
 }
 

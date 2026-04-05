@@ -5,7 +5,6 @@
 #include "rnsreader_utils.hxx"
 #include "consts.h"
 #include "aster_utils.hxx"
-#include "setup_eos.hxx"
 
 #include <loop.hxx>
 #include <loop_device.hxx>
@@ -16,21 +15,13 @@ using namespace Loop;
 using namespace amrex;
 using namespace std;
 using namespace AsterUtils;
-using namespace EOSX;
 
 extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_RNSReader_Init_VelAtmo;
   DECLARE_CCTK_PARAMETERS;
 
-  auto eos_3p_tab3d = global_eos_3p_tab3d;
-  if (not CCTK_EQUALS(evolution_eos, "Tabulated3d")) {
-    CCTK_VERROR("Invalid evolution EOS type '%s'. Please, set "
-                "EOSX::evolution_eos = \"Tabulated3d\" in your parameter file.",
-                evolution_eos);
-  }
-
-  // Open the Omega(r_cyl) file. Everything still says vel(theta) because I am a lazy asshole
   Omega_th_reader* vel_th_reader = nullptr;
+  // Open the Omega(th) file
   FILE *vel_th_file = fopen(vel_th_filename, "r");
     
   // Check if everything is OK with the file
@@ -53,11 +44,11 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
   const vec<GF3D2<const CCTK_REAL>, dim> gf_beta{betax, betay, betaz};
 
   // Calculate grading of corot. atmo. to match numerical atmo. at r_corot_max
-  // const CCTK_REAL rho_atm_r = (r_corot_max > r_atmo)
-  //   ? (rho_abs_min * pow((r_atmo / r_corot_max), n_rho_atmo))
-  //   : rho_abs_min;
-  // const CCTK_REAL n_corot = (log(rho_atm_r) - log(10 * rho_abs_min)) / (log(r_atmo) - log(r_corot_max));
-  // CCTK_VINFO("Calculated n_corot to be %e.", n_corot);
+  const CCTK_REAL rho_atm_r = (r_corot_max > r_atmo)
+    ? (rho_abs_min * pow((r_atmo / r_corot_max), n_rho_atmo))
+    : rho_abs_min;
+  const CCTK_REAL n_corot = (log(rho_atm_r) - log(10 * rho_abs_min)) / (log(r_atmo) - log(r_corot_max));
+  CCTK_VINFO("Calculated n_corot to be %e.", n_corot);
 
   grid.loop_all<1, 1, 1>(grid.nghostzones,
                          [=] CCTK_HOST(const Loop::PointDesc &p)
@@ -65,11 +56,6 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
     const CCTK_REAL velxL = velx(p.I);
     const CCTK_REAL velyL = vely(p.I);
     const CCTK_REAL rhoL = rho(p.I);
-    const CCTK_REAL tempL = temperature(p.I);
-    const CCTK_REAL YeL = Ye(p.I);
-    const CCTK_REAL epsL = eps(p.I);
-    const CCTK_REAL pressL = press(p.I);
-    const CCTK_REAL cyl_distance = sqrt(p.x * p.x + p.y * p.y);
     const CCTK_REAL radial_distance = sqrt(p.x * p.x + p.y * p.y + p.z * p.z);
     
     // Grading rho
@@ -79,24 +65,19 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
     const CCTK_REAL rho_atmo_cut = rho_atm * (1 + atmo_tol);
 
     if (rhoL <= rho_atmo_cut && radial_distance < r_corot_max) {
-      // CCTK_REAL costh = std::abs(p.z) / radial_distance; // cos(theta) on RNS grid runs from 0 to 1
+      CCTK_REAL costh = std::abs(p.z) / radial_distance; // cos(theta) on RNS grid runs from 0 to 1
       CCTK_REAL omg_surf;
       vel_th_reader->interpolate_1d_quantity_as_function_of_th(
-          MDIV - 1, cyl_distance, &omg_surf); // This used to be tabulated in cos(th), now I tabulate in r_cyl
+          MDIV - 1, costh, &omg_surf); // Interp omega to cos(theta) from file
 
       // Grading Omega
       CCTK_REAL omg_atm = (radial_distance > r_corot_min)
         ? (omg_surf * pow((r_corot_min / radial_distance), n_omg_atmo))
         : omg_surf;
       
-      // Pad density and recalculate primitives
-      // CCTK_REAL rho_corot_atm = (radial_distance > r_atmo)
-      //   ? (10 * rho_abs_min * pow((r_atmo / radial_distance), n_corot))
-      //   : 10 * rho_abs_min;
-      CCTK_REAL rho_corot_atm = 10.0 * rho_atm;
-
-      CCTK_REAL eps_corot_atm = eos_3p_tab3d->eps_from_rho_temp_ye(rho_corot_atm, tempL, YeL);
-      CCTK_REAL press_corot_atm = eos_3p_tab3d->press_from_rho_temp_ye(rho_corot_atm, tempL, YeL); 
+      CCTK_REAL rho_corot_atm = (radial_distance > r_atmo)
+        ? (10 * rho_abs_min * pow((r_atmo / radial_distance), n_corot))
+        : 10 * rho_abs_min;
 
       double alpL = calc_avg_v2c(alp, p);
 
@@ -106,15 +87,11 @@ extern "C" void RNSReader_Init_VelAtmo(CCTK_ARGUMENTS) {
       velx(p.I) = (-p.y * omg_atm + betas_avg(0)) / alpL;
       vely(p.I) = (p.x * omg_atm + betas_avg(1)) / alpL;
       rho(p.I) = rho_corot_atm;
-      eps(p.I) = eps_corot_atm;
-      press(p.I) = press_corot_atm;
 
     } else {
       velx(p.I) = velxL;
       vely(p.I) = velyL;
       rho(p.I) = rhoL;
-      eps(p.I) = epsL;
-      press(p.I) = pressL;
     }
   });
 }
