@@ -34,6 +34,12 @@ VI_GRMHDX_number_of_reductions(int which_integral) {
                   "volume_average_norm_B_cd"))
     return 4;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "volume_average_norm_B_posz"))
+    return 4;
+  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "volume_average_norm_B_negz"))
+    return 4;
+  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                   "volume_average_norm_B_m1_cd"))
     return 4;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
@@ -69,6 +75,10 @@ VI_GRMHDX_number_of_reductions(int which_integral) {
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral], "em_energy_ab"))
     return 2;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral], "em_energy_cd"))
+    return 2;
+  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral], "em_energy_posz"))
+    return 2;
+  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral], "em_energy_negz"))
     return 2;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral], "coordvolume"))
     return 1;
