@@ -28,7 +28,7 @@ using namespace Arith;
 using namespace Loop;
 
 // define namespace here for old versions of Lorene that don't do so
-namespace Lorene {}
+// namespace Lorene {}
 using namespace Lorene;
 
 namespace {
@@ -74,9 +74,6 @@ extern "C" void MeudonBNSX_initialise(CCTK_ARGUMENTS) {
   int const nz = cctk_lsh[2] - 1;
   int const npoints = nx * ny * nz;
   vector<double> xx(npoints), yy(npoints), zz(npoints);
-
-  // TODO: currently works only with polytropic EOS
-  CCTK_INFO("MeudonBNSX will use the polytropic equation of state.");
 
   grid.loop_all<1, 1, 1>(grid.nghostzones,
                          [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
@@ -210,7 +207,9 @@ extern "C" void MeudonBNSX_initialise(CCTK_ARGUMENTS) {
           rho(p.I) = bin_ns.nbar[idx] / rho_unit;
           if (!recalculate_eps)
             eps(p.I) = bin_ns.ener_spec[idx];
-          // TODO: currently works only with polytropic EOS
+          // TODO: this only works for simple polytropic, or tabulated EOS.
+          // The expressions are valid for polytropes. Eps and press can and must be
+          // recalculated in a separate thorn for tabulated EOS.
           else
             eps(p.I) = K * pow(rho(p.I), bin_ns.gamma_poly1 - 1.) /
                        (bin_ns.gamma_poly1 - 1.);

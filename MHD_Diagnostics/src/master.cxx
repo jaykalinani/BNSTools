@@ -387,29 +387,11 @@ extern "C" void compute_mhd_derivs(CCTK_ARGUMENTS) {
     double invdet = 1.0 / det;
 
     // Calculate also divB from AsterX staggered field
-    // Use fourth-order ECHO expressions
-    // TODO: check if face index is correct, how to handle densitized B?
+    // using fourth-order ECHO expressions
 
-    double Bx_stagg = 13. * dBx_stag(p.I + p.DI[0]) / 12. -
-                      (dBx_stag(p.I) + dBx_stag(p.I + 2 * p.DI[0])) / 24.;
-    double By_stagg = 13. * dBy_stag(p.I + p.DI[1]) / 12. -
-                      (dBy_stag(p.I) + dBy_stag(p.I + 2 * p.DI[1])) / 24.;
-    double Bz_stagg = 13. * dBz_stag(p.I + p.DI[2]) / 12. -
-                      (dBz_stag(p.I) + dBz_stag(p.I + 2 * p.DI[2])) / 24.;
-
-    double Bx_stagg_m1 =
-        13. * dBx_stag(p.I) / 12. -
-        (dBx_stag(p.I + p.DI[0]) + dBx_stag(p.I - p.DI[0])) / 24.;
-    double By_stagg_m1 =
-        13. * dBy_stag(p.I) / 12. -
-        (dBy_stag(p.I + p.DI[1]) + dBy_stag(p.I - p.DI[1])) / 24.;
-    double Bz_stagg_m1 =
-        13. * dBz_stag(p.I) / 12. -
-        (dBz_stag(p.I + p.DI[2]) + dBz_stag(p.I - p.DI[2])) / 24.;
-
-    divB(p.I) = dxi[1] * (Bx_stagg - Bx_stagg_m1) +
-                dxi[2] * (By_stagg - By_stagg_m1) +
-                dxi[3] * (Bz_stagg - Bz_stagg_m1);
+    divB(p.I) = calc_fd_forward_midpoint<0>(dBx_stag, p, mag_correction_order) +
+      calc_fd_forward_midpoint<1>(dBy_stag, p, mag_correction_order) +
+      calc_fd_forward_midpoint<2>(dBz_stag, p, mag_correction_order);
 
     // ===========================================
 

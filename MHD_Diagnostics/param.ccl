@@ -13,6 +13,9 @@
 # USES CCTK_INT metric_timelevels
 #############################################################################
 
+shares: AsterX
+USES CCTK_INT mag_correction_order
+
 private:
 
 CCTK_INT diagnostics_compute_every "How often to compute diagnostics?" STEERABLE=ALWAYS

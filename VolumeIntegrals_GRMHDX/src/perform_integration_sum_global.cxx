@@ -25,25 +25,19 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
   /* FIXME: Add this symmetry stuff... Should be straightforward. */
   CCTK_REAL sym_factor1, sym_factor2, sym_factor3;
 
-  /*
-    if (CCTK_EQUALS(domain,"bitant")){
-      sym_factor1 = 2.0e0;
-      sym_factor2 = 2.0e0;
-      sym_factor3 = 0.0e0;
-    } else if (CCTK_EQUALS(domain,"octant")){
-      sym_factor1 = 8.0e0;
-      sym_factor2 = 0.0e0;
-      sym_factor3 = 0.0e0;
-    } else {
-      sym_factor1 = 1.0e0;
-      sym_factor2 = 1.0e0;
-      sym_factor3 = 1.0e0;
-    }
-  */
-
-  sym_factor1 = 1.0e0;
-  sym_factor2 = 1.0e0;
-  sym_factor3 = 1.0e0;
+  if (CCTK_EQUALS(VIdomain,"bitant")){
+    sym_factor1 = 2.0e0;
+    sym_factor2 = 2.0e0;
+    sym_factor3 = 0.0e0;
+  } else if (CCTK_EQUALS(VIdomain,"octant")){
+    sym_factor1 = 8.0e0;
+    sym_factor2 = 0.0e0;
+    sym_factor3 = 0.0e0;
+  } else {
+    sym_factor1 = 1.0e0;
+    sym_factor2 = 1.0e0;
+    sym_factor3 = 1.0e0;
+  }
 
   // CarpetX reductions currently include the cell volume in the sum. Keeping
   // this code here in case that ever changes. const amrex::Geometry &geom =
@@ -177,6 +171,34 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
       *comx = sym_factor2 * VolIntegral[4 * (which_integral) + 0] / norm;
       *comy = sym_factor2 * VolIntegral[4 * (which_integral) + 1] / norm;
       *comz = sym_factor3 * VolIntegral[4 * (which_integral) + 2] / norm;
+    } else if (myproc == 0 && verbose >= 1) {
+      printf("VolumeIntegrals_GRMHDX: DoSum skipped global COM update: integral=%d norm=%e raw_mass=%e\n",
+             which_integral, norm, VolIntegral[4 * (which_integral) + 3]);
+    }
+  }
+  /* Set CoM tracker for NS 1 */
+  if (which_integral == 2 &&
+      CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "centerofmass")) {
+    const double norm = sym_factor1 * VolIntegral[4 * (which_integral) + 3];
+    if (std::isfinite(norm) && std::abs(norm) > 0.0) {
+      *comx1 = sym_factor2 * VolIntegral[4 * (which_integral) + 0] / norm;
+      *comy1 = sym_factor2 * VolIntegral[4 * (which_integral) + 1] / norm;
+      *comz1 = sym_factor3 * VolIntegral[4 * (which_integral) + 2] / norm;
+    } else if (myproc == 0 && verbose >= 1) {
+      printf("VolumeIntegrals_GRMHDX: DoSum skipped global COM update: integral=%d norm=%e raw_mass=%e\n",
+             which_integral, norm, VolIntegral[4 * (which_integral) + 3]);
+    }
+  }
+  /* Set CoM tracker for NS 2 */
+  if (which_integral == 3 &&
+      CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "centerofmass")) {
+    const double norm = sym_factor1 * VolIntegral[4 * (which_integral) + 3];
+    if (std::isfinite(norm) && std::abs(norm) > 0.0) {
+      *comx2 = sym_factor2 * VolIntegral[4 * (which_integral) + 0] / norm;
+      *comy2 = sym_factor2 * VolIntegral[4 * (which_integral) + 1] / norm;
+      *comz2 = sym_factor3 * VolIntegral[4 * (which_integral) + 2] / norm;
     } else if (myproc == 0 && verbose >= 1) {
       printf("VolumeIntegrals_GRMHDX: DoSum skipped global COM update: integral=%d norm=%e raw_mass=%e\n",
              which_integral, norm, VolIntegral[4 * (which_integral) + 3]);
