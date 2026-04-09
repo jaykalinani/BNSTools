@@ -60,7 +60,7 @@ SCHEDULE VI_vacuumX_InitializeIntegralCounter before VI_vacuumX_VolumeIntegralGr
   WRITES: IntegralCounter(everywhere)
 } "Initialize IntegralCounter variable"
 ##################
-SCHEDULE GROUP VI_vacuumX_VolumeIntegralGroup AT CCTK_ANALYSIS WHILE VolumeIntegrals_vacuumX::IntegralCounter
+SCHEDULE GROUP VI_vacuumX_VolumeIntegralGroup AT CCTK_ANALYSIS WHILE VolumeIntegrals_vacuumX::IntegralCounter AFTER Z4c_AnalysisGroup
 {
 } "Evaluate all volume integrals"
 

@@ -240,18 +240,35 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
     const CCTK_REAL idx = 1.0 / CCTK_DELTA_SPACE(0);
     const CCTK_REAL idy = 1.0 / CCTK_DELTA_SPACE(1);
     const CCTK_REAL idz = 1.0 / CCTK_DELTA_SPACE(2);
+    vect<int, dim> imin, imax;
+    grid.box_int<1, 1, 1>(grid.nghostzones, imin, imax);
 
-    grid.loop_allmn_device<1, 1, 1>(
-        grid.nghostzones, 1,
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          VolIntegrand1(p.I) = 0.0;
+          VolIntegrand2(p.I) = 0.0;
+          VolIntegrand3(p.I) = 0.0;
+          VolIntegrand4(p.I) = 0.0;
+        });
+
+    grid.loop_int_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          for (int d = 0; d < dim; ++d)
+            if (p.I[d] < imin[d] + 1 || p.I[d] >= imax[d] - 1)
+              return;
           VI_vacuumX_ADM_Mass_integrand_eval_derivs(
               VolIntegrand2, VolIntegrand3, VolIntegrand4, p, idx, idy, idz,
               alp, gxx, gxy, gxz, gyy, gyz, gzz);
         });
 
-    grid.loop_allmn_device<1, 1, 1>(
-        grid.nghostzones, 2,
+    grid.loop_int_device<1, 1, 1>(
+        grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          for (int d = 0; d < dim; ++d)
+            if (p.I[d] < imin[d] + 2 || p.I[d] >= imax[d] - 2)
+              return;
           VI_vacuumX_ADM_Mass_integrand(VolIntegrand1, p, idx, idy, idz,
                                         VolIntegrand2, VolIntegrand3,
                                         VolIntegrand4);
