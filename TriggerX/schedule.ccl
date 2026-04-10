@@ -1,0 +1,25 @@
+# Schedule definitions for thorn TriggerX
+
+SCHEDULE TriggerX_Startup AT STARTUP
+{
+  LANG: C
+} "Register the TriggerX GH extension"
+
+SCHEDULE TriggerX_ParamCheck AT PARAMCHECK
+{
+  LANG: C
+} "Check TriggerX parameters"
+
+SCHEDULE TriggerX_Check AT postinitial BEFORE EstimateError
+{
+  LANG: C
+  OPTIONS: GLOBAL
+  STORAGE: TriggerX_Vars
+} "Evaluate triggers before CarpetX initial regridding"
+
+SCHEDULE TriggerX_Check AT poststep BEFORE EstimateError
+{
+  LANG: C
+  OPTIONS: GLOBAL
+  STORAGE: TriggerX_Vars
+} "Evaluate triggers before CarpetX regridding"

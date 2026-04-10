@@ -1,0 +1,36 @@
+TriggerX provides generic threshold-based steering for CarpetX-style runtime
+scalars and arrays.
+
+It is intended for cases where a condition on a variable or parameter should
+change a scalar before CarpetX regridding runs, for example to add a BoxInBox
+refinement level once a lapse threshold is crossed.
+
+Current reactions:
+- `steerscalar`
+- `steerparam`
+
+The thorn runs at `postinitial` and `poststep` before `EstimateError`, so
+updates to `BoxInBox::num_levels`, `BoxInBox::radius`, or similar runtime
+scalars are visible to the same regridding pass.
+
+Example:
+
+```
+ActiveThorns = "TriggerX BoxInBox"
+
+TriggerX::trigger_number = 1
+TriggerX::trigger_debug  = 1
+
+TriggerX::trigger_checked_variable[0] = "ADMBase::alp"
+TriggerX::trigger_reduction[0]        = "minimum"
+TriggerX::trigger_relation[0]         = ">"
+TriggerX::trigger_checked_value[0]    = 0.01
+
+TriggerX::trigger_reaction[0]             = "steerscalar"
+TriggerX::trigger_steered_scalar[0]       = "BoxInBox::num_levels"
+TriggerX::trigger_steered_scalar_index[0] = 0
+TriggerX::trigger_steered_scalar_value[0] = "13"
+```
+
+For array targets such as `BoxInBox::radius`, use the flattened array index in
+`trigger_steered_scalar_index`. For BoxInBox this is `level + 30 * region`.

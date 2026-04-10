@@ -1,0 +1,12 @@
+# Interface definition for thorn TriggerX
+
+IMPLEMENTS: TriggerX
+INHERITS: CarpetXRegrid
+
+PUBLIC:
+
+CCTK_REAL TriggerX_Vars DISTRIB=CONSTANT TAGS='checkpoint="no"'
+{
+  trigger_cctk_iteration
+  trigger_cctk_time
+} "Auxiliary scalars that can be used in trigger conditions"
