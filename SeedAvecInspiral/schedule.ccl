@@ -1,0 +1,144 @@
+#Schedule definitions for thorn SeedAvecInspiral
+
+STORAGE: Avec_cent
+SCHEDULE SeedAvecInspiral_Initialize_Seeding_Flags AT CCTK_INITIAL
+{
+   LANG: C
+   OPTIONS: GLOBAL
+   WRITES:  SeedNow(everywhere), DoneSeeding(everywhere)
+   WRITES: vel_NS1(everywhere) vel_NS2(everywhere)
+} "Initialize seeding variables."
+
+if (seed_every != 0) {
+  SCHEDULE SeedAvecInspiral_InitializeAvectoZero AT initial IN ODESolvers_Initial BEFORE AsterX_InitialGroup 
+  {
+    LANG: C
+    WRITES: AsterX::Avec_x(everywhere) AsterX::Avec_y(everywhere) AsterX::Avec_z(everywhere)
+  } "Set up zero vector potential"
+
+  SCHEDULE GROUP Seed_During_Evolution at CCTK_POSTSTEP
+  {
+  } "Routines for seeding magnetic field during evolution."
+
+  SCHEDULE SeedAvecInspiral_Set_Seeding_Flags in Seed_During_Evolution
+  {
+     LANG: C
+     OPTIONS: GLOBAL
+     READS: VolumeIntegrals_GRMHDX::CoM1(everywhere) VolumeIntegrals_GRMHDX::CoM2(everywhere)
+     READS: DoneSeeding(everywhere)
+     WRITES: SeedNow(everywhere)
+  } "Evaluate whether to seed now or not."
+
+  SCHEDULE GROUP Seeding_Tasks IN Seed_During_Evolution IF SeedAvecInspiral::SeedNow AFTER SeedAvecInspiral_Set_Seeding_Flags 
+  {
+  } "If conditions are met, seed magnetic field."
+
+  SCHEDULE SeedAvecInspiral_InitializeCenteredAvec_BNS IN Seeding_Tasks 
+  {
+    LANG: C
+    READS: HydroBaseX::press(everywhere)
+    READS: VolumeIntegrals_GRMHDX::CoM1(everywhere) VolumeIntegrals_GRMHDX::CoM2(everywhere)
+    WRITES: Avec_x_cent(everywhere) Avec_y_cent(everywhere) Avec_z_cent(everywhere)
+    WRITES: SeedNow(everywhere), DoneSeeding(everywhere)
+  } "Set up initial conditions for the cell-centered vector potential"
+
+  SCHEDULE SeedAvecInspiral_InitializeStagAvec_BNS IN Seeding_Tasks AFTER SeedAvecInspiral_InitializeCenteredAvec_BNS BEFORE AsterX_InitialGroup 
+  {
+    LANG: C
+    READS: Avec_x_cent(everywhere) Avec_y_cent(everywhere) Avec_z_cent(everywhere)
+    WRITES: AsterX::Avec_x(interior) AsterX::Avec_y(interior) AsterX::Avec_z(interior)
+    SYNC: AsterX::Avec_x AsterX::Avec_y AsterX::Avec_z
+  } "Set up initial conditions for the vector potential"
+
+  SCHEDULE GROUP AsterX_Con2PrimGroup IN Seeding_Tasks AFTER SeedAvecInspiral_InitializeStagAvec_BNS 
+  {
+  } "Calc B from A, run Con2Prim."
+
+  if (initial_beta) {
+    if (set_coorbiting_vel) {
+      SCHEDULE SeedAvecInspiral_InterpolateNSVelocity IN Seeding_Tasks BEFORE SeedAvecInspiral_SetInitialBetaFloor 
+      {
+        LANG: C
+        OPTIONS: GLOBAL
+        READS: HydroBaseX::vel(everywhere)
+        READS: VolumeIntegrals_GRMHDX::CoM1(everywhere) VolumeIntegrals_GRMHDX::CoM2(everywhere)
+        WRITES: vel_NS1(everywhere) vel_NS2(everywhere)
+      } "Get velocity of NS CoMs"
+    }
+
+    SCHEDULE SeedAvecInspiral_SetInitialBetaFloor IN Seeding_Tasks AFTER AsterX_Con2PrimGroup 
+    {
+      LANG: C
+      READS: HydroBaseX::vel(everywhere) HydroBaseX::Bvec(everywhere) HydroBaseX::press(everywhere) HydroBaseX::temperature(everywhere) HydroBaseX::Ye(everywhere)
+      READS: VolumeIntegrals_GRMHDX::CoM1(everywhere) VolumeIntegrals_GRMHDX::CoM2(everywhere)
+      READS: ADMBaseX::metric(everywhere)
+      READS: vel_NS1(everywhere) vel_NS2(everywhere)
+      WRITES: HydrobaseX::rho(everywhere) HydroBaseX::press(everywhere) HydroBaseX::eps(everywhere) HydroBaseX::entropy(everywhere)  HydrobaseX::vel(everywhere)
+    } "Enforce initial minimum plasma beta"
+
+    SCHEDULE AsterX_Prim2Con_Initial IN Seeding_Tasks AFTER SeedAvecInspiral_SetInitialBetaFloor
+    {
+      LANG: C
+      READS: ADMBaseX::metric(interior)
+      READS: HydroBaseX::rho(interior) HydroBaseX::vel(interior) HydroBaseX::eps(interior) HydroBaseX::press(interior) HydroBaseX::Bvec(interior)
+      READS: HydroBaseX::entropy(interior) HydroBaseX::Ye(interior)
+      WRITES: AsterX::cons_vector(interior) AsterX::dB(interior)
+      SYNC: AsterX::cons_vector AsterX::dB
+    } "Update cons after setting initial beta"
+  }
+
+  SCHEDULE AsterX_Tmunu IN Seeding_Tasks AFTER AsterX_Con2PrimGroup AFTER AsterX_ApplyOuterBCOnPrim
+  {
+    LANG: C
+    READS: ADMBaseX::metric(everywhere) ADMBaseX::lapse(everywhere) ADMBaseX::shift(everywhere)
+    READS: HydroBaseX::rho(everywhere) HydroBaseX::press(everywhere) HydroBaseX::eps(everywhere)
+    READS: HydroBaseX::vel(everywhere)
+    READS: AsterX::zvec_x(everywhere), AsterX::zvec_y(everywhere), AsterX::zvec_z(everywhere)
+    READS: AsterX::svec_x(everywhere), AsterX::svec_y(everywhere), AsterX::svec_z(everywhere)
+    READS: HydroBaseX::Bvec(everywhere)
+    READS: TmunuBaseX::eTtt(interior) TmunuBaseX::eTti(interior) TmunuBaseX::eTij(interior)
+    WRITES: TmunuBaseX::eTtt(interior) TmunuBaseX::eTti(interior) TmunuBaseX::eTij(interior)
+    SYNC: TmunuBaseX::eTtt TmunuBaseX::eTti TmunuBaseX::eTij
+  } "Compute the energy-momentum tensor"
+
+}
+else {
+  SCHEDULE SeedAvecInspiral_InitializeCenteredAvec_BNS AT initial IN ODESolvers_Initial AFTER HydroBaseX_PostInitial BEFORE AsterX_InitialGroup {
+    LANG: C
+    READS: HydroBaseX::press(everywhere)
+    READS: VolumeIntegrals_GRMHDX::CoM1(everywhere) VolumeIntegrals_GRMHDX::CoM2(everywhere)
+    WRITES: Avec_x_cent(everywhere) Avec_y_cent(everywhere) Avec_z_cent(everywhere)
+    WRITES:  SeedNow(everywhere), DoneSeeding(everywhere)
+  } "Set up initial conditions for the cell-centered vector potential"
+
+  SCHEDULE SeedAvecInspiral_InitializeStagAvec_BNS AT initial IN ODESolvers_Initial AFTER SeedAvecInspiral_InitializeCenteredAvec_BNS BEFORE AsterX_InitialGroup 
+  {
+    LANG: C
+    READS: Avec_x_cent(everywhere) Avec_y_cent(everywhere) Avec_z_cent(everywhere)
+    WRITES: AsterX::Avec_x(interior) AsterX::Avec_y(interior) AsterX::Avec_z(interior)
+    SYNC: AsterX::Avec_x AsterX::Avec_y AsterX::Avec_z
+  } "Set up initial conditions for the vector potential"
+
+  if (initial_beta) {
+    if (set_coorbiting_vel) {
+      SCHEDULE SeedAvecInspiral_InterpolateNSVelocity IN Seeding_Tasks BEFORE SeedAvecInspiral_SetInitialBetaFloor 
+      {
+        LANG: C
+        OPTIONS: GLOBAL
+        READS: HydroBaseX::vel(everywhere)
+        READS: VolumeIntegrals_GRMHDX::CoM1(everywhere) VolumeIntegrals_GRMHDX::CoM2(everywhere)
+        WRITES: vel_NS1(everywhere) vel_NS2(everywhere)
+      } "Get velocity of NS CoMs"
+    }
+
+    SCHEDULE SeedAvecInspiral_SetInitialBetaFloor AT initial IN AsterX_InitialGroup AFTER AsterX_ComputeBFromdB BEFORE AsterX_CheckPrims 
+    {
+      LANG: C
+      READS: HydroBaseX::vel(everywhere) HydroBaseX::Bvec(everywhere) HydroBaseX::press(everywhere) HydroBaseX::temperature(everywhere) HydroBaseX::Ye(everywhere)
+      READS: ADMBaseX::metric(everywhere)
+      READS: VolumeIntegrals_GRMHDX::CoM1(everywhere) VolumeIntegrals_GRMHDX::CoM2(everywhere)
+      READS: vel_NS1(everywhere) vel_NS2(everywhere)
+      WRITES: HydrobaseX::rho(everywhere) HydroBaseX::press(everywhere) HydroBaseX::eps(everywhere) HydroBaseX::entropy(everywhere) HydrobaseX::vel(everywhere)
+    } "Enforce initial minimum plasma beta"
+  }
+}

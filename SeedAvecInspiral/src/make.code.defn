@@ -1,0 +1,9 @@
+#Main make.code.defn file for thorn SeedAvecInspiral
+
+# Source files in this directory
+SRCS =	\
+  initial_betafloor.cxx \
+  magBNS.cxx
+
+#Subdirectories containing source files
+SUBDIRS =

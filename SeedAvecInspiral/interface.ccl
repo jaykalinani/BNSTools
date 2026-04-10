@@ -1,0 +1,44 @@
+# Interface definition for thorn SeedAvecInspiral
+
+IMPLEMENTS: SeedAvecInspiral
+INHERITS: HydroBaseX AsterX VolumeIntegrals_GRMHDX
+
+USES INCLUDE HEADER: loop_device.hxx
+USES INCLUDE HEADER: setup_eos.hxx
+USES INCLUDE HEADER: aster_fd.hxx aster_interp.hxx aster_utils.hxx
+
+CCTK_REAL Avec_cent TYPE=gf CENTERING={ccc} TAGS='checkpoint="no"'
+{
+  Avec_x_cent
+  Avec_y_cent
+  Avec_z_cent
+} "Cell-centered vector potential components"
+
+CCTK_REAL vel_NS1 TYPE=ARRAY DISTRIB=CONSTANT DIM=1 SIZE=3
+{
+  vel_NS1
+} "Helper for dynamic seeding of external dipole field. Records velocity of NS CoM"
+
+CCTK_REAL vel_NS2 TYPE=ARRAY DISTRIB=CONSTANT DIM=1 SIZE=3
+{
+  vel_NS2
+} "Helper for dynamic seeding of external dipole field. Records velocity of NS CoM"
+
+CCTK_INT SeedNow type=SCALAR tags='checkpoint="yes"'
+CCTK_INT DoneSeeding type=SCALAR tags='checkpoint="yes"'
+
+CCTK_INT FUNCTION DriverInterpolate(
+  CCTK_POINTER_TO_CONST IN cctkGH,
+  CCTK_INT IN N_dims,
+  CCTK_INT IN local_interp_handle,
+  CCTK_INT IN param_table_handle,
+  CCTK_INT IN coord_system_handle,
+  CCTK_INT IN N_interp_points,
+  CCTK_INT IN interp_coords_type,
+  CCTK_POINTER_TO_CONST ARRAY IN interp_coords,
+  CCTK_INT IN N_input_arrays,
+  CCTK_INT ARRAY IN input_array_indices,
+  CCTK_INT IN N_output_arrays,
+  CCTK_INT ARRAY IN output_array_types,
+  CCTK_POINTER ARRAY IN output_arrays)
+REQUIRES FUNCTION DriverInterpolate
