@@ -1,0 +1,93 @@
+# Parameter definitions for thorn TriggerX
+
+# Trigger definitions are parsed into a GH extension at startup, so steering
+# the trigger metadata itself during runtime is not meaningful.
+CCTK_INT Trigger_Number "Number of triggers" STEERABLE=RECOVER
+{
+  0:10 :: "The number of triggers that are defined"
+} 0
+
+STRING Trigger_Checked_Variable[10] "Variable to be checked, or 'param' for a parameter" STEERABLE=RECOVER
+{
+  ".+" :: "Fully qualified variable name"
+  "^$" :: "An empty string disables this trigger"
+} ""
+
+STRING Trigger_Checked_Parameter_Thorn[10] "Thorn of the parameter to be checked" STEERABLE=RECOVER
+{
+  ".+" :: "Thorn name"
+  "^$" :: "Unused unless Trigger_Checked_Variable is 'param'"
+} ""
+
+STRING Trigger_Checked_Parameter_Name[10] "Parameter to be checked" STEERABLE=RECOVER
+{
+  ".+" :: "Parameter name"
+  "^$" :: "Unused unless Trigger_Checked_Variable is 'param'"
+} ""
+
+STRING Trigger_Relation[10] "Relation operator for the checked value" STEERABLE=RECOVER
+{
+  "^(<|<=|>|>=|==|!=)$" :: "Supported relations"
+} ">"
+
+CCTK_REAL Trigger_Checked_Value[10] "Threshold value for the trigger" STEERABLE=RECOVER
+{
+  *:* :: "Value to compare against"
+} 1.0
+
+STRING Trigger_Reduction[10] "Optional reduction method for the checked variable" STEERABLE=RECOVER
+{
+  ".+" :: "For example 'minimum' or 'maximum'"
+  "^$" :: "No reduction; intended for scalar or array variables"
+} ""
+
+KEYWORD Trigger_Reaction[10] "How to react when the trigger fires" STEERABLE=RECOVER
+{
+  "steerparam"  :: "Change a steerable parameter"
+  "steerscalar" :: "Change a grid scalar or grid array entry"
+} "steerscalar"
+
+STRING Trigger_Steered_Parameter_Thorn[10] "Thorn of the parameter to be changed" STEERABLE=ALWAYS
+{
+  ".+" :: "Thorn name"
+  "^$" :: "Unused unless Trigger_Reaction is 'steerparam'"
+} ""
+
+STRING Trigger_Steered_Parameter_Name[10] "Parameter to be changed" STEERABLE=ALWAYS
+{
+  ".+" :: "Parameter name"
+  "^$" :: "Unused unless Trigger_Reaction is 'steerparam'"
+} ""
+
+STRING Trigger_Steered_Parameter_Value[10] "New parameter value" STEERABLE=ALWAYS
+{
+  ".+" :: "Value to assign"
+  "^$" :: "Can be empty"
+} ""
+
+STRING Trigger_Steered_Scalar[10] "Grid scalar or grid array variable to be changed" STEERABLE=ALWAYS
+{
+  ".+" :: "Fully qualified variable name"
+  "^$" :: "Unused unless Trigger_Reaction is 'steerscalar'"
+} ""
+
+INT Trigger_Steered_Scalar_Index[10] "Entry to change inside the target scalar/array" STEERABLE=ALWAYS
+{
+  0:* :: "Zero-based index"
+} 0
+
+STRING Trigger_Steered_Scalar_Value[10] "New scalar value" STEERABLE=ALWAYS
+{
+  ".+" :: "Value to assign"
+  "^$" :: "Can be empty"
+} ""
+
+INT Trigger_Once[10] "Whether this trigger should fire only once" STEERABLE=ALWAYS
+{
+  0:1 :: "0 (no) or 1 (yes)"
+} 0
+
+CCTK_INT Trigger_Debug "Turn on debug messages" STEERABLE=RECOVER
+{
+  0:1 :: "Only 0 (off) or 1 (on)"
+} 0

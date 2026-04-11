@@ -1,0 +1,2 @@
+# Source files in this directory
+SRCS = triggerx.c
