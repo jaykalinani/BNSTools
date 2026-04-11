@@ -6,7 +6,7 @@
 
 #include <cmath>
 
-#include "seeds_utils.hxx"
+#include "seedavec_utils.hxx"
 
 namespace SeedAvecInspiral {
 using namespace std;

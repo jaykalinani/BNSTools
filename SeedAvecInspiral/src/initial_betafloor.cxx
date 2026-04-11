@@ -7,7 +7,7 @@
 #include <cmath>
 
 #include "util_Table.h"
-#include "seeds_utils.hxx"
+#include "seedavec_utils.hxx"
 #include "setup_eos.hxx"
 
 namespace SeedAvecInspiral {
