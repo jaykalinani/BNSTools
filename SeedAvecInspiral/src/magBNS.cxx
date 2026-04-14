@@ -37,7 +37,7 @@ extern "C" void SeedAvecInspiral_Set_Seeding_Flags(CCTK_ARGUMENTS) {
     const CCTK_REAL ns_Dx = abs(*comx1 - *comx2);
     const CCTK_REAL ns_Dy = abs(*comy1 - *comy2);
     const CCTK_REAL ns_sep = sqrt(ns_Dx * ns_Dx + ns_Dy * ns_Dy);
-    if (ns_sep > seeding_separation)
+    if (ns_sep < seeding_separation)
       seed_trigger = true;
   }
 

@@ -75,19 +75,19 @@ if (seed_every != 0) {
       READS: vel_NS1(everywhere) vel_NS2(everywhere)
       WRITES: HydrobaseX::rho(everywhere) HydroBaseX::press(everywhere) HydroBaseX::eps(everywhere) HydroBaseX::entropy(everywhere)  HydrobaseX::vel(everywhere)
     } "Enforce initial minimum plasma beta"
-
-    SCHEDULE AsterX_Prim2Con_Initial IN Seeding_Tasks AFTER SeedAvecInspiral_SetInitialBetaFloor
-    {
-      LANG: C
-      READS: ADMBaseX::metric(interior)
-      READS: HydroBaseX::rho(interior) HydroBaseX::vel(interior) HydroBaseX::eps(interior) HydroBaseX::press(interior) HydroBaseX::Bvec(interior)
-      READS: HydroBaseX::entropy(interior) HydroBaseX::Ye(interior)
-      WRITES: AsterX::cons_vector(interior) AsterX::dB(interior)
-      SYNC: AsterX::cons_vector AsterX::dB
-    } "Update cons after setting initial beta"
   }
 
-  SCHEDULE AsterX_Tmunu IN Seeding_Tasks AFTER AsterX_Con2PrimGroup AFTER AsterX_ApplyOuterBCOnPrim
+  SCHEDULE AsterX_Prim2Con_Initial IN Seeding_Tasks AFTER SeedAvecInspiral_SetInitialBetaFloor AFTER AsterX_Con2PrimGroup
+  {
+    LANG: C
+    READS: ADMBaseX::metric(interior)
+    READS: HydroBaseX::rho(interior) HydroBaseX::vel(interior) HydroBaseX::eps(interior) HydroBaseX::press(interior) HydroBaseX::Bvec(interior)
+    READS: HydroBaseX::entropy(interior) HydroBaseX::Ye(interior)
+    WRITES: AsterX::cons_vector(interior) AsterX::dB(interior)
+    SYNC: AsterX::cons_vector AsterX::dB
+  } "Update cons after setting initial magnetic field"
+
+  SCHEDULE AsterX_Tmunu IN Seeding_Tasks AFTER AsterX_Prim2Con_Initial AFTER AsterX_ApplyOuterBCOnPrim
   {
     LANG: C
     READS: ADMBaseX::metric(everywhere) ADMBaseX::lapse(everywhere) ADMBaseX::shift(everywhere)
