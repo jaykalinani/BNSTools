@@ -29,9 +29,15 @@ VI_vacuumX_avg_v2c_at(const GF3D2<const T> &gf, const PointDesc &p,
 CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void
 VI_vacuumX_L2_integrand(const GF3D2<double> VolIntegrand1,
                         const PointDesc &p,
-                        const GF3D2<const CCTK_REAL> f) {
+                        const GF3D2<const CCTK_REAL> f,
+                        const GF3D2<double> VolIntegrand2,
+                        const GF3D2<double> VolIntegrand3,
+                        const GF3D2<double> VolIntegrand4) {
   const CCTK_REAL fL = f(p.I);
   VolIntegrand1(p.I) = fL * fL;
+  VolIntegrand2(p.I) = 0.0;
+  VolIntegrand3(p.I) = 0.0;
+  VolIntegrand4(p.I) = 0.0;
 }
 
 /* Center of Lapse: */

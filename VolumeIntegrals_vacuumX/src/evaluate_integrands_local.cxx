@@ -120,13 +120,93 @@ VI_vacuumX_sample_dynamic_gf(const VI_vacuumX_dynamic_gf &f,
 
 } // namespace
 
+extern "C" void VI_vacuumX_ComputeIntegrandFluxes(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_VI_vacuumX_ComputeIntegrandFluxes;
+  DECLARE_CCTK_PARAMETERS;
+
+  const int which_integral =
+      NumIntegrals - static_cast<int>(*IntegralCounter) + 1;
+  if (which_integral < 1 || which_integral > NumIntegrals ||
+      which_integral > 100) {
+    CCTK_VERROR("Invalid integral index: which_integral=%d NumIntegrals=%d IntegralCounter=%d",
+                which_integral, NumIntegrals,
+                static_cast<int>(*IntegralCounter));
+  }
+
+  const CCTK_REAL idx = 1.0 / CCTK_DELTA_SPACE(0);
+  const CCTK_REAL idy = 1.0 / CCTK_DELTA_SPACE(1);
+  const CCTK_REAL idz = 1.0 / CCTK_DELTA_SPACE(2);
+  vect<int, dim> bnd_min, bnd_max, all_min, all_max, int_min, int_max;
+  grid.boundary_box<1, 1, 1>(grid.nghostzones, bnd_min, bnd_max);
+  grid.box_all<1, 1, 1>(grid.nghostzones, all_min, all_max);
+  grid.box_int<1, 1, 1>(grid.nghostzones, int_min, int_max);
+  using std::max, std::min;
+  const vect<int, dim> flux_min = max(all_min, int_min - 1);
+  const vect<int, dim> flux_max = min(all_max, int_max + 1);
+
+  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral], "ADM_Mass")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          if (all(p.I >= flux_min && p.I < flux_max)) {
+            VI_vacuumX_ADM_Mass_integrand_eval_derivs(
+                VolIntegrand2, VolIntegrand3, VolIntegrand4, p, idx, idy, idz,
+                alp, gxx, gxy, gxz, gyy, gyz, gzz);
+          } else {
+            VolIntegrand2(p.I) = 0.0;
+            VolIntegrand3(p.I) = 0.0;
+            VolIntegrand4(p.I) = 0.0;
+          }
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "ADM_Momentum")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          if (all(p.I >= flux_min && p.I < flux_max)) {
+            VI_vacuumX_ADM_Momentum_integrand_eval_derivs(
+                VolIntegrand2, VolIntegrand3, VolIntegrand4, p, idx, idy, idz,
+                alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz, kyy, kyz,
+                kzz);
+          } else {
+            VolIntegrand2(p.I) = 0.0;
+            VolIntegrand3(p.I) = 0.0;
+            VolIntegrand4(p.I) = 0.0;
+          }
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "ADM_Angular_Momentum")) {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          if (all(p.I >= flux_min && p.I < flux_max)) {
+            VI_vacuumX_ADM_Angular_Momentum_integrand_eval_derivs(
+                VolIntegrand2, VolIntegrand3, VolIntegrand4, p, idx, idy, idz,
+                alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz, kyy, kyz,
+                kzz);
+          } else {
+            VolIntegrand2(p.I) = 0.0;
+            VolIntegrand3(p.I) = 0.0;
+            VolIntegrand4(p.I) = 0.0;
+          }
+        });
+  } else {
+    grid.loop_all_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          VolIntegrand2(p.I) = 0.0;
+          VolIntegrand3(p.I) = 0.0;
+          VolIntegrand4(p.I) = 0.0;
+        });
+  }
+}
+
 extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_VI_vacuumX_ComputeIntegrand;
   DECLARE_CCTK_PARAMETERS;
 
   const int which_integral =
       NumIntegrals - static_cast<int>(*IntegralCounter) + 1;
-
   if (which_integral < 1 || which_integral > NumIntegrals ||
       which_integral > 100) {
     CCTK_VERROR("Invalid integral index: which_integral=%d NumIntegrals=%d IntegralCounter=%d",
@@ -154,7 +234,7 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
     const auto MU2_gf =
         VI_vacuumX_get_dynamic_gf(cctkGH, timelevel, MU2_vi, Momentum2VarString);
 
-    grid.loop_all_device<1, 1, 1>(
+    grid.loop_int_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           const CCTK_REAL H = VI_vacuumX_sample_dynamic_gf(H_gf, p);
@@ -187,7 +267,7 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
       const auto MU2_gf = VI_vacuumX_get_dynamic_gf(cctkGH, timelevel, MU2_vi,
                                                     Momentum2VarString);
 
-      grid.loop_all_device<1, 1, 1>(
+      grid.loop_int_device<1, 1, 1>(
           grid.nghostzones,
           [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
             const CCTK_REAL H = VI_vacuumX_sample_dynamic_gf(H_gf, p);
@@ -203,7 +283,7 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
       const auto M2_gf = VI_vacuumX_get_dynamic_gf(cctkGH, timelevel, M2_vi,
                                                    MomentumSquaredVarString);
 
-      grid.loop_all_device<1, 1, 1>(
+      grid.loop_int_device<1, 1, 1>(
           grid.nghostzones,
           [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
             const CCTK_REAL H = VI_vacuumX_sample_dynamic_gf(H_gf, p);
@@ -215,7 +295,7 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "centeroflapse")) {
 
-    grid.loop_all_device<1, 1, 1>(
+    grid.loop_int_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           VI_vacuumX_CoL_integrand(VolIntegrand1, VolIntegrand2, VolIntegrand3,
@@ -229,10 +309,11 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
 
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral], "one")) {
 
-    grid.loop_all_device<1, 1, 1>(
+    grid.loop_int_device<1, 1, 1>(
         grid.nghostzones,
-        [=] CCTK_DEVICE(const PointDesc &p)
-            CCTK_ATTRIBUTE_ALWAYS_INLINE { VolIntegrand1(p.I) = 1.0; });
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          VolIntegrand1(p.I) = 1.0;
+        });
 
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "ADM_Mass")) {
@@ -240,35 +321,10 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
     const CCTK_REAL idx = 1.0 / CCTK_DELTA_SPACE(0);
     const CCTK_REAL idy = 1.0 / CCTK_DELTA_SPACE(1);
     const CCTK_REAL idz = 1.0 / CCTK_DELTA_SPACE(2);
-    vect<int, dim> imin, imax;
-    grid.box_int<1, 1, 1>(grid.nghostzones, imin, imax);
-
-    grid.loop_all_device<1, 1, 1>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          VolIntegrand1(p.I) = 0.0;
-          VolIntegrand2(p.I) = 0.0;
-          VolIntegrand3(p.I) = 0.0;
-          VolIntegrand4(p.I) = 0.0;
-        });
 
     grid.loop_int_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          for (int d = 0; d < dim; ++d)
-            if (p.I[d] < imin[d] + 1 || p.I[d] >= imax[d] - 1)
-              return;
-          VI_vacuumX_ADM_Mass_integrand_eval_derivs(
-              VolIntegrand2, VolIntegrand3, VolIntegrand4, p, idx, idy, idz,
-              alp, gxx, gxy, gxz, gyy, gyz, gzz);
-        });
-
-    grid.loop_int_device<1, 1, 1>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          for (int d = 0; d < dim; ++d)
-            if (p.I[d] < imin[d] + 2 || p.I[d] >= imax[d] - 2)
-              return;
           VI_vacuumX_ADM_Mass_integrand(VolIntegrand1, p, idx, idy, idz,
                                         VolIntegrand2, VolIntegrand3,
                                         VolIntegrand4);
@@ -281,17 +337,8 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
     const CCTK_REAL idy = 1.0 / CCTK_DELTA_SPACE(1);
     const CCTK_REAL idz = 1.0 / CCTK_DELTA_SPACE(2);
 
-    grid.loop_allmn_device<1, 1, 1>(
-        grid.nghostzones, 1,
-        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          VI_vacuumX_ADM_Momentum_integrand_eval_derivs(
-              VolIntegrand2, VolIntegrand3, VolIntegrand4, p, idx, idy, idz,
-              alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz, kyy, kyz,
-              kzz);
-        });
-
-    grid.loop_allmn_device<1, 1, 1>(
-        grid.nghostzones, 2,
+    grid.loop_int_device<1, 1, 1>(
+        grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           VI_vacuumX_ADM_Momentum_integrand(VolIntegrand1, p, idx, idy, idz,
                                             VolIntegrand2, VolIntegrand3,
@@ -305,17 +352,8 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
     const CCTK_REAL idy = 1.0 / CCTK_DELTA_SPACE(1);
     const CCTK_REAL idz = 1.0 / CCTK_DELTA_SPACE(2);
 
-    grid.loop_allmn_device<1, 1, 1>(
-        grid.nghostzones, 1,
-        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          VI_vacuumX_ADM_Angular_Momentum_integrand_eval_derivs(
-              VolIntegrand2, VolIntegrand3, VolIntegrand4, p, idx, idy, idz,
-              alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz, kyy, kyz,
-              kzz);
-        });
-
-    grid.loop_allmn_device<1, 1, 1>(
-        grid.nghostzones, 2,
+    grid.loop_int_device<1, 1, 1>(
+        grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           VI_vacuumX_ADM_Angular_Momentum_integrand(
               VolIntegrand1, p, idx, idy, idz, VolIntegrand2, VolIntegrand3,
@@ -330,13 +368,10 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
            "understand Integration_quantity_keyword[%d] = %s\n",
            which_integral, Integration_quantity_keyword[which_integral]);
     // Unknown keyword: clear integrands so stale values cannot leak into sums.
-    grid.loop_all_device<1, 1, 1>(
+    grid.loop_int_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
           VolIntegrand1(p.I) = 0.0;
-          VolIntegrand2(p.I) = 0.0;
-          VolIntegrand3(p.I) = 0.0;
-          VolIntegrand4(p.I) = 0.0;
         });
   }
 
@@ -376,59 +411,80 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
         position_z[which_centre];
   }
 
+}
+
+extern "C" void VI_vacuumX_ApplyRegionMasks(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_VI_vacuumX_ApplyRegionMasks;
+  DECLARE_CCTK_PARAMETERS;
+
+  const int which_integral =
+      NumIntegrals - static_cast<int>(*IntegralCounter) + 1;
+  if (which_integral < 1 || which_integral > NumIntegrals ||
+      which_integral > 100) {
+    CCTK_VERROR("Invalid integral index: which_integral=%d NumIntegrals=%d IntegralCounter=%d",
+                which_integral, NumIntegrals,
+                static_cast<int>(*IntegralCounter));
+  }
+
   /* ZERO OUT INTEGRATION REGIONS */
 
   /* Set integrands to zero outside a sphere centered at x,y,z.
      I.e., this results in the integral being restricted INSIDE sphere */
-  if (volintegral_inside_sphere__radius[which_integral] > 0.0) {
-    const double radius = volintegral_inside_sphere__radius[which_integral];
-    double xprime = volintegral_sphere__center_x_initial[which_integral];
-    double yprime = volintegral_sphere__center_y_initial[which_integral];
-    double zprime = volintegral_sphere__center_z_initial[which_integral];
+  const bool use_inside_sphere =
+      volintegral_inside_sphere__radius[which_integral] > 0.0;
+  const bool use_outside_sphere =
+      volintegral_outside_sphere__radius[which_integral] > 0.0;
 
-    if (cctk_iteration > 0 &&
-        (amr_centre__tracks__volintegral_inside_sphere[which_integral] != -1 ||
-         volintegral_sphere__tracks__amr_centre[which_integral] != -1)) {
-      xprime = volintegral_inside_sphere__center_x[which_integral];
-      yprime = volintegral_inside_sphere__center_y[which_integral];
-      zprime = volintegral_inside_sphere__center_z[which_integral];
-    }
+  if (!use_inside_sphere && !use_outside_sphere)
+    return;
 
-    grid.loop_all_device<1, 1, 1>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          const double dx = p.x - xprime;
-          const double dy = p.y - yprime;
-          const double dz = p.z - zprime;
-          if (sqrt(dx * dx + dy * dy + dz * dz) > radius) {
-            VolIntegrand1(p.I) = 0.0;
-            VolIntegrand2(p.I) = 0.0;
-            VolIntegrand3(p.I) = 0.0;
-            VolIntegrand4(p.I) = 0.0;
-          }
-        });
+  const double inside_radius = volintegral_inside_sphere__radius[which_integral];
+  double inside_xprime = volintegral_sphere__center_x_initial[which_integral];
+  double inside_yprime = volintegral_sphere__center_y_initial[which_integral];
+  double inside_zprime = volintegral_sphere__center_z_initial[which_integral];
+
+  if (use_inside_sphere && cctk_iteration > 0 &&
+      (amr_centre__tracks__volintegral_inside_sphere[which_integral] != -1 ||
+       volintegral_sphere__tracks__amr_centre[which_integral] != -1)) {
+    inside_xprime = volintegral_inside_sphere__center_x[which_integral];
+    inside_yprime = volintegral_inside_sphere__center_y[which_integral];
+    inside_zprime = volintegral_inside_sphere__center_z[which_integral];
   }
 
-  /* Set integrands to zero inside a sphere centered at x,y,z.
-     I.e., this results in the integral being restricted OUTSIDE sphere. */
-  if (volintegral_outside_sphere__radius[which_integral] > 0.0) {
-    const double radius = volintegral_outside_sphere__radius[which_integral];
-    const double xprime = volintegral_outside_sphere__center_x[which_integral];
-    const double yprime = volintegral_outside_sphere__center_y[which_integral];
-    const double zprime = volintegral_outside_sphere__center_z[which_integral];
+  const double outside_radius =
+      volintegral_outside_sphere__radius[which_integral];
+  const double outside_xprime = volintegral_outside_sphere__center_x[which_integral];
+  const double outside_yprime = volintegral_outside_sphere__center_y[which_integral];
+  const double outside_zprime = volintegral_outside_sphere__center_z[which_integral];
 
-    grid.loop_all_device<1, 1, 1>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          const double dx = p.x - xprime;
-          const double dy = p.y - yprime;
-          const double dz = p.z - zprime;
-          if (sqrt(dx * dx + dy * dy + dz * dz) <= radius) {
-            VolIntegrand1(p.I) = 0.0;
-            VolIntegrand2(p.I) = 0.0;
-            VolIntegrand3(p.I) = 0.0;
-            VolIntegrand4(p.I) = 0.0;
-          }
-        });
-  }
+  grid.loop_int_device<1, 1, 1>(
+      grid.nghostzones,
+      [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        bool zero_integrand = false;
+
+        if (use_inside_sphere) {
+          const double dx = p.x - inside_xprime;
+          const double dy = p.y - inside_yprime;
+          const double dz = p.z - inside_zprime;
+          zero_integrand =
+              zero_integrand ||
+              (sqrt(dx * dx + dy * dy + dz * dz) > inside_radius);
+        }
+
+        if (use_outside_sphere) {
+          const double dx = p.x - outside_xprime;
+          const double dy = p.y - outside_yprime;
+          const double dz = p.z - outside_zprime;
+          zero_integrand =
+              zero_integrand ||
+              (sqrt(dx * dx + dy * dy + dz * dz) <= outside_radius);
+        }
+
+        if (zero_integrand) {
+          VolIntegrand1(p.I) = 0.0;
+          VolIntegrand2(p.I) = 0.0;
+          VolIntegrand3(p.I) = 0.0;
+          VolIntegrand4(p.I) = 0.0;
+        }
+      });
 }
