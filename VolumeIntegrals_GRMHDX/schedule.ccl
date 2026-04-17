@@ -25,7 +25,7 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_INITIAL BEFORE AsterX
 {
   LANG: C
   OPTIONS: GLOBAL
-  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere) CoM1(everywhere) CoM2(everywhere) 
+  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere)
   WRITES: VolIntegral(everywhere)
   WRITES: volintegral_inside_sphere__center_x(everywhere)
   WRITES: volintegral_inside_sphere__center_y(everywhere)
@@ -39,7 +39,7 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLE
 {
   LANG: C
   OPTIONS: GLOBAL
-  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere) CoM1(everywhere) CoM2(everywhere) 
+  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere)
   WRITES: VolIntegral(everywhere)
   WRITES: volintegral_inside_sphere__center_x(everywhere)
   WRITES: volintegral_inside_sphere__center_y(everywhere)
@@ -105,7 +105,8 @@ SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup AFTER VI_GRMHDX_Comput
   READS: BoxInBox::position_x(everywhere)
   READS: BoxInBox::position_y(everywhere)
   READS: BoxInBox::position_z(everywhere)
-  WRITES: VolIntegral(everywhere) GlobalCoM(everywhere) CoM1(everywhere) CoM2(everywhere) 
+  WRITES: VolIntegral(everywhere) GlobalCoM(everywhere)
+  WRITES: AsterSeeds::CoM_NS1(everywhere) AsterSeeds::CoM_NS2(everywhere)
   WRITES: BoxInBox::position_x(everywhere)
   WRITES: BoxInBox::position_y(everywhere)
   WRITES: BoxInBox::position_z(everywhere)
