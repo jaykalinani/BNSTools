@@ -136,11 +136,14 @@ extern "C" void VI_vacuumX_ComputeIntegrandFluxes(CCTK_ARGUMENTS) {
   const CCTK_REAL idx = 1.0 / CCTK_DELTA_SPACE(0);
   const CCTK_REAL idy = 1.0 / CCTK_DELTA_SPACE(1);
   const CCTK_REAL idz = 1.0 / CCTK_DELTA_SPACE(2);
-  vect<int, dim> bnd_min, bnd_max, all_min, all_max, int_min, int_max;
-  grid.boundary_box<1, 1, 1>(grid.nghostzones, bnd_min, bnd_max);
+
+  vect<int, dim> all_min, all_max, int_min, int_max;
+
   grid.box_all<1, 1, 1>(grid.nghostzones, all_min, all_max);
   grid.box_int<1, 1, 1>(grid.nghostzones, int_min, int_max);
+
   using std::max, std::min;
+  
   const vect<int, dim> flux_min = max(all_min, int_min - 1);
   const vect<int, dim> flux_max = min(all_max, int_max + 1);
 
