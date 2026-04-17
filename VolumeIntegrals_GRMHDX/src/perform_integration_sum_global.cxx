@@ -176,29 +176,29 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
              which_integral, norm, VolIntegral[4 * (which_integral) + 3]);
     }
   }
-  /* Set CoM tracker for NS 1 */
+  /* Set AsterSeeds CoM tracker for NS 1 */
   if (which_integral == 2 &&
       CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                   "centerofmass")) {
     const double norm = sym_factor1 * VolIntegral[4 * (which_integral) + 3];
     if (std::isfinite(norm) && std::abs(norm) > 0.0) {
-      *comx1 = sym_factor2 * VolIntegral[4 * (which_integral) + 0] / norm;
-      *comy1 = sym_factor2 * VolIntegral[4 * (which_integral) + 1] / norm;
-      *comz1 = sym_factor3 * VolIntegral[4 * (which_integral) + 2] / norm;
+      CoM_NS1[0] = sym_factor2 * VolIntegral[4 * (which_integral) + 0] / norm;
+      CoM_NS1[1] = sym_factor2 * VolIntegral[4 * (which_integral) + 1] / norm;
+      CoM_NS1[2] = sym_factor3 * VolIntegral[4 * (which_integral) + 2] / norm;
     } else if (myproc == 0 && verbose >= 1) {
       printf("VolumeIntegrals_GRMHDX: DoSum skipped global COM update: integral=%d norm=%e raw_mass=%e\n",
              which_integral, norm, VolIntegral[4 * (which_integral) + 3]);
     }
   }
-  /* Set CoM tracker for NS 2 */
+  /* Set AsterSeeds CoM tracker for NS 2 */
   if (which_integral == 3 &&
       CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                   "centerofmass")) {
     const double norm = sym_factor1 * VolIntegral[4 * (which_integral) + 3];
     if (std::isfinite(norm) && std::abs(norm) > 0.0) {
-      *comx2 = sym_factor2 * VolIntegral[4 * (which_integral) + 0] / norm;
-      *comy2 = sym_factor2 * VolIntegral[4 * (which_integral) + 1] / norm;
-      *comz2 = sym_factor3 * VolIntegral[4 * (which_integral) + 2] / norm;
+      CoM_NS2[0] = sym_factor2 * VolIntegral[4 * (which_integral) + 0] / norm;
+      CoM_NS2[1] = sym_factor2 * VolIntegral[4 * (which_integral) + 1] / norm;
+      CoM_NS2[2] = sym_factor3 * VolIntegral[4 * (which_integral) + 2] / norm;
     } else if (myproc == 0 && verbose >= 1) {
       printf("VolumeIntegrals_GRMHDX: DoSum skipped global COM update: integral=%d norm=%e raw_mass=%e\n",
              which_integral, norm, VolIntegral[4 * (which_integral) + 3]);

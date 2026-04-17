@@ -2,7 +2,7 @@
 # $Header:$
 
 implements: VolumeIntegrals_GRMHDX
-inherits: ADMBaseX HydroBaseX AsterX BoxInBox
+inherits: ADMBaseX HydroBaseX BoxInBox AsterSeeds AsterX
 
 USES INCLUDE HEADER: loop_device.hxx
 
@@ -11,16 +11,6 @@ CCTK_REAL GlobalCoM type=SCALAR tags='checkpoint="no"'
 {
   comx, comy, comz
 } "Record CoM to set origin for toroidal/poloidal decompositions"
-
-CCTK_REAL CoM1 type=SCALAR tags='checkpoint="no"'
-{
-  comx1, comy1, comz1
-} "Record CoM of NS 1"
-
-CCTK_REAL CoM2 type=SCALAR tags='checkpoint="no"'
-{
-  comx2, comy2, comz2
-} "Record CoM of NS 2"
 
 private:
 CCTK_REAL VolIntegrands TYPE=GF CENTERING={ccc} tags='checkpoint="no"'
