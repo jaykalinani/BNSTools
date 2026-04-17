@@ -1,7 +1,7 @@
 # Schedule definitions for thorn VolumeIntegrals_GRMHDX
 # $Header:$
 
-STORAGE: VolIntegrands,VolIntegrals,MovingSphRegionIntegrals,IntegralCounterVar,VolIntegrals_vacuum_time
+STORAGE: IntegralCounterVar,VolIntegrals_vacuum_time
 
 
 ##### FILE OUTPUT STUFF #####
@@ -23,6 +23,7 @@ SCHEDULE VI_GRMHDX_file_output_routine_Startup AT CCTK_POST_RECOVER_VARIABLES
 #############################
 SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_INITIAL BEFORE AsterX_InitialGroup
 {
+  STORAGE: VolIntegrals,MovingSphRegionIntegrals,GlobalCoM
   LANG: C
   OPTIONS: GLOBAL
   WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere) CoM1(everywhere) CoM2(everywhere) 
@@ -37,6 +38,7 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_INITIAL BEFORE AsterX
 
 SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLES
 {
+  STORAGE: VolIntegrals,MovingSphRegionIntegrals,GlobalCoM
   LANG: C
   OPTIONS: GLOBAL
   WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere) CoM1(everywhere) CoM2(everywhere) 
@@ -61,8 +63,9 @@ SCHEDULE GROUP VI_GRMHDX_VolumeIntegralGroup AT poststep BEFORE (EstimateError S
 {
 } "Evaluate all volume integrals"
 
-SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_GRMHDX_DoSum
+SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_GRMHDX_ApplyRegionMasks
 {
+  STORAGE: VolIntegrands,MovingSphRegionIntegrals,GlobalCoM
   LANG: C
   READS: IntegralCounter(everywhere) GlobalCoM(everywhere) 
   READS: BoxInBox::position_x(everywhere) BoxInBox::position_y(everywhere) BoxInBox::position_z(everywhere)
@@ -77,10 +80,7 @@ SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_G
   READS: ADMBaseX::gzz(everywhere)
   READS: AsterX::w_lorentz(everywhere)
   READS: AsterX::b2small(everywhere)
-  WRITES: VolIntegrand1(everywhere) 
-  WRITES: VolIntegrand2(everywhere) 
-  WRITES: VolIntegrand3(everywhere) 
-  WRITES: VolIntegrand4(everywhere)
+  WRITES: VolIntegrands(interior)
   WRITES: volintegral_inside_sphere__center_x(everywhere) 
   WRITES: volintegral_inside_sphere__center_y(everywhere) 
   WRITES: volintegral_inside_sphere__center_z(everywhere)
@@ -89,8 +89,31 @@ SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_G
   WRITES: volintegral_outside_sphere__center_z(everywhere)
 } "Compute Integrand"
 
-SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup AFTER VI_GRMHDX_ComputeIntegrand
+SCHEDULE VI_GRMHDX_ApplyRegionMasks in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_GRMHDX_DoSum
 {
+  STORAGE: VolIntegrands,MovingSphRegionIntegrals
+  LANG: C
+  READS: IntegralCounter(everywhere)
+  READS: BoxInBox::position_x(everywhere) BoxInBox::position_y(everywhere) BoxInBox::position_z(everywhere)
+  READS: VolIntegrands(interior)
+  READS: volintegral_inside_sphere__center_x(everywhere)
+  READS: volintegral_inside_sphere__center_y(everywhere)
+  READS: volintegral_inside_sphere__center_z(everywhere)
+  READS: volintegral_outside_sphere__center_x(everywhere)
+  READS: volintegral_outside_sphere__center_y(everywhere)
+  READS: volintegral_outside_sphere__center_z(everywhere)
+  WRITES: VolIntegrands(interior)
+  WRITES: volintegral_inside_sphere__center_x(everywhere)
+  WRITES: volintegral_inside_sphere__center_y(everywhere)
+  WRITES: volintegral_inside_sphere__center_z(everywhere)
+  WRITES: volintegral_outside_sphere__center_x(everywhere)
+  WRITES: volintegral_outside_sphere__center_y(everywhere)
+  WRITES: volintegral_outside_sphere__center_z(everywhere)
+} "Apply sphere-based region masks to integrands"
+
+SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup AFTER VI_GRMHDX_ApplyRegionMasks
+{
+  STORAGE: VolIntegrands,VolIntegrals,MovingSphRegionIntegrals,GlobalCoM
   OPTIONS: GLOBAL
   LANG: C
   READS: IntegralCounter(everywhere)
@@ -101,7 +124,7 @@ SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup AFTER VI_GRMHDX_Comput
   READS: volintegral_outside_sphere__center_y(everywhere)
   READS: volintegral_outside_sphere__center_z(everywhere)
   READS: VolIntegral(everywhere)
-  READS: VolIntegrands(everywhere)
+  READS: VolIntegrands(interior)
   READS: BoxInBox::position_x(everywhere)
   READS: BoxInBox::position_y(everywhere)
   READS: BoxInBox::position_z(everywhere)
@@ -126,6 +149,7 @@ SCHEDULE VI_GRMHDX_DecrementIntegralCounter in VI_GRMHDX_VolumeIntegralGroup AFT
 if(enable_file_output) {
   SCHEDULE VI_GRMHDX_file_output after VI_GRMHDX_VolumeIntegralGroup AT CCTK_ANALYSIS
   {
+    STORAGE: VolIntegrals,MovingSphRegionIntegrals,VolIntegrals_vacuum_time
     LANG: C
     OPTIONS: GLOBAL
     READS: volintegral_inside_sphere__center_x(everywhere)

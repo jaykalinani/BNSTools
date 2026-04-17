@@ -139,7 +139,10 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void
 CoordVol_integrand(const Loop::GF3D2<double> VolIntegrand1,
                    const Loop::PointDesc &p,
                    const Loop::GF3D2<const double> rho0,
-                   const CCTK_REAL dens_1) {
+                   const CCTK_REAL dens_1,
+                   const Loop::GF3D2<double> VolIntegrand2,
+                   const Loop::GF3D2<double> VolIntegrand3,
+                   const Loop::GF3D2<double> VolIntegrand4) {
 
   const CCTK_REAL my_rho = rho0(p.I);
   if (my_rho > dens_1) {
@@ -147,6 +150,9 @@ CoordVol_integrand(const Loop::GF3D2<double> VolIntegrand1,
   } else {
     VolIntegrand1(p.I) = 0.0;
   }
+  VolIntegrand2(p.I) = 0.0;
+  VolIntegrand3(p.I) = 0.0;
+  VolIntegrand4(p.I) = 0.0;
 }
 
 /* Center of Mass: */
@@ -175,10 +181,16 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void M0_integrand(
     const Loop::GF3D2<const double> rho0, const Loop::GF3D2<const double> gxx,
     const Loop::GF3D2<const double> gxy, const Loop::GF3D2<const double> gxz,
     const Loop::GF3D2<const double> gyy, const Loop::GF3D2<const double> gyz,
-    const Loop::GF3D2<const double> gzz, const CCTK_REAL gamma_lim) {
+    const Loop::GF3D2<const double> gzz, const CCTK_REAL gamma_lim,
+    const Loop::GF3D2<double> VolIntegrand2,
+    const Loop::GF3D2<double> VolIntegrand3,
+    const Loop::GF3D2<double> VolIntegrand4) {
   double rho_starL = compute_rho_star(p, w_lorentz, rho0, gxx, gxy, gxz, gyy,
                                       gyz, gzz, gamma_lim);
   VolIntegrand1(p.I) = rho_starL;
+  VolIntegrand2(p.I) = 0.0;
+  VolIntegrand3(p.I) = 0.0;
+  VolIntegrand4(p.I) = 0.0;
 }
 
 /* Density weighted norm of magnetic field strength: */
@@ -193,7 +205,9 @@ mean_density_weighted_B(
     const Loop::GF3D2<const double> rho0, const Loop::GF3D2<const double> gxx,
     const Loop::GF3D2<const double> gxy, const Loop::GF3D2<const double> gxz,
     const Loop::GF3D2<const double> gyy, const Loop::GF3D2<const double> gyz,
-    const Loop::GF3D2<const double> gzz, const CCTK_REAL gamma_lim) {
+    const Loop::GF3D2<const double> gzz, const CCTK_REAL gamma_lim,
+    const Loop::GF3D2<double> VolIntegrand3,
+    const Loop::GF3D2<double> VolIntegrand4) {
   const CCTK_REAL gammaDD00 = gxx(p.I);
   const CCTK_REAL gammaDD01 = gxy(p.I);
   const CCTK_REAL gammaDD02 = gxz(p.I);
@@ -213,6 +227,8 @@ mean_density_weighted_B(
                      2. * gammaDD12 * By * Bz + gammaDD22 * Bz * Bz;
   VolIntegrand1(p.I) = rho_starL * sqrt(norm_B_sq);
   VolIntegrand2(p.I) = rho_starL;
+  VolIntegrand3(p.I) = 0.0;
+  VolIntegrand4(p.I) = 0.0;
 }
 
 /* Volume averaged norm of B in region (dens_1,dens_2]: */
@@ -508,7 +524,8 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void kinetic_shibata(
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
     const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
-    const double cms_x, const double cms_y, const double gamma_lim) {
+    const double cms_x, const double cms_y, const double gamma_lim,
+    const Loop::GF3D2<double> VolIntegrand4) {
 
   const CCTK_REAL gammaDD00 = gxx(p.I);
   const CCTK_REAL gammaDD01 = gxy(p.I);
@@ -608,6 +625,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void kinetic_shibata(
   VolIntegrand3(p.I) = 0.5 * sqrtgamma * (my_rho * (1.0 + my_eps) + my_press) *
                        w_lorentz_limited * w_lorentz_limited *
                        (my_lapse * vz_2 - shiftz_vz);
+  VolIntegrand4(p.I) = 0.0;
 }
 
 /* Kinetic energy as given by https://arxiv.org/pdf/2112.08413.pdf */
@@ -629,7 +647,8 @@ kinetic_palenzuela(
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
     const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
-    const double cms_x, const double cms_y, const double gamma_lim) {
+    const double cms_x, const double cms_y, const double gamma_lim,
+    const Loop::GF3D2<double> VolIntegrand4) {
 
   const CCTK_REAL gammaDD00 = gxx(p.I);
   const CCTK_REAL gammaDD01 = gxy(p.I);
@@ -729,6 +748,7 @@ kinetic_palenzuela(
   VolIntegrand3(p.I) = 0.5 * sqrtgamma * (my_rho * (1.0 + my_eps) + my_press) *
                        w_lorentz_limited * w_lorentz_limited *
                        (vz_2 - shiftz_vz / my_lapse);
+  VolIntegrand4(p.I) = 0.0;
 }
 
 /* Kinetic energy density given by 0.5*rhoh*W^2v^2 */
@@ -745,7 +765,8 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void kinetic(
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
     const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
-    const double cms_x, const double cms_y, const double gamma_lim) {
+    const double cms_x, const double cms_y, const double gamma_lim,
+    const Loop::GF3D2<double> VolIntegrand4) {
 
   const CCTK_REAL gammaDD00 = gxx(p.I);
   const CCTK_REAL gammaDD01 = gxy(p.I);
@@ -822,6 +843,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void kinetic(
 
   VolIntegrand3(p.I) = 0.5 * sqrtgamma * (my_rho * (1.0 + my_eps) + my_press) *
                        (w_lorentz_limited * w_lorentz_limited * vz_2);
+  VolIntegrand4(p.I) = 0.0;
 }
 
 /* Total kinetic energy as defined by total energy in hydro sector - rest mass -
@@ -837,7 +859,9 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void kinetic_tot(
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
     const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
-    const double gamma_lim) {
+    const double gamma_lim, const Loop::GF3D2<double> VolIntegrand2,
+    const Loop::GF3D2<double> VolIntegrand3,
+    const Loop::GF3D2<double> VolIntegrand4) {
 
   const CCTK_REAL gammaDD00 = gxx(p.I);
   const CCTK_REAL gammaDD01 = gxy(p.I);
@@ -885,6 +909,9 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void kinetic_tot(
   VolIntegrand1(p.I) =
       sqrtgamma * (my_press * (w_lorentz_limited * w_lorentz_limited * v_2) +
                    (my_rho * (1.0 + my_eps)) * w_lorentz_limited * wm1);
+  VolIntegrand2(p.I) = 0.0;
+  VolIntegrand3(p.I) = 0.0;
+  VolIntegrand4(p.I) = 0.0;
 }
 
 /* Thermal energy:
@@ -906,7 +933,8 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void thermal(
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
     const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
-    const double my_baryon_mass, const double gamma_lim) {
+    const double my_baryon_mass, const double gamma_lim,
+    const Loop::GF3D2<double> VolIntegrand4) {
 
   const CCTK_REAL w_lorentz = w_lorentzGF(p.I);
   const CCTK_REAL rho0 = rho0GF(p.I);
@@ -929,6 +957,7 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void thermal(
   // Total entropy
   VolIntegrand3(p.I) =
       sqrtgamma * rho0 * entropy * w_lorentz_limited / my_baryon_mass;
+  VolIntegrand4(p.I) = 0.0;
 }
 
 CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_co(
@@ -938,7 +967,9 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_co(
     const Loop::GF3D2<const double> gxx, const Loop::GF3D2<const double> gxy,
     const Loop::GF3D2<const double> gxz, const Loop::GF3D2<const double> gyy,
     const Loop::GF3D2<const double> gyz, const Loop::GF3D2<const double> gzz,
-    const double gamma_lim) {
+    const double gamma_lim, const Loop::GF3D2<double> VolIntegrand2,
+    const Loop::GF3D2<double> VolIntegrand3,
+    const Loop::GF3D2<double> VolIntegrand4) {
 
   const CCTK_REAL b2small = b2smallGF(p.I);
   const CCTK_REAL w_lorentz = w_lorentzGF(p.I);
@@ -951,6 +982,9 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_co(
   double sqrtgamma = compute_sqrtgamma(p, gxx, gxy, gxz, gyy, gyz, gzz);
 
   VolIntegrand1(p.I) = sqrtgamma * w_lorentz_limited * b2small / 2.0;
+  VolIntegrand2(p.I) = 0.0;
+  VolIntegrand3(p.I) = 0.0;
+  VolIntegrand4(p.I) = 0.0;
 }
 
 /* Magnetic energy split into azimuthal energy component and rest: */
@@ -964,7 +998,8 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_tot(
     const Loop::GF3D2<const double> gxy, const Loop::GF3D2<const double> gxz,
     const Loop::GF3D2<const double> gyy, const Loop::GF3D2<const double> gyz,
     const Loop::GF3D2<const double> gzz, const double cms_x,
-    const double cms_y) {
+    const double cms_y, const Loop::GF3D2<double> VolIntegrand3,
+    const Loop::GF3D2<double> VolIntegrand4) {
 
   // Notice that CoM_integrand_GAMMA_SPEED_LIMIT is applied to the integrands
   // above involving the Lorentz factor w_lorentz. The be consistent we probably
@@ -1078,12 +1113,16 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_tot(
       (E_2 + sqrtgammaE_cov[2] * sqrtgammaE_contra[2] / sqrtgamma + B_2 +
        B_cov[2] * B_contra[2] * sqrtgamma) /
       2.0;
+  VolIntegrand3(p.I) = 0.0;
+  VolIntegrand4(p.I) = 0.0;
 }
 
 /* Magnetic energy in +/- z domain: */
 CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_tot_zsplit(
     const Loop::GF3D2<double> VolIntegrand1,
-    const Loop::GF3D2<double> VolIntegrand2, const Loop::PointDesc &p,
+    const Loop::GF3D2<double> VolIntegrand2,
+    const Loop::GF3D2<double> VolIntegrand3,
+    const Loop::GF3D2<double> VolIntegrand4, const Loop::PointDesc &p,
     const Loop::GF3D2<const double> velx, const Loop::GF3D2<const double> vely,
     const Loop::GF3D2<const double> velz, const Loop::GF3D2<const double> Bvecx,
     const Loop::GF3D2<const double> Bvecy,
@@ -1206,10 +1245,14 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_tot_zspl
         (E_2 + sqrtgammaE_cov[2] * sqrtgammaE_contra[2] / sqrtgamma + B_2 +
          B_cov[2] * B_contra[2] * sqrtgamma) /
         2.0;
+    VolIntegrand3(p.I) = 0.0;
+    VolIntegrand4(p.I) = 0.0;
   } else {
 
     VolIntegrand1(p.I) = 0.0;
     VolIntegrand2(p.I) = 0.0;
+    VolIntegrand3(p.I) = 0.0;
+    VolIntegrand4(p.I) = 0.0;
   }
 }
 
@@ -1227,7 +1270,8 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_tot_12(
     const Loop::GF3D2<const double> gxy, const Loop::GF3D2<const double> gxz,
     const Loop::GF3D2<const double> gyy, const Loop::GF3D2<const double> gyz,
     const Loop::GF3D2<const double> gzz, const double cms_x,
-    const double cms_y) {
+    const double cms_y, const Loop::GF3D2<double> VolIntegrand3,
+    const Loop::GF3D2<double> VolIntegrand4) {
 
   // Notice that CoM_integrand_GAMMA_SPEED_LIMIT is applied to the integrands
   // above involving the Lorentz factor w_lorentz. The be consistent we probably
@@ -1345,11 +1389,15 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void magnetic_tot_12(
         (E_2 + sqrtgammaE_cov[2] * sqrtgammaE_contra[2] / sqrtgamma + B_2 +
          B_cov[2] * B_contra[2] * sqrtgamma) /
         2.0;
+    VolIntegrand3(p.I) = 0.0;
+    VolIntegrand4(p.I) = 0.0;
 
   } else {
 
     VolIntegrand1(p.I) = 0.0;
     VolIntegrand2(p.I) = 0.0;
+    VolIntegrand3(p.I) = 0.0;
+    VolIntegrand4(p.I) = 0.0;
   }
 }
 #endif
