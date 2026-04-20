@@ -1,2 +1,2 @@
 # Source files in this directory
-SRCS = triggerx.c
+SRCS = triggerx.cxx

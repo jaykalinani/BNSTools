@@ -1,6 +1,7 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include "cctk.h"
 #include "cctk_Arguments.h"
@@ -8,6 +9,16 @@
 #include "cctk_Groups.h"
 #include "cctk_Parameters.h"
 #include "cctk_WarnLevel.h"
+
+#include <AMReX.H>
+#include <tuple.hxx>
+#include <loop.hxx>
+
+namespace CarpetX {
+using Loop::dim;
+}
+
+#include <reduction.hxx>
 
 typedef struct {
   int number;
@@ -94,10 +105,150 @@ static int TriggerX_CheckRelation(const char *relation, CCTK_REAL lhs,
   return 0;
 }
 
+static int TriggerX_UnpackReducedValue(int trigger, int vartype,
+                                       const void *storage,
+                                       CCTK_REAL *value) {
+  switch (vartype) {
+  case CCTK_VARIABLE_REAL:
+    *value = *(const CCTK_REAL *)storage;
+    return 1;
+  case CCTK_VARIABLE_INT:
+    *value = (CCTK_REAL)*(const CCTK_INT *)storage;
+    return 1;
+  default:
+    CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
+               "Trigger %d uses reduction on unsupported variable type %d",
+               trigger, vartype);
+    return 0;
+  }
+}
+
+static int TriggerX_CarpetXReductionSupported(const char *reduction) {
+  return CCTK_EQUALS(reduction, "minimum") ||
+         CCTK_EQUALS(reduction, "maximum") ||
+         CCTK_EQUALS(reduction, "sum") ||
+         CCTK_EQUALS(reduction, "sum_abs") ||
+         CCTK_EQUALS(reduction, "sum_squared") ||
+         CCTK_EQUALS(reduction, "average") ||
+         CCTK_EQUALS(reduction, "standard_deviation") ||
+         CCTK_EQUALS(reduction, "volume") ||
+         CCTK_EQUALS(reduction, "norm1") ||
+         CCTK_EQUALS(reduction, "norm2") ||
+         CCTK_EQUALS(reduction, "norm_inf") ||
+         CCTK_EQUALS(reduction, "maximum_abs");
+}
+
+static int TriggerX_CarpetXReductionValue(
+    int trigger, const char *reduction, const CarpetX::reduction_CCTK_REAL &red,
+    CCTK_REAL *value) {
+  if (CCTK_EQUALS(reduction, "minimum")) {
+    *value = red.min;
+  } else if (CCTK_EQUALS(reduction, "maximum")) {
+    *value = red.max;
+  } else if (CCTK_EQUALS(reduction, "sum")) {
+    *value = red.sum;
+  } else if (CCTK_EQUALS(reduction, "sum_abs")) {
+    *value = red.sumabs;
+  } else if (CCTK_EQUALS(reduction, "sum_squared")) {
+    *value = red.sum2;
+  } else if (CCTK_EQUALS(reduction, "average")) {
+    *value = red.avg();
+  } else if (CCTK_EQUALS(reduction, "standard_deviation")) {
+    *value = red.sdv();
+  } else if (CCTK_EQUALS(reduction, "volume")) {
+    *value = red.norm0();
+  } else if (CCTK_EQUALS(reduction, "norm1")) {
+    *value = red.norm1();
+  } else if (CCTK_EQUALS(reduction, "norm2")) {
+    *value = red.norm2();
+  } else if (CCTK_EQUALS(reduction, "norm_inf") ||
+             CCTK_EQUALS(reduction, "maximum_abs")) {
+    *value = red.norm_inf();
+  } else {
+    CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
+               "Trigger %d uses unsupported CarpetX reduction '%s'", trigger,
+               reduction);
+    return 0;
+  }
+
+  return 1;
+}
+
+static int TriggerX_ReduceVariable(const cGH *GH, int trigger, int varindex,
+                                   const char *reduction, CCTK_REAL *value) {
+  const int grouptype = TriggerX_GroupTypeFromVar(varindex);
+
+  if (grouptype == CCTK_GF) {
+    const int groupindex = CCTK_GroupIndexFromVarI(varindex);
+    const int firstvarindex = CCTK_FirstVarIndexI(groupindex);
+    const int vi = varindex - firstvarindex;
+
+    if (groupindex < 0 || firstvarindex < 0 || vi < 0) {
+      CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
+                 "Trigger %d could not inspect checked variable '%s'", trigger,
+                 CCTK_FullVarName(varindex));
+      return 0;
+    }
+
+    if (!TriggerX_CarpetXReductionSupported(reduction)) {
+      CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
+                 "Trigger %d uses unsupported reduction '%s' for grid function '%s'",
+                 trigger, reduction, CCTK_FullVarName(varindex));
+      return 0;
+    }
+
+    return TriggerX_CarpetXReductionValue(trigger, reduction,
+                                          CarpetX::reduce(groupindex, vi, 0),
+                                          value);
+  }
+
+  {
+    const int vartype = CCTK_VarTypeI(varindex);
+    const int reduction_handle = CCTK_ReductionHandle(reduction);
+
+    if (reduction_handle < 0) {
+      CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
+                 "Could not get reduction handle '%s' for trigger %d",
+                 reduction, trigger);
+      return 0;
+    }
+
+    if (vartype == CCTK_VARIABLE_REAL) {
+      CCTK_REAL realval = 0.0;
+
+      if (CCTK_Reduce(GH, -1, reduction_handle, 1, vartype, &realval, 1,
+                      varindex)) {
+        CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
+                   "Reduction '%s' failed for trigger %d", reduction, trigger);
+        return 0;
+      }
+
+      return TriggerX_UnpackReducedValue(trigger, vartype, &realval, value);
+    }
+
+    if (vartype == CCTK_VARIABLE_INT) {
+      CCTK_INT intval = 0;
+
+      if (CCTK_Reduce(GH, -1, reduction_handle, 1, vartype, &intval, 1,
+                      varindex)) {
+        CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
+                   "Reduction '%s' failed for trigger %d", reduction, trigger);
+        return 0;
+      }
+
+      return TriggerX_UnpackReducedValue(trigger, vartype, &intval, value);
+    }
+
+    CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
+               "Reduction '%s' is unsupported for trigger %d variable type %d",
+               reduction, trigger, vartype);
+    return 0;
+  }
+}
+
 static int TriggerX_ReadValue(const cGH *GH, TriggerXGH *my_GH, int trigger,
                               CCTK_REAL *value) {
   const int varindex = my_GH->checked_variable[trigger];
-  int reduction_handle = 0;
   int use_reduction = 0;
 
   if (!CCTK_EQUALS(my_GH->reduction[trigger], "")) {
@@ -109,46 +260,11 @@ static int TriggerX_ReadValue(const cGH *GH, TriggerXGH *my_GH, int trigger,
                  trigger);
       return 0;
     }
-
-    reduction_handle = CCTK_ReductionHandle(my_GH->reduction[trigger]);
-    if (reduction_handle < 0) {
-      CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
-                 "Could not get reduction handle '%s' for trigger %d",
-                 my_GH->reduction[trigger], trigger);
-      return 0;
-    }
   }
 
   if (use_reduction) {
-    union {
-      CCTK_REAL realval;
-      CCTK_INT intval;
-      CCTK_COMPLEX complexval;
-    } anytypevalue;
-    const int vartype = CCTK_VarTypeI(varindex);
-    const int ierr = CCTK_Reduce(GH, -1, reduction_handle, 1, vartype,
-                                 &anytypevalue, 1, varindex);
-
-    if (ierr) {
-      CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
-                 "Reduction '%s' failed for trigger %d",
-                 my_GH->reduction[trigger], trigger);
-      return 0;
-    }
-
-    switch (vartype) {
-    case CCTK_VARIABLE_REAL:
-      *value = anytypevalue.realval;
-      return 1;
-    case CCTK_VARIABLE_INT:
-      *value = (CCTK_REAL)anytypevalue.intval;
-      return 1;
-    default:
-      CCTK_VWarn(0, __LINE__, __FILE__, CCTK_THORNSTRING,
-                 "Trigger %d uses reduction on unsupported variable type %d",
-                 trigger, vartype);
-      return 0;
-    }
+    return TriggerX_ReduceVariable(GH, trigger, varindex,
+                                   my_GH->reduction[trigger], value);
   }
 
   if (varindex >= 0) {
@@ -318,7 +434,7 @@ static int TriggerX_SteerScalar(const cGH *GH, TriggerXGH *my_GH, int trigger,
   return -1;
 }
 
-void TriggerX_Check(CCTK_ARGUMENTS) {
+extern "C" void TriggerX_Check(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS;
   DECLARE_CCTK_PARAMETERS;
 
@@ -479,13 +595,13 @@ static void *TriggerX_SetupGH(tFleshConfig *config, int conv_level, cGH *GH) {
   return my_GH;
 }
 
-int TriggerX_Startup(void) {
+extern "C" int TriggerX_Startup(void) {
   CCTK_RegisterGHExtensionSetupGH(CCTK_RegisterGHExtension("TriggerX"),
                                   TriggerX_SetupGH);
   return 0;
 }
 
-void TriggerX_ParamCheck(CCTK_ARGUMENTS) {
+extern "C" void TriggerX_ParamCheck(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
   int i;
 
@@ -515,6 +631,12 @@ void TriggerX_ParamCheck(CCTK_ARGUMENTS) {
                    "Trigger %d checks grid function '%s' without a reduction; "
                    "this will use only the first local value",
                    i, Trigger_Checked_Variable[i]);
+      } else if (!CCTK_EQUALS(Trigger_Reduction[i], "") &&
+                 TriggerX_GroupTypeFromVar(varindex) == CCTK_GF &&
+                 !TriggerX_CarpetXReductionSupported(Trigger_Reduction[i])) {
+        CCTK_VWarn(1, __LINE__, __FILE__, CCTK_THORNSTRING,
+                   "Trigger %d uses unsupported CarpetX reduction '%s' for '%s'",
+                   i, Trigger_Reduction[i], Trigger_Checked_Variable[i]);
       }
     }
 

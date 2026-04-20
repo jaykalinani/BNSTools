@@ -3,6 +3,10 @@
 IMPLEMENTS: TriggerX
 INHERITS: CarpetXRegrid
 
+USES INCLUDE HEADER: tuple.hxx
+USES INCLUDE HEADER: loop.hxx
+USES INCLUDE HEADER: reduction.hxx
+
 PUBLIC:
 
 CCTK_REAL TriggerX_Vars DISTRIB=CONSTANT TAGS='checkpoint="no"'

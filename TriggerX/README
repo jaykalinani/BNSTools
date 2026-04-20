@@ -5,6 +5,22 @@ It is intended for cases where a condition on a variable or parameter should
 change a scalar before CarpetX regridding runs, for example to add a BoxInBox
 refinement level once a lapse threshold is crossed.
 
+For CarpetX grid functions, TriggerX uses CarpetX's internal reduction
+machinery instead of the legacy Cactus reduction handles. Supported grid
+function reductions are:
+- `minimum`
+- `maximum`
+- `sum`
+- `sum_abs`
+- `sum_squared`
+- `average`
+- `standard_deviation`
+- `volume`
+- `norm1`
+- `norm2`
+- `norm_inf`
+- `maximum_abs`
+
 Current reactions:
 - `steerscalar`
 - `steerparam`
@@ -27,7 +43,7 @@ TriggerX::trigger_relation[0]         = ">"
 TriggerX::trigger_checked_value[0]    = 0.01
 
 TriggerX::trigger_reaction[0]             = "steerscalar"
-TriggerX::trigger_steered_scalar[0]       = "BoxInBox::num_levels"
+TriggerX::trigger_steered_scalar[0]       = "BoxInBox::num_levels[0]"
 TriggerX::trigger_steered_scalar_index[0] = 0
 TriggerX::trigger_steered_scalar_value[0] = "13"
 ```
