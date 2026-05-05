@@ -133,6 +133,50 @@ extern "C" void NRPyPlusTOVID_ET_InitialData(CCTK_ARGUMENTS) {
   free(TOV_in.rbar_arr);
 }
 
+extern "C" void NRPyPlusTOVID_ET_InitialADM(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_NRPyPlusTOVID_ET_InitialADM;
+  DECLARE_CCTK_PARAMETERS;
+
+  ID_inputs TOV_in;
+  read_TOV_input_data_from_file(&TOV_in);
+
+  const array<CCTK_INT, dim> indextype = {1, 1, 1};
+  const GF3D2layout CCC_layout(cctkGH, indextype);
+
+  grid.loop_all<1, 1, 1>(grid.nghostzones,
+                         [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        CCTK_INT idx = CCC_layout.linear(p.I);
+        CCTK_REAL rr = sqrt(p.x*p.x + p.y*p.y + p.z*p.z);
+        CCTK_REAL th = acos(p.z/rr);
+
+        CCTK_REAL IDexp_4phi,IDnu,IDPressure,IDrho_baryonic,IDrho__total_energy_density;
+        interpolate_TOV_solution_to_point(rr, TOV_in, &IDexp_4phi,&IDnu,
+                                          &IDPressure,&IDrho_baryonic,&IDrho__total_energy_density);
+
+        CCTK_REAL IDalpha,IDgammaDD00,IDgammaDD01,IDgammaDD02,IDgammaDD11,IDgammaDD12,IDgammaDD22;
+        convert_TOV_spacetime_vars_to_ADM_vars(rr, th, IDexp_4phi,IDnu,
+            &IDalpha,&IDgammaDD00,&IDgammaDD01,&IDgammaDD02,&IDgammaDD11,&IDgammaDD12,&IDgammaDD22);
+
+        // HydroQuantities(p,
+        //                IDPressure,IDrho_baryonic,IDrho__total_energy_density,
+        //                press,rho,eps,velx,vely,velz);
+
+        ADMQuantities(p,
+                      IDalpha,IDgammaDD00,IDgammaDD01,IDgammaDD02,IDgammaDD11,IDgammaDD12,IDgammaDD22,
+                      alp_cc,betax_cc,betay_cc,betaz_cc,
+                      gxx_cc,gxy_cc,gxz_cc,gyy_cc,gyz_cc,gzz_cc);
+  });
+
+  free(TOV_in.r_Schw_arr);
+  free(TOV_in.rho_arr);
+  free(TOV_in.rho_baryon_arr);
+  free(TOV_in.P_arr);
+  free(TOV_in.M_arr);
+  free(TOV_in.expnu_arr);
+  free(TOV_in.exp4phi_arr);
+  free(TOV_in.rbar_arr);
+}
+
 extern "C" void NRPyPlusTOVID_Interpolation_C2V(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_NRPyPlusTOVID_Interpolation_C2V;
   DECLARE_CCTK_PARAMETERS;

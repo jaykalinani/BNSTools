@@ -42,3 +42,32 @@ SCHEDULE NRPyPlusTOVID_Interpolation_C2V IN HydroBaseX_InitialData AFTER NRPyPlu
   SYNC: ADMBaseX::dtlapse ADMBaseX::dtshift
 } "Interpolate metric from cell center to vertex"
 
+if (NRPyTOV_Cowling) {
+  schedule NRPyPlusTOVID_ET_InitialADM IN CCTK_POSTREGRID BEFORE ODESolvers_PostStep
+  {
+    LANG: C
+    WRITES: metric_cc(everywhere)
+    WRITES: lapse_cc(everywhere)
+    WRITES: shift_cc(everywhere)
+  } "Set values for ADM variables of TOV"
+
+  schedule NRPyPlusTOVID_Interpolation_C2V IN CCTK_POSTREGRID BEFORE ODESolvers_PostStep AFTER NRPyPlusTOVID_ET_InitialADM 
+  {
+    LANG: C
+    READS: metric_cc(everywhere)
+    READS: lapse_cc(everywhere)
+    READS: shift_cc(everywhere)
+
+    WRITES: ADMBaseX::metric(interior)
+    WRITES: ADMBaseX::lapse(interior)
+    WRITES: ADMBaseX::shift(interior)
+    WRITES: ADMBaseX::curv(interior)
+    WRITES: ADMBaseX::dtlapse(interior)
+    WRITES: ADMBaseX::dtshift(interior)
+
+    SYNC: ADMBaseX::metric ADMBaseX::lapse ADMBaseX::shift ADMBaseX::curv
+    SYNC: ADMBaseX::dtlapse ADMBaseX::dtshift
+  } "Interpolate metric from cell center to vertex"
+}
+
+

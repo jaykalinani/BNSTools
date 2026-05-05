@@ -64,3 +64,7 @@ CCTK_REAL Pressure_depletion_factor "Pressure depletion factor = Pdf: P => (1-Pd
 {
  0:* :: "Greater than or equal to zero, where zero is no depletion and default."
 } 0.0
+
+BOOLEAN NRPyTOV_Cowling "Schedule NRPyTOVID for cowling case."
+{
+} "no"
