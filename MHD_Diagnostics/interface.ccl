@@ -35,7 +35,7 @@ sigma4bb,normcurlB,a4sq,divB
 }
 # divB requires access to AsterX
 
-real vels_old TYPE=GF CENTERING={ccc} tags='InterpNumTimelevels=1 prolongation="none"'
+real vels_old TYPE=GF CENTERING={ccc} tags='InterpNumTimelevels=1 checkpoint="yes" evolve="no" restrict="no" prolongation_type="minmod" prolongation_order=1'
 {
 velxold, velyold, velzold, w_lorentzold
 }

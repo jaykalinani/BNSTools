@@ -23,6 +23,21 @@ SCHEDULE init_fields IN HydroBaseX_InitialData #after ID_TabEOS_HydroQuantities
   WRITES: smallb_Poyn(everywhere) velocity_derivatives_3p1(everywhere) constraints_derivative_tensors(everywhere) diagnostics_mhd(everywhere) vels_old(everywhere)
 } "Set all diagnostic fields to zero in the beginning."
 
+SCHEDULE MHD_Diagnostics_Sync_Recovered AT post_recover_variables
+{
+  LANG: C
+  OPTIONS: global
+  SYNC: vels_old
+} "Synchronize recovered MHD diagnostics restart storage"
+
+SCHEDULE MHD_Diagnostics_Reset_VelsOld_PostRegrid AT postregrid AFTER ODESolvers_PostStep
+{
+  LANG: C
+  READS: HydroBaseX::vel(everywhere) AsterX::w_lorentz(everywhere)
+  WRITES: vels_old(everywhere)
+  SYNC: vels_old
+} "Reset MHD diagnostics old velocity storage after regrid"
+
 SCHEDULE compute_mhd_diagnostics AT CCTK_ANALYSIS BEFORE compute_mhd_derivs
 {
   LANG: C
