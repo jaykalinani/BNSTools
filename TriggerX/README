@@ -1,3 +1,11 @@
+Cactus Code Thorn TriggerX
+Core Author(s)  : Jay Kalinani <jaykalinani@gmail.com>
+Maintainer(s)   : Jay Kalinani <jaykalinani@gmail.com>
+Licence         : GPLv3
+--------------------------------------------------------------------------
+
+1. Purpose
+
 TriggerX provides generic threshold-based steering for CarpetX-style runtime
 scalars and arrays.
 
