@@ -1,6 +1,13 @@
 Cactus Code Thorn MHD_Diagnostics ( based on smallbPoynET )
+Core Author(s)  : Allen Wen <acw6923@rit.edu>
+Legacy Author(s): Michail Chabanov <micsma@rit.edu>
+                  Zachariah B. Etienne <zachetie@gmail.com>
+Maintainer(s)   : Allen Wen <acw6923@rit.edu>
+License         : BSD 2-Clause (FreeBSD license)
+--------------------------------------------------------------------------
 
-Author(s)    : Michail Chabanov, Zachariah B. Etienne
+1. Purpose
+
 Note         : Using HydroBase velocity and magnetic field variables, as
                well as ADMBase spacetime metric variables, smallbPoynET
                computes b^i, b^2, and three spatial components of Poynting
@@ -9,6 +16,3 @@ Note         : Using HydroBase velocity and magnetic field variables, as
                The current version of this thorn is destined to be replaced
                by the NRPy+ version documented and coded here:
                https://github.com/zachetienne/nrpytutorial/blob/master/Tutorial-ETK_thorn-u0_smallb_Poynting.ipynb
-Maintainer(s): Zachariah B. Etienne
-License      : BSD 2-Clause (FreeBSD license)
---------------------------------------------------------------------------
