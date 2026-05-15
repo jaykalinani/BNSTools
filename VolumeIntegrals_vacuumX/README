@@ -1,7 +1,15 @@
 Cactus Code Thorn VolumeIntegrals_vacuumX
-Author(s)    : Zachariah B. Etienne
-               Leonardo Werneck
-               Ian Ruchlin
+Core Author(s)  : Jay Kalinani <jaykalinani@gmail.com>
+                  Maxwell Rizzo <marizzo2@illinois.edu>
+Legacy Author(s): Zachariah B. Etienne <zachetie@gmail.com>
+                  Ian Ruchlin
+                  Leonardo Werneck
+Maintainer(s)   : Maxwell Rizzo <marizzo2@illinois.edu>
+License         : BSD 2-Clause (FreeBSD license)
+--------------------------------------------------------------------------
+
+1. Purpose
+
 Note         : Thorn for integration of spacetime quantities, in
                integration volumes consisting of spherical shells,
                regions with hollowed balls, and simple spheres.
@@ -92,8 +100,3 @@ TODO/FIXME   : This thorn currently depends on ML_BSSN. There is a bit
                requiring a GRMHD code. For this thorn to make use of
                gridfunctions either in ML_BSSN/ADMBase *or* Hydrobase
                does not seem to be possible within the ETK at this time.
-
-
-Maintainer(s): Zachariah B. Etienne
-License      : BSD 2-Clause (FreeBSD license)
---------------------------------------------------------------------------
