@@ -113,7 +113,7 @@ SCHEDULE VI_GRMHDX_ApplyRegionMasks in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_G
 
 SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup AFTER VI_GRMHDX_ApplyRegionMasks
 {
-  # STORAGE: VolIntegrands,VolIntegrals,MovingSphRegionIntegrals,GlobalCoM
+  STORAGE: VolIntegrands,VolIntegrals,MovingSphRegionIntegrals,GlobalCoM
   OPTIONS: GLOBAL
   LANG: C
   READS: IntegralCounter(everywhere)
@@ -129,7 +129,7 @@ SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup AFTER VI_GRMHDX_ApplyR
   READS: BoxInBox::position_y(everywhere)
   READS: BoxInBox::position_z(everywhere)
   WRITES: VolIntegral(everywhere) GlobalCoM(everywhere)
-  # WRITES: AsterSeeds::CoM_NS1(everywhere) AsterSeeds::CoM_NS2(everywhere)
+  WRITES: AsterSeeds::CoM_NS1(everywhere) AsterSeeds::CoM_NS2(everywhere)
   WRITES: BoxInBox::position_x(everywhere)
   WRITES: BoxInBox::position_y(everywhere)
   WRITES: BoxInBox::position_z(everywhere)
