@@ -1,5 +1,15 @@
 Cactus Code Thorn VolumeIntegrals_GRMHDX
-Author(s)    : Zachariah B. Etienne, Jay Kalinani
+Core Author(s)  : Jay Kalinani <jaykalinani@gmail.com>
+                  Allen Wen <acw6923@rit.edu>
+Contributor(s)  : Maxwell Rizzo <marizzo2@illinois.edu>
+Legacy Author(s): Michail Chabanov <micsma@rit.edu>
+                  Zachariah B. Etienne <zachetie@gmail.com>
+Maintainer(s)   : Jay Kalinani <jaykalinani@gmail.com>
+License         : BSD 2-Clause (FreeBSD license)
+--------------------------------------------------------------------------
+
+1. Purpose
+
 Note         : Thorn for integration of spacetime quantities, in
                integration volumes consisting of spherical shells,
                regions with hollowed balls, and simple spheres.
@@ -67,7 +77,3 @@ VolumeIntegrals_GRMHD::volintegral_inside_sphere__radius            [4] =  13.5
 VolumeIntegrals_GRMHD::amr_centre__tracks__volintegral_inside_sphere[4] =  1
 VolumeIntegrals_GRMHD::volintegral_sphere__center_x_initial         [5] =  15.2
 VolumeIntegrals_GRMHD::volintegral_inside_sphere__radius            [5] =  13.5
-
-Maintainer(s): Jay Kalinani, Zachariah B. Etienne
-License      : BSD 2-Clause (FreeBSD license)
---------------------------------------------------------------------------

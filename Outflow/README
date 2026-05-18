@@ -1,7 +1,9 @@
 Cactus Code Thorn Outflow
-Thorn Author(s)     : Roland Haas roland.haas@physics.gatech.edu
-Thorn Maintainer(s) : Roland Haas roland.haas@physics.gatech.edu
-                      Tanja Bode  tanja.bode@uni-tuebingen.de
+Core Author(s)  : Allen Wen <acw6923@rit.edu>
+Legacy Author(s): Tanja Bode <tanja.bode@uni-tuebingen.de>
+                  Roland Haas <roland.haas@physics.gatech.edu>
+Maintainer(s)   : Allen Wen <acw6923@rit.edu>
+Licence         : GPLv3
 --------------------------------------------------------------------------
 
 Purpose of the thorn:

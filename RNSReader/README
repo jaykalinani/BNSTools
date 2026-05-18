@@ -1,11 +1,11 @@
-Cactus Code Thorn RNSID
-Author(s)    : Nik Stergioulas
-               Tom Goodale
-               Roberto De Pietri
-               Frank Löffler
-Maintainer(s): Roberto De Pietri
-               Nik Stergioulas
-Licence      : GPLv2+
+Cactus Code Thorn RNSReader
+Core Author(s)  : Allen Wen <acw6923@rit.edu>
+Legacy Author(s): Roberto De Pietri
+                  Tom Goodale
+                  Frank Löffler <knarf@cct.lsu.edu>
+                  Nik Stergioulas
+Maintainer(s)   : Allen Wen <acw6923@rit.edu>
+Licence         : GPLv2+
 --------------------------------------------------------------------------
 
 Purpose of the thorn:
