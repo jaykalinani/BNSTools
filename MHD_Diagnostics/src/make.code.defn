@@ -2,7 +2,7 @@
 #$Header : $
 
 #Source files in this directory
-SRCS = master.cxx init_fields.cxx #set_ghostzones.C
+SRCS = master.cxx init_fields.cxx sync.cxx #set_ghostzones.C
 
 #Subdirectories containing source files
 SUBDIRS =
