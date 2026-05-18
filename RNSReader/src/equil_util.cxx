@@ -479,7 +479,7 @@ double zbrent_diff(double (*func)(double, double, double, double, double,
       fb = fc;
       fc = fa;
     }
-    tol1 = 2.0 * EPS * fabs(b) + 0.5 * tol;
+    tol1 = 2.0 * DBL_EPSILON * fabs(b) + 0.5 * tol;
     xm = 0.5 * (c - b);
     if (fabs(xm) <= tol1 || fb == 0.0) {
       return_value = b;
@@ -566,7 +566,7 @@ double zbrent_rot(double (*func)(double, double, double, double, double, double,
       fb = fc;
       fc = fa;
     }
-    tol1 = 2.0 * EPS * fabs(b) + 0.5 * tol;
+    tol1 = 2.0 * DBL_EPSILON * fabs(b) + 0.5 * tol;
     xm = 0.5 * (c - b);
     if (fabs(xm) <= tol1 || fb == 0.0) {
       return_value = b;

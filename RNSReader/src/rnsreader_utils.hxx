@@ -74,6 +74,16 @@ public:
 
     // First find the central interpolation stencil index:
     int idx = bisection_idx_finder(th, numlines_in_file, th_arr);
+    if (idx == 0)
+    {
+      *f_of_th = v_th_arr[0];
+      return;
+    }
+    if (idx == numlines_in_file - 1)
+    {
+      *f_of_th = v_th_arr[numlines_in_file - 1];
+      return;
+    }
     
 #ifdef MAX
 #undef MAX
@@ -122,6 +132,11 @@ public:
     int x2 = numlines_in_file - 1;
     CCTK_REAL y1 = rrbar - rbar_arr[x1];
     CCTK_REAL y2 = rrbar - rbar_arr[x2];
+    if (rrbar <= rbar_arr[0])
+      return 0;
+    if (rrbar >= rbar_arr[numlines_in_file - 1])
+      return numlines_in_file - 1;
+    
     if (y1 * y2 >= 0) {
       // Cannot print on GPU
       // fprintf(stderr,"INTERPOLATION BRACKETING ERROR %e | %e
