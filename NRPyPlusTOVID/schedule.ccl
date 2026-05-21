@@ -1,3 +1,6 @@
+# Schedule definitions for thorn NRPyPlusTOVID
+
+STORAGE: metric_cc, lapse_cc, shift_cc
 
 schedule NRPyPlusTOVID_ET_InitialData IN HydroBaseX_InitialData
 {

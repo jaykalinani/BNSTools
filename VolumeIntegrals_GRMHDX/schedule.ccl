@@ -1,7 +1,7 @@
 # Schedule definitions for thorn VolumeIntegrals_GRMHDX
 # $Header:$
 
-STORAGE: IntegralCounterVar,VolIntegrals_vacuum_time
+STORAGE: IntegralCounterVar,VolIntegrals_vacuum_time,VolIntegrals,MovingSphRegionIntegrals,VolIntegrands,GlobalCoM
 
 
 ##### FILE OUTPUT STUFF #####
@@ -23,7 +23,6 @@ SCHEDULE VI_GRMHDX_file_output_routine_Startup AT CCTK_POST_RECOVER_VARIABLES
 #############################
 SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_INITIAL BEFORE AsterX_InitialGroup
 {
-  STORAGE: VolIntegrals,MovingSphRegionIntegrals,GlobalCoM
   LANG: C
   OPTIONS: GLOBAL
   WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere)
@@ -38,7 +37,6 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_INITIAL BEFORE AsterX
 
 SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLES
 {
-  STORAGE: VolIntegrals,MovingSphRegionIntegrals,GlobalCoM
   LANG: C
   OPTIONS: GLOBAL
   WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere)
@@ -65,7 +63,6 @@ SCHEDULE GROUP VI_GRMHDX_VolumeIntegralGroup AT poststep BEFORE (EstimateError S
 
 SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_GRMHDX_ApplyRegionMasks
 {
-  STORAGE: VolIntegrands,MovingSphRegionIntegrals,GlobalCoM
   LANG: C
   READS: IntegralCounter(everywhere) GlobalCoM(everywhere) 
   READS: BoxInBox::position_x(everywhere) BoxInBox::position_y(everywhere) BoxInBox::position_z(everywhere)
@@ -91,7 +88,6 @@ SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_G
 
 SCHEDULE VI_GRMHDX_ApplyRegionMasks in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_GRMHDX_DoSum
 {
-  STORAGE: VolIntegrands,MovingSphRegionIntegrals
   LANG: C
   READS: IntegralCounter(everywhere)
   READS: BoxInBox::position_x(everywhere) BoxInBox::position_y(everywhere) BoxInBox::position_z(everywhere)
@@ -113,7 +109,6 @@ SCHEDULE VI_GRMHDX_ApplyRegionMasks in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_G
 
 SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup AFTER VI_GRMHDX_ApplyRegionMasks
 {
-  STORAGE: VolIntegrands,VolIntegrals,MovingSphRegionIntegrals,GlobalCoM
   OPTIONS: GLOBAL
   LANG: C
   READS: IntegralCounter(everywhere)
@@ -150,7 +145,6 @@ SCHEDULE VI_GRMHDX_DecrementIntegralCounter in VI_GRMHDX_VolumeIntegralGroup AFT
 if(enable_file_output) {
   SCHEDULE VI_GRMHDX_file_output after VI_GRMHDX_VolumeIntegralGroup AT CCTK_ANALYSIS
   {
-    STORAGE: VolIntegrals,MovingSphRegionIntegrals,VolIntegrals_vacuum_time
     LANG: C
     OPTIONS: GLOBAL
     READS: volintegral_inside_sphere__center_x(everywhere)

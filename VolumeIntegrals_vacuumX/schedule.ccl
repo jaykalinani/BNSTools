@@ -1,7 +1,7 @@
 # Schedule definitions for thorn VolumeIntegrals_vacuumX
 # $Header:$
 
-STORAGE: IntegralCounterVar,VolIntegrals_vacuum_time
+STORAGE: IntegralCounterVar,VolIntegrals_vacuum_time,VolIntegrals,MovingSphRegionIntegrals,VolIntegrands
 
 
 ##### FILE OUTPUT STUFF #####
@@ -23,7 +23,6 @@ SCHEDULE VI_vacuumX_file_output_routine_Startup AT CCTK_POST_RECOVER_VARIABLES
 #############################
 SCHEDULE VI_vacuumX_InitializeIntegralCounterToZero AT CCTK_INITIAL
 {
-  STORAGE: VolIntegrals,MovingSphRegionIntegrals
   LANG: C
   OPTIONS: GLOBAL
   WRITES: IntegralCounter(everywhere)
@@ -39,7 +38,6 @@ SCHEDULE VI_vacuumX_InitializeIntegralCounterToZero AT CCTK_INITIAL
 
 SCHEDULE VI_vacuumX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLES
 {
-  STORAGE: VolIntegrals,MovingSphRegionIntegrals
   LANG: C
   OPTIONS: GLOBAL
   WRITES: IntegralCounter(everywhere)
@@ -68,7 +66,6 @@ SCHEDULE GROUP VI_vacuumX_VolumeIntegralGroup AT CCTK_ANALYSIS WHILE VolumeInteg
 
 SCHEDULE VI_vacuumX_ComputeIntegrandFluxes in VI_vacuumX_VolumeIntegralGroup BEFORE VI_vacuumX_ComputeIntegrand
 {
-  STORAGE: VolIntegrands
   LANG: C
   READS: IntegralCounter(everywhere)
   READS: ADMBaseX::alp(everywhere)
@@ -89,7 +86,6 @@ SCHEDULE VI_vacuumX_ComputeIntegrandFluxes in VI_vacuumX_VolumeIntegralGroup BEF
 
 SCHEDULE VI_vacuumX_ComputeIntegrand in VI_vacuumX_VolumeIntegralGroup BEFORE VI_vacuumX_ApplyRegionMasks
 {
-  STORAGE: VolIntegrands,MovingSphRegionIntegrals
   LANG: C
   READS: IntegralCounter(everywhere)
   READS: BoxInBox::position_x(everywhere) BoxInBox::position_y(everywhere) BoxInBox::position_z(everywhere)
@@ -118,7 +114,6 @@ SCHEDULE VI_vacuumX_ComputeIntegrand in VI_vacuumX_VolumeIntegralGroup BEFORE VI
 
 SCHEDULE VI_vacuumX_ApplyRegionMasks in VI_vacuumX_VolumeIntegralGroup BEFORE VI_vacuumX_DoSum
 {
-  STORAGE: VolIntegrands,MovingSphRegionIntegrals
   LANG: C
   READS: IntegralCounter(everywhere)
   READS: VolIntegrands(interior)
@@ -133,7 +128,6 @@ SCHEDULE VI_vacuumX_ApplyRegionMasks in VI_vacuumX_VolumeIntegralGroup BEFORE VI
 
 SCHEDULE VI_vacuumX_DoSum in VI_vacuumX_VolumeIntegralGroup AFTER VI_vacuumX_ApplyRegionMasks
 {
-  STORAGE: VolIntegrands,VolIntegrals,MovingSphRegionIntegrals
   OPTIONS: GLOBAL
   LANG: C
   READS: IntegralCounter(everywhere)
@@ -169,7 +163,6 @@ SCHEDULE VI_vacuumX_DecrementIntegralCounter in VI_vacuumX_VolumeIntegralGroup A
 if(enable_file_output) {
   SCHEDULE VI_vacuumX_file_output after VI_vacuumX_VolumeIntegralGroup AT CCTK_ANALYSIS
   {
-    STORAGE: VolIntegrals,MovingSphRegionIntegrals,VolIntegrals_vacuum_time
     LANG: C
     OPTIONS: GLOBAL
     READS: volintegral_inside_sphere__center_x(everywhere)

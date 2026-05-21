@@ -7,6 +7,13 @@ if (CCTK_EQUALS (initial_data,    "MeudonBNSX") ||
     CCTK_EQUALS (initial_dtshift, "MeudonBNSX") ||
     CCTK_EQUALS (initial_hydro,   "MeudonBNSX"))
 {
+  STORAGE: metric_cc
+  STORAGE: lapse_cc
+  STORAGE: shift_cc
+  STORAGE: curv_cc
+  STORAGE: dtlapse_cc
+  STORAGE: dtshift_cc
+
   SCHEDULE MeudonBNSX_initialise IN HydroBaseX_InitialData
   {
     LANG: C
