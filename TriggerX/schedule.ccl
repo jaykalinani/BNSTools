@@ -1,5 +1,7 @@
 # Schedule definitions for thorn TriggerX
 
+STORAGE: TriggerX_Vars
+
 SCHEDULE TriggerX_Startup AT STARTUP
 {
   LANG: C

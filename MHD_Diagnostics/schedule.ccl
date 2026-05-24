@@ -1,7 +1,7 @@
 # Schedule definitions for thorn MHD_Diagnostics
 # $Header:$
 
-STORAGE: smallb_Poyn, velocity_derivatives_3p1, constraints_derivative_tensors, diagnostics_mhd
+STORAGE: smallb_Poyn, velocity_derivatives_3p1, constraints_derivative_tensors, diagnostics_mhd, vels_old
 
 STORAGE: ADMBaseX::metric, ADMBaseX::curv, ADMBaseX::lapse, ADMBaseX::shift
 

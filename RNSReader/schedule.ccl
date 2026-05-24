@@ -3,6 +3,7 @@
 if (CCTK_Equals(initial_data,"RNSReader")) 
 {
   STORAGE:ADMBaseX::metric,ADMBaseX::curv,ADMBaseX::lapse,ADMBaseX::shift
+  STORAGE: metric_cc, lapse_cc, shift_cc, curv_cc, dtlapse_cc, dtshift_cc
 
   #schedule Hydro_RNSID_CheckParameters  AT CCTK_PARAMCHECK
   #{
