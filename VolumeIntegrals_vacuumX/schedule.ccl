@@ -104,18 +104,13 @@ SCHEDULE VI_vacuumX_ComputeIntegrand in VI_vacuumX_VolumeIntegralGroup BEFORE VI
   READS: ADMBaseX::kzz(everywhere)
   READS: VolIntegrand2(everywhere) VolIntegrand3(everywhere) VolIntegrand4(everywhere)
   WRITES: VolIntegrand1(interior) VolIntegrand2(interior) VolIntegrand3(interior) VolIntegrand4(interior)
-  WRITES: volintegral_inside_sphere__center_x(everywhere)
-  WRITES: volintegral_inside_sphere__center_y(everywhere)
-  WRITES: volintegral_inside_sphere__center_z(everywhere)
-  WRITES: volintegral_outside_sphere__center_x(everywhere)
-  WRITES: volintegral_outside_sphere__center_y(everywhere)
-  WRITES: volintegral_outside_sphere__center_z(everywhere)
 } "Compute Integrand"
 
 SCHEDULE VI_vacuumX_ApplyRegionMasks in VI_vacuumX_VolumeIntegralGroup BEFORE VI_vacuumX_DoSum
 {
   LANG: C
   READS: IntegralCounter(everywhere)
+  READS: BoxInBox::position_x(everywhere) BoxInBox::position_y(everywhere) BoxInBox::position_z(everywhere)
   READS: VolIntegrands(interior)
   READS: volintegral_inside_sphere__center_x(everywhere)
   READS: volintegral_inside_sphere__center_y(everywhere)
@@ -124,6 +119,12 @@ SCHEDULE VI_vacuumX_ApplyRegionMasks in VI_vacuumX_VolumeIntegralGroup BEFORE VI
   READS: volintegral_outside_sphere__center_y(everywhere)
   READS: volintegral_outside_sphere__center_z(everywhere)
   WRITES: VolIntegrands(interior)
+  WRITES: volintegral_inside_sphere__center_x(everywhere)
+  WRITES: volintegral_inside_sphere__center_y(everywhere)
+  WRITES: volintegral_inside_sphere__center_z(everywhere)
+  WRITES: volintegral_outside_sphere__center_x(everywhere)
+  WRITES: volintegral_outside_sphere__center_y(everywhere)
+  WRITES: volintegral_outside_sphere__center_z(everywhere)
 } "Apply sphere-based region masks to integrands"
 
 SCHEDULE VI_vacuumX_DoSum in VI_vacuumX_VolumeIntegralGroup AFTER VI_vacuumX_ApplyRegionMasks
@@ -138,7 +139,7 @@ SCHEDULE VI_vacuumX_DoSum in VI_vacuumX_VolumeIntegralGroup AFTER VI_vacuumX_App
   READS: volintegral_outside_sphere__center_y(everywhere)
   READS: volintegral_outside_sphere__center_z(everywhere)
   READS: VolIntegral(everywhere)
-  READS: VolIntegrands(interior)
+  READS: BoxInBox::active(everywhere)
   READS: BoxInBox::position_x(everywhere)
   READS: BoxInBox::position_y(everywhere)
   READS: BoxInBox::position_z(everywhere)
@@ -156,6 +157,7 @@ SCHEDULE VI_vacuumX_DecrementIntegralCounter in VI_vacuumX_VolumeIntegralGroup A
 {
   LANG: C
   OPTIONS: GLOBAL
+  READS: IntegralCounter(everywhere)
   WRITES: IntegralCounter(everywhere)
 } "Decrement IntegralCounter variable"
 ##################
