@@ -27,6 +27,7 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
   CCTK_REAL *sf_origin_x = nullptr;
   CCTK_REAL *sf_origin_y = nullptr;
   CCTK_REAL *sf_origin_z = nullptr;
+  CCTK_REAL *sf_valid = nullptr;
   CCTK_REAL *sf_centroid_x = nullptr;
   CCTK_REAL *sf_centroid_y = nullptr;
   CCTK_REAL *sf_centroid_z = nullptr;
@@ -45,6 +46,8 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
         CCTK_VarDataPtr(cctkGH, 0, "SphericalSurface::sf_origin_y[0]"));
     sf_origin_z = static_cast<CCTK_REAL *>(
         CCTK_VarDataPtr(cctkGH, 0, "SphericalSurface::sf_origin_z[0]"));
+    sf_valid = static_cast<CCTK_REAL *>(
+        CCTK_VarDataPtr(cctkGH, 0, "SphericalSurface::sf_valid[0]"));
     sf_centroid_x = static_cast<CCTK_REAL *>(
         CCTK_VarDataPtr(cctkGH, 0, "SphericalSurface::sf_centroid_x[0]"));
     sf_centroid_y = static_cast<CCTK_REAL *>(
@@ -53,6 +56,8 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
         CCTK_VarDataPtr(cctkGH, 0, "SphericalSurface::sf_centroid_z[0]"));
     if (sf_origin_x == nullptr)
       CCTK_ERROR("SphericalSurface::sf_origin has no storage while surface tracking is enabled");
+    if (sf_valid == nullptr)
+      CCTK_ERROR("SphericalSurface::sf_valid has no storage while surface tracking is enabled");
     if (sf_centroid_x == nullptr)
       CCTK_ERROR("SphericalSurface::sf_centroid has no storage while surface tracking is enabled");
   }
@@ -207,6 +212,7 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
         sf_centroid_x[which_surface] = sf_origin_x[which_surface];
         sf_centroid_y[which_surface] = sf_origin_y[which_surface];
         sf_centroid_z[which_surface] = sf_origin_z[which_surface];
+        sf_valid[which_surface] = 1;
       }
     } else if (myproc == 0 && verbose >= 1) {
       printf("VolumeIntegrals_GRMHDX: DoSum skipped centre update: integral=%d norm=%e raw_mass=%e\n",
