@@ -75,15 +75,9 @@ SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_G
   READS: ADMBaseX::gyy(everywhere)
   READS: ADMBaseX::gyz(everywhere)
   READS: ADMBaseX::gzz(everywhere)
-  READS: AsterX::w_lorentz(everywhere)
-  READS: AsterX::b2small(everywhere)
+  READS: AsterX::w_lorentz(interior)
+  READS: AsterX::b2small(interior)
   WRITES: VolIntegrands(interior)
-  WRITES: volintegral_inside_sphere__center_x(everywhere) 
-  WRITES: volintegral_inside_sphere__center_y(everywhere) 
-  WRITES: volintegral_inside_sphere__center_z(everywhere)
-  WRITES: volintegral_outside_sphere__center_x(everywhere) 
-  WRITES: volintegral_outside_sphere__center_y(everywhere) 
-  WRITES: volintegral_outside_sphere__center_z(everywhere)
 } "Compute Integrand"
 
 SCHEDULE VI_GRMHDX_ApplyRegionMasks in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_GRMHDX_DoSum
@@ -119,10 +113,12 @@ SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup AFTER VI_GRMHDX_ApplyR
   READS: volintegral_outside_sphere__center_y(everywhere)
   READS: volintegral_outside_sphere__center_z(everywhere)
   READS: VolIntegral(everywhere)
-  READS: VolIntegrands(interior)
+  READS: GlobalCoM(everywhere)
   READS: BoxInBox::position_x(everywhere)
   READS: BoxInBox::position_y(everywhere)
   READS: BoxInBox::position_z(everywhere)
+  READS: BoxInBox::active(everywhere)
+  READS: AsterSeeds::CoM_NS1(everywhere) AsterSeeds::CoM_NS2(everywhere)
   WRITES: VolIntegral(everywhere) GlobalCoM(everywhere)
   WRITES: AsterSeeds::CoM_NS1(everywhere) AsterSeeds::CoM_NS2(everywhere)
   WRITES: BoxInBox::position_x(everywhere)
@@ -138,6 +134,7 @@ SCHEDULE VI_GRMHDX_DecrementIntegralCounter in VI_GRMHDX_VolumeIntegralGroup AFT
 {
   LANG: C
   OPTIONS: GLOBAL
+  READS: IntegralCounter(everywhere)
   WRITES: IntegralCounter(everywhere)
 } "Decrement IntegralCounter variable"
 ##################
