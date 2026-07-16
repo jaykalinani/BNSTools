@@ -116,9 +116,20 @@ extern "C" void VI_vacuumX_file_output(CCTK_ARGUMENTS) {
         if(enable_time_reparameterization) { sprintf(header_buffer + strlen(header_buffer),"# Col. 2: Physical Time (physical_time)\n"); which_col++; }
 
 	for(int which_integral=1;which_integral<=NumIntegrals;which_integral++) {
-	  if(volintegral_inside_sphere__radius[which_integral]>0 && volintegral_outside_sphere__radius[which_integral]>0) {
-	    sprintf(header_buffer + strlen(header_buffer),
-                    "# Col. %d: %s. Init. IN sphere @ (%e,%e,%e), r=%e. OUT sphere @ (%e,%e,%e), r=%e. Moves/Tracks AMR Centre %d/%d\n",
+		  if(volintegral_surface_sphere__radius[which_integral]>0) {
+		    sprintf(header_buffer + strlen(header_buffer),
+			    "# Col. %d: %s. Surface sphere @ (%e,%e,%e), r=%e, kernel width=%e. Moves/Tracks AMR Centre %d/%d\n",
+			    which_col,Integration_quantity_keyword[which_integral],
+			    volintegral_sphere__center_x_initial[which_integral],
+			    volintegral_sphere__center_y_initial[which_integral],
+			    volintegral_sphere__center_z_initial[which_integral],
+			    volintegral_surface_sphere__radius[which_integral],
+			    volintegral_surface_sphere__width[which_integral],
+			    amr_centre__tracks__volintegral_inside_sphere[which_integral],
+			    volintegral_sphere__tracks__amr_centre[which_integral]);
+		  } else if(volintegral_inside_sphere__radius[which_integral]>0 && volintegral_outside_sphere__radius[which_integral]>0) {
+		    sprintf(header_buffer + strlen(header_buffer),
+	                    "# Col. %d: %s. Init. IN sphere @ (%e,%e,%e), r=%e. OUT sphere @ (%e,%e,%e), r=%e. Moves/Tracks AMR Centre %d/%d\n",
 		    which_col,Integration_quantity_keyword[which_integral],
 		    volintegral_sphere__center_x_initial[which_integral],
 		    volintegral_sphere__center_y_initial[which_integral],

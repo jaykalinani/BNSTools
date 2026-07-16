@@ -12,7 +12,7 @@
 #include "../../../CarpetX/CarpetX/src/reduction.hxx"
 
 extern "C" void VI_vacuumX_DoSum(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_VI_vacuumX_DoSum;
+  DECLARE_CCTK_ARGUMENTS_VI_vacuumX_DoSum;
   DECLARE_CCTK_PARAMETERS;
   const int myproc = CCTK_MyProc(cctkGH);
 
@@ -44,11 +44,13 @@ extern "C" void VI_vacuumX_DoSum(CCTK_ARGUMENTS) {
   const int num_reductions = VI_vacuumX_number_of_reductions(which_integral);
 
   if (verbose >= 1)
-    printf("VolumeIntegrals_vacuumX: Iter %d, num_reductions=%d, Integ. quantity=%s, sphere moves/tracks AMR centre=%d/%d | INSIDE center x,y,z=%e,%e,%e ; r=%e | OUTSIDE center x,y,z=%e,%e,%e ; r=%e\n",
+    printf("VolumeIntegrals_vacuumX: Iter %d, num_reductions=%d, Integ. quantity=%s, sphere moves/tracks AMR centre=%d/%d | SURFACE r=%e width=%e | INSIDE center x,y,z=%e,%e,%e ; r=%e | OUTSIDE center x,y,z=%e,%e,%e ; r=%e\n",
            which_integral, num_reductions,
            Integration_quantity_keyword[which_integral],
            amr_centre__tracks__volintegral_inside_sphere[which_integral],
            volintegral_sphere__tracks__amr_centre[which_integral],
+           volintegral_surface_sphere__radius[which_integral],
+           volintegral_surface_sphere__width[which_integral],
            volintegral_inside_sphere__center_x[which_integral],
            volintegral_inside_sphere__center_y[which_integral],
            volintegral_inside_sphere__center_z[which_integral],

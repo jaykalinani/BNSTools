@@ -82,8 +82,11 @@ keyword Integration_quantity_keyword[101] "Which quantity to integrate" STEERABL
 "centeroflapse"           :: "Center of Lapse"
 "one"                     :: "Integrand = 1. Useful for debugging"
 "ADM_Mass"                :: "ADM Mass"
+"ADM_Mass_Surface"        :: "ADM mass from a spherical surface integral using a normalized shell kernel"
 "ADM_Momentum"            :: "ADM Momentum"
+"ADM_Momentum_Surface"    :: "ADM linear momentum components from a spherical surface integral using a normalized shell kernel"
 "ADM_Angular_Momentum"    :: "ADM Angular Momentum"
+"ADM_Angular_Momentum_Surface" :: "ADM angular momentum components from a spherical surface integral using a normalized shell kernel"
 } "nothing"
 
 ########################################
@@ -117,6 +120,16 @@ CCTK_REAL volintegral_inside_sphere__radius[101] "Volume integral in a spherical
   *:* :: "Any number"
 } 0
 CCTK_REAL volintegral_outside_sphere__radius[101] "Volume integral outside a spherical region: radius of spherical region" STEERABLE=ALWAYS
+{
+  *:* :: "Any number"
+} 0
+
+CCTK_REAL volintegral_surface_sphere__radius[101] "Surface integral on a spherical shell: radius of spherical surface" STEERABLE=ALWAYS
+{
+  *:* :: "Any number"
+} 0
+
+CCTK_REAL volintegral_surface_sphere__width[101] "Surface integral on a spherical shell: radial kernel half-width. If <=0, use twice the local maximum grid spacing." STEERABLE=ALWAYS
 {
   *:* :: "Any number"
 } 0

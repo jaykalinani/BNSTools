@@ -147,7 +147,9 @@ extern "C" void VI_vacuumX_ComputeIntegrandFluxes(CCTK_ARGUMENTS) {
   const vect<int, dim> flux_min = max(all_min, int_min - 1);
   const vect<int, dim> flux_max = min(all_max, int_max + 1);
 
-  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral], "ADM_Mass")) {
+  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral], "ADM_Mass") ||
+      CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "ADM_Mass_Surface")) {
     grid.loop_all_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
@@ -218,6 +220,42 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
   }
 
   const CCTK_INT timelevel = 0;
+
+  if (cctk_iteration == 0) {
+    volintegral_inside_sphere__center_x[which_integral] =
+        volintegral_sphere__center_x_initial[which_integral];
+    volintegral_inside_sphere__center_y[which_integral] =
+        volintegral_sphere__center_y_initial[which_integral];
+    volintegral_inside_sphere__center_z[which_integral] =
+        volintegral_sphere__center_z_initial[which_integral];
+
+    volintegral_outside_sphere__center_x[which_integral] =
+        volintegral_sphere__center_x_initial[which_integral];
+    volintegral_outside_sphere__center_y[which_integral] =
+        volintegral_sphere__center_y_initial[which_integral];
+    volintegral_outside_sphere__center_z[which_integral] =
+        volintegral_sphere__center_z_initial[which_integral];
+  }
+
+  if (volintegral_sphere__tracks__amr_centre[which_integral] != -1) {
+    const int which_centre =
+        volintegral_sphere__tracks__amr_centre[which_integral];
+    if (which_centre < 0 || which_centre > 2) {
+      CCTK_VERROR("Invalid BoxInBox centre index %d for integral %d; valid range is [0,2]",
+                  which_centre, which_integral);
+    }
+
+    volintegral_inside_sphere__center_x[which_integral] = position_x[which_centre];
+    volintegral_inside_sphere__center_y[which_integral] = position_y[which_centre];
+    volintegral_inside_sphere__center_z[which_integral] = position_z[which_centre];
+
+    volintegral_outside_sphere__center_x[which_integral] =
+        position_x[which_centre];
+    volintegral_outside_sphere__center_y[which_integral] =
+        position_y[which_centre];
+    volintegral_outside_sphere__center_z[which_integral] =
+        position_z[which_centre];
+  }
 
   /* Note: Must extend this if/else statement if adding a new integrand! */
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
@@ -334,6 +372,74 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
         });
 
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "ADM_Mass_Surface")) {
+
+    const CCTK_REAL center_x =
+        volintegral_inside_sphere__center_x[which_integral];
+    const CCTK_REAL center_y =
+        volintegral_inside_sphere__center_y[which_integral];
+    const CCTK_REAL center_z =
+        volintegral_inside_sphere__center_z[which_integral];
+    const CCTK_REAL radius =
+        volintegral_surface_sphere__radius[which_integral];
+    const CCTK_REAL kernel_width =
+        volintegral_surface_sphere__width[which_integral];
+
+    grid.loop_int_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          VI_vacuumX_ADM_Mass_surface_integrand(
+              VolIntegrand1, p, center_x, center_y, center_z, radius,
+              kernel_width, VolIntegrand2, VolIntegrand3, VolIntegrand4);
+        });
+
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "ADM_Momentum_Surface")) {
+
+    const CCTK_REAL center_x =
+        volintegral_inside_sphere__center_x[which_integral];
+    const CCTK_REAL center_y =
+        volintegral_inside_sphere__center_y[which_integral];
+    const CCTK_REAL center_z =
+        volintegral_inside_sphere__center_z[which_integral];
+    const CCTK_REAL radius =
+        volintegral_surface_sphere__radius[which_integral];
+    const CCTK_REAL kernel_width =
+        volintegral_surface_sphere__width[which_integral];
+
+    grid.loop_int_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          VI_vacuumX_ADM_Momentum_surface_integrand(
+              VolIntegrand1, VolIntegrand2, VolIntegrand3, VolIntegrand4, p,
+              center_x, center_y, center_z, radius, kernel_width, alp, gxx, gxy,
+              gxz, gyy, gyz, gzz, kxx, kxy, kxz, kyy, kyz, kzz);
+        });
+
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "ADM_Angular_Momentum_Surface")) {
+
+    const CCTK_REAL center_x =
+        volintegral_inside_sphere__center_x[which_integral];
+    const CCTK_REAL center_y =
+        volintegral_inside_sphere__center_y[which_integral];
+    const CCTK_REAL center_z =
+        volintegral_inside_sphere__center_z[which_integral];
+    const CCTK_REAL radius =
+        volintegral_surface_sphere__radius[which_integral];
+    const CCTK_REAL kernel_width =
+        volintegral_surface_sphere__width[which_integral];
+
+    grid.loop_int_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          VI_vacuumX_ADM_Angular_Momentum_surface_integrand(
+              VolIntegrand1, VolIntegrand2, VolIntegrand3, VolIntegrand4, p,
+              center_x, center_y, center_z, radius, kernel_width, alp, gxx, gxy,
+              gxz, gyy, gyz, gzz, kxx, kxy, kxz, kyy, kyz, kzz);
+        });
+
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "ADM_Momentum")) {
 
     const CCTK_REAL idx = 1.0 / CCTK_DELTA_SPACE(0);
@@ -378,42 +484,6 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
         });
   }
 
-  if (cctk_iteration == 0) {
-    volintegral_inside_sphere__center_x[which_integral] =
-        volintegral_sphere__center_x_initial[which_integral];
-    volintegral_inside_sphere__center_y[which_integral] =
-        volintegral_sphere__center_y_initial[which_integral];
-    volintegral_inside_sphere__center_z[which_integral] =
-        volintegral_sphere__center_z_initial[which_integral];
-
-    volintegral_outside_sphere__center_x[which_integral] =
-        volintegral_sphere__center_x_initial[which_integral];
-    volintegral_outside_sphere__center_y[which_integral] =
-        volintegral_sphere__center_y_initial[which_integral];
-    volintegral_outside_sphere__center_z[which_integral] =
-        volintegral_sphere__center_z_initial[which_integral];
-  }
-
-  if (volintegral_sphere__tracks__amr_centre[which_integral] != -1) {
-    const int which_centre =
-        volintegral_sphere__tracks__amr_centre[which_integral];
-    if (which_centre < 0 || which_centre > 2) {
-      CCTK_VERROR("Invalid BoxInBox centre index %d for integral %d; valid range is [0,2]",
-                  which_centre, which_integral);
-    }
-
-    volintegral_inside_sphere__center_x[which_integral] = position_x[which_centre];
-    volintegral_inside_sphere__center_y[which_integral] = position_y[which_centre];
-    volintegral_inside_sphere__center_z[which_integral] = position_z[which_centre];
-
-    volintegral_outside_sphere__center_x[which_integral] =
-        position_x[which_centre];
-    volintegral_outside_sphere__center_y[which_integral] =
-        position_y[which_centre];
-    volintegral_outside_sphere__center_z[which_integral] =
-        position_z[which_centre];
-  }
-
 }
 
 extern "C" void VI_vacuumX_ApplyRegionMasks(CCTK_ARGUMENTS) {
@@ -427,6 +497,15 @@ extern "C" void VI_vacuumX_ApplyRegionMasks(CCTK_ARGUMENTS) {
     CCTK_VERROR("Invalid integral index: which_integral=%d NumIntegrals=%d IntegralCounter=%d",
                 which_integral, NumIntegrals,
                 static_cast<int>(*IntegralCounter));
+  }
+
+  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "ADM_Mass_Surface") ||
+      CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "ADM_Momentum_Surface") ||
+      CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "ADM_Angular_Momentum_Surface")) {
+    return;
   }
 
   /* ZERO OUT INTEGRATION REGIONS */
