@@ -168,6 +168,11 @@ CCTK_INT volintegral_sphere__tracks__amr_centre[101] "Volume integral tracks AMR
   -1:100 :: "-1 = do not track an AMR box centre. Runtime check enforces BoxInBox-supported index range."
 } -1
 
+CCTK_INT sphericalsurface__tracks__volintegral_inside_sphere[101] "Move a spherical surface using the volume-integral center of mass." STEERABLE = ALWAYS
+{
+  -1:100 :: "-1 disables tracking; otherwise move SphericalSurface surface N"
+} -1
+
 
 ########################################
 

@@ -50,14 +50,14 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLE
 } "Initialize IntegralCounter variable to zero"
 
 # BoxInBox_Setup is scheduled AS EstimateError; order against the alias name.
-SCHEDULE VI_GRMHDX_InitializeIntegralCounter before VI_GRMHDX_VolumeIntegralGroup AT poststep BEFORE EstimateError
+SCHEDULE VI_GRMHDX_InitializeIntegralCounter AT poststep AFTER SphericalSurface_Set BEFORE (VI_GRMHDX_VolumeIntegralGroup EstimateError)
 {
   LANG: C
   OPTIONS: GLOBAL
   WRITES: IntegralCounter(everywhere)
-} "Initialize IntegralCounter variable"
+} "Initialize IntegralCounter and invalidate tracked spherical surfaces"
 ##################
-SCHEDULE GROUP VI_GRMHDX_VolumeIntegralGroup AT poststep BEFORE (EstimateError Seed_During_Evolution) WHILE VolumeIntegrals_GRMHDX::IntegralCounter
+SCHEDULE GROUP VI_GRMHDX_VolumeIntegralGroup AT poststep AFTER SphericalSurface_Set BEFORE (SphericalSurface_HasBeenSet EstimateError Seed_During_Evolution) WHILE VolumeIntegrals_GRMHDX::IntegralCounter
 {
 } "Evaluate all volume integrals"
 

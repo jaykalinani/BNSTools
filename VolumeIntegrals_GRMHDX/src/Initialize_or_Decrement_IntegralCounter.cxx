@@ -51,6 +51,28 @@ extern "C" void VI_GRMHDX_InitializeIntegralCounter(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_VI_GRMHDX_InitializeIntegralCounter;
   DECLARE_CCTK_PARAMETERS;
 
+  const CCTK_INT *nsurfaces = nullptr;
+  CCTK_REAL *sf_valid = nullptr;
+  for (int which_integral = 1; which_integral <= NumIntegrals;
+       ++which_integral) {
+    const int which_surface =
+        sphericalsurface__tracks__volintegral_inside_sphere[which_integral];
+    if (which_surface == -1)
+      continue;
+    if (nsurfaces == nullptr) {
+      nsurfaces = static_cast<const CCTK_INT *>(
+          CCTK_ParameterGet("nsurfaces", "SphericalSurface", nullptr));
+      sf_valid = static_cast<CCTK_REAL *>(
+          CCTK_VarDataPtr(cctkGH, 0, "SphericalSurface::sf_valid[0]"));
+    }
+    if (nsurfaces == nullptr || sf_valid == nullptr)
+      CCTK_ERROR("SphericalSurface storage is unavailable while surface tracking is enabled");
+    if (which_surface >= *nsurfaces)
+      CCTK_VERROR("Cannot track spherical surface #%d; SphericalSurface::nsurfaces is %d",
+                  which_surface, static_cast<int>(*nsurfaces));
+    sf_valid[which_surface] = 0;
+  }
+
   if (VolIntegral_out_every <= 0 || NumIntegrals <= 0) {
     *IntegralCounter = 0;
     return;
