@@ -13,6 +13,11 @@ CCTK_REAL GlobalCoM type=SCALAR tags='checkpoint="no"'
 } "Record CoM to set origin for toroidal/poloidal decompositions"
 
 private:
+CCTK_REAL DensityModeDiagnostics type=SCALAR tags='checkpoint="no"'
+{
+  density_mode_rho_max
+} "Current maximum HydroBaseX::rho used to normalize density-mode diagnostics."
+
 CCTK_REAL VolIntegrands TYPE=GF CENTERING={ccc} tags='checkpoint="no"'
 {
   VolIntegrand1,VolIntegrand2,VolIntegrand3,VolIntegrand4
@@ -38,4 +43,3 @@ CCTK_REAL VolIntegrals_vacuum_time type=SCALAR tags='checkpoint="no"'
 {
   physical_time
 } "keeps track of the physical time, in case time coordinate is reparameterized, a la http://arxiv.org/abs/1404.6523"
-

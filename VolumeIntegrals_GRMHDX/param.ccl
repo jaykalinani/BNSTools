@@ -67,6 +67,11 @@ CCTK_REAL dens_atmo "Used to exclude points in the atmosphere" STEERABLE = ALWAY
   0:* :: "must be positive otherwise arbitrary"
 } 1e-13
 
+CCTK_REAL density_modes_rho_cutoff "Relative density cutoff for azimuthal density modes, in units of current max(HydroBaseX::rho)" STEERABLE = ALWAYS
+{
+  0:* :: "Any non-negative real"
+} 1.0e-3
+
 # ------------------------------
 
 keyword Integration_quantity_keyword[101] "Which quantity to integrate" STEERABLE = ALWAYS
@@ -76,6 +81,8 @@ keyword Integration_quantity_keyword[101] "Which quantity to integrate" STEERABL
 "centerofmass"                  :: "Center of Mass"
 "restmass"                      :: "Rest Mass"
 "one"                           :: "Integrand = 1. Useful for debugging"
+"density_modes_m0"              :: "m=0 density mode using rho_star above density_modes_rho_cutoff*max(rho)"
+"density_modes_m1_m2"           :: "m=1 and m=2 azimuthal density modes using rho_star above density_modes_rho_cutoff*max(rho)"
 "density_weighted_norm_B_field" :: "Norm of magnetic field strength weighted by rhostar"
 "magnetic_energy_total"         :: "Total energy in electro-magnetic sector"
 "magnetic_energy_comov"         :: "Integral over magnetic pressure"

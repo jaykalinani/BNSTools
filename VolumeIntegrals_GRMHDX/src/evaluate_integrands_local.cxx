@@ -7,8 +7,54 @@
 #include <cstring>
 
 #include "integrands.cxx"
+#include "../../../CarpetX/CarpetX/src/driver.hxx"
+#include "../../../CarpetX/CarpetX/src/reduction.hxx"
 
 using namespace Loop;
+
+extern "C" void VI_GRMHDX_ComputeDensityModeRhoMax(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS_VI_GRMHDX_ComputeDensityModeRhoMax;
+  DECLARE_CCTK_PARAMETERS;
+
+  const int which_integral =
+      NumIntegrals - static_cast<int>(*IntegralCounter) + 1;
+  if (which_integral < 1 || which_integral > NumIntegrals ||
+      which_integral > 100) {
+    CCTK_VERROR(
+        "Invalid integral index: which_integral=%d NumIntegrals=%d "
+        "IntegralCounter=%d",
+        which_integral, NumIntegrals, static_cast<int>(*IntegralCounter));
+  }
+
+  *density_mode_rho_max = 0.0;
+  if (!CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                   "density_modes_m0") &&
+      !CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                   "density_modes_m1_m2")) {
+    return;
+  }
+
+  const int varindex = CCTK_VarIndex("HydroBaseX::rho");
+  if (varindex < 0) {
+    CCTK_VERROR("Could not find HydroBaseX::rho for density-mode diagnostic");
+  }
+  const int gi = CCTK_GroupIndexFromVarI(varindex);
+  assert(gi >= 0);
+  const int v0 = CCTK_FirstVarIndexI(gi);
+  assert(v0 >= 0);
+  const int vi = varindex - v0;
+
+  const CarpetX::reduction<CCTK_REAL, 3> red = CarpetX::reduce(gi, vi, 0);
+  if (std::isfinite(red.max) && red.max > 0.0) {
+    *density_mode_rho_max = red.max;
+  } else if (CCTK_MyProc(cctkGH) == 0 && verbose >= 1) {
+    CCTK_VINFO("Density-mode rho max reduction was not positive and finite: "
+               "keyword=%s max=%e min=%e sum=%e",
+               Integration_quantity_keyword[which_integral], red.max, red.min,
+               red.sum);
+  }
+}
+
 extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_VI_GRMHDX_ComputeIntegrand;
   DECLARE_CCTK_PARAMETERS;
@@ -70,6 +116,35 @@ extern "C" void VI_GRMHDX_ComputeIntegrand(CCTK_ARGUMENTS) {
           VolIntegrand2(p.I) = 0.0;
           VolIntegrand3(p.I) = 0.0;
           VolIntegrand4(p.I) = 0.0;
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "density_modes_m0")) {
+    const double rho_max = *density_mode_rho_max;
+    grid.loop_int_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          density_mode_m0_integrand(VolIntegrand1, p, w_lorentz, rho, gxx,
+                                    gxy, gxz, gyy, gyz, gzz, gamma_lim,
+                                    rho_max, density_modes_rho_cutoff,
+                                    VolIntegrand2, VolIntegrand3,
+                                    VolIntegrand4);
+        });
+  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                         "density_modes_m1_m2")) {
+    double cms_x = 0.0;
+    double cms_y = 0.0;
+    if (set_origin_with_VIX) {
+      cms_x = *comx;
+      cms_y = *comy;
+    }
+    const double rho_max = *density_mode_rho_max;
+    grid.loop_int_device<1, 1, 1>(
+        grid.nghostzones,
+        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
+          density_modes_m1_m2_integrand(
+              VolIntegrand1, VolIntegrand2, VolIntegrand3, VolIntegrand4, p,
+              w_lorentz, rho, gxx, gxy, gxz, gyy, gyz, gzz, gamma_lim, rho_max,
+              density_modes_rho_cutoff, cms_x, cms_y);
         });
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                          "density_weighted_norm_B_field")) {

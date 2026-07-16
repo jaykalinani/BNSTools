@@ -1,7 +1,7 @@
 # Schedule definitions for thorn VolumeIntegrals_GRMHDX
 # $Header:$
 
-STORAGE: IntegralCounterVar,VolIntegrals_vacuum_time,VolIntegrals,MovingSphRegionIntegrals,VolIntegrands,GlobalCoM
+STORAGE: IntegralCounterVar,VolIntegrals_vacuum_time,VolIntegrals,MovingSphRegionIntegrals,VolIntegrands,GlobalCoM,DensityModeDiagnostics
 
 
 ##### FILE OUTPUT STUFF #####
@@ -25,7 +25,7 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_INITIAL BEFORE AsterX
 {
   LANG: C
   OPTIONS: GLOBAL
-  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere)
+  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere) density_mode_rho_max(everywhere)
   WRITES: VolIntegral(everywhere)
   WRITES: volintegral_inside_sphere__center_x(everywhere)
   WRITES: volintegral_inside_sphere__center_y(everywhere)
@@ -39,7 +39,7 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLE
 {
   LANG: C
   OPTIONS: GLOBAL
-  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere)
+  WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere) density_mode_rho_max(everywhere)
   WRITES: VolIntegral(everywhere)
   WRITES: volintegral_inside_sphere__center_x(everywhere)
   WRITES: volintegral_inside_sphere__center_y(everywhere)
@@ -61,10 +61,19 @@ SCHEDULE GROUP VI_GRMHDX_VolumeIntegralGroup AT poststep BEFORE (EstimateError S
 {
 } "Evaluate all volume integrals"
 
+SCHEDULE VI_GRMHDX_ComputeDensityModeRhoMax in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_GRMHDX_ComputeIntegrand
+{
+  LANG: C
+  OPTIONS: GLOBAL
+  READS: IntegralCounter(everywhere)
+  READS: HydroBaseX::rho(everywhere)
+  WRITES: density_mode_rho_max(everywhere)
+} "Compute max rho for density-mode diagnostics"
+
 SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_GRMHDX_ApplyRegionMasks
 {
   LANG: C
-  READS: IntegralCounter(everywhere) GlobalCoM(everywhere) 
+  READS: IntegralCounter(everywhere) GlobalCoM(everywhere) density_mode_rho_max(everywhere)
   READS: BoxInBox::position_x(everywhere) BoxInBox::position_y(everywhere) BoxInBox::position_z(everywhere)
   READS: HydroBaseX::rho(everywhere) HydroBaseX::eps(everywhere) HydroBaseX::press(everywhere) HydroBaseX::entropy(everywhere)
   READS: HydroBaseX::vel(everywhere) HydroBaseX::Bvec(everywhere)  

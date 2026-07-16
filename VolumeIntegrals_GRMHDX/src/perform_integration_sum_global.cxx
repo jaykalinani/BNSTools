@@ -12,7 +12,7 @@
 #include "../../../CarpetX/CarpetX/src/reduction.hxx"
 
 extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_VI_GRMHDX_DoSum;
+  DECLARE_CCTK_ARGUMENTS_VI_GRMHDX_DoSum;
   DECLARE_CCTK_PARAMETERS;
   const int myproc = CCTK_MyProc(cctkGH);
 

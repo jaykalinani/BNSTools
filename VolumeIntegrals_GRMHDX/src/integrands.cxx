@@ -193,6 +193,72 @@ CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void M0_integrand(
   VolIntegrand4(p.I) = 0.0;
 }
 
+/* m=0 density mode, matching the IllinoisGRMHD rho_star thresholding. */
+CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void
+density_mode_m0_integrand(
+    const Loop::GF3D2<double> VolIntegrand1, const Loop::PointDesc &p,
+    const Loop::GF3D2<const double> w_lorentz,
+    const Loop::GF3D2<const double> rho0, const Loop::GF3D2<const double> gxx,
+    const Loop::GF3D2<const double> gxy, const Loop::GF3D2<const double> gxz,
+    const Loop::GF3D2<const double> gyy, const Loop::GF3D2<const double> gyz,
+    const Loop::GF3D2<const double> gzz, const CCTK_REAL gamma_lim,
+    const CCTK_REAL rho_max, const CCTK_REAL rho_cutoff,
+    const Loop::GF3D2<double> VolIntegrand2,
+    const Loop::GF3D2<double> VolIntegrand3,
+    const Loop::GF3D2<double> VolIntegrand4) {
+  const CCTK_REAL rho_local = rho0(p.I);
+
+  VolIntegrand1(p.I) = 0.0;
+  VolIntegrand2(p.I) = 0.0;
+  VolIntegrand3(p.I) = 0.0;
+  VolIntegrand4(p.I) = 0.0;
+
+  if (std::isfinite(rho_local) && std::isfinite(rho_max) && rho_max > 0.0 &&
+      rho_local / rho_max > rho_cutoff) {
+    VolIntegrand1(p.I) = compute_rho_star(p, w_lorentz, rho0, gxx, gxy, gxz,
+                                           gyy, gyz, gzz, gamma_lim);
+  }
+}
+
+/* m=1 and m=2 azimuthal density modes about the selected origin. */
+CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void
+density_modes_m1_m2_integrand(
+    const Loop::GF3D2<double> VolIntegrand1,
+    const Loop::GF3D2<double> VolIntegrand2,
+    const Loop::GF3D2<double> VolIntegrand3,
+    const Loop::GF3D2<double> VolIntegrand4, const Loop::PointDesc &p,
+    const Loop::GF3D2<const double> w_lorentz,
+    const Loop::GF3D2<const double> rho0, const Loop::GF3D2<const double> gxx,
+    const Loop::GF3D2<const double> gxy, const Loop::GF3D2<const double> gxz,
+    const Loop::GF3D2<const double> gyy, const Loop::GF3D2<const double> gyz,
+    const Loop::GF3D2<const double> gzz, const CCTK_REAL gamma_lim,
+    const CCTK_REAL rho_max, const CCTK_REAL rho_cutoff,
+    const CCTK_REAL cms_x, const CCTK_REAL cms_y) {
+  const CCTK_REAL rho_local = rho0(p.I);
+
+  VolIntegrand1(p.I) = 0.0;
+  VolIntegrand2(p.I) = 0.0;
+  VolIntegrand3(p.I) = 0.0;
+  VolIntegrand4(p.I) = 0.0;
+
+  if (std::isfinite(rho_local) && std::isfinite(rho_max) && rho_max > 0.0 &&
+      rho_local / rho_max > rho_cutoff) {
+    const CCTK_REAL xco = p.x - cms_x;
+    const CCTK_REAL yco = p.y - cms_y;
+    CCTK_REAL phi = 0.0;
+    if (xco != 0.0 || yco != 0.0) {
+      phi = atan2(yco, xco);
+    }
+
+    const CCTK_REAL rho_starL = compute_rho_star(
+        p, w_lorentz, rho0, gxx, gxy, gxz, gyy, gyz, gzz, gamma_lim);
+    VolIntegrand1(p.I) = rho_starL * cos(phi);
+    VolIntegrand2(p.I) = rho_starL * sin(phi);
+    VolIntegrand3(p.I) = rho_starL * cos(2.0 * phi);
+    VolIntegrand4(p.I) = rho_starL * sin(2.0 * phi);
+  }
+}
+
 /* Density weighted norm of magnetic field strength: */
 CCTK_DEVICE CCTK_HOST CCTK_ATTRIBUTE_ALWAYS_INLINE inline void
 mean_density_weighted_B(

@@ -17,6 +17,7 @@ extern "C" void VI_GRMHDX_InitializeIntegralCounterToZero(CCTK_ARGUMENTS) {
   *comx = 0;
   *comy = 0;
   *comz = 0;
+  *density_mode_rho_max = 0;
 
   // Init Array that Holds Results
   for (int ii = 0; ii < 101; ii++) {

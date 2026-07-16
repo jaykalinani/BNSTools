@@ -25,6 +25,12 @@ VI_GRMHDX_number_of_reductions(int which_integral) {
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral], "one"))
     return 1;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "density_modes_m0"))
+    return 1;
+  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "density_modes_m1_m2"))
+    return 4;
+  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                   "density_weighted_norm_B_field"))
     return 2;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
