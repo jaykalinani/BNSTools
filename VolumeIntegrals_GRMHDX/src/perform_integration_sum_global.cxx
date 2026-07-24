@@ -22,6 +22,46 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
                 which_integral, NumIntegrals, static_cast<int>(*IntegralCounter));
   }
 
+  const int which_surface =
+      sphericalsurface__tracks__volintegral_inside_sphere[which_integral];
+  CCTK_REAL *sf_origin_x = nullptr;
+  CCTK_REAL *sf_origin_y = nullptr;
+  CCTK_REAL *sf_origin_z = nullptr;
+  CCTK_REAL *sf_valid = nullptr;
+  CCTK_REAL *sf_centroid_x = nullptr;
+  CCTK_REAL *sf_centroid_y = nullptr;
+  CCTK_REAL *sf_centroid_z = nullptr;
+  if (which_surface != -1) {
+    const auto *nsurfaces = static_cast<const CCTK_INT *>(
+        CCTK_ParameterGet("nsurfaces", "SphericalSurface", nullptr));
+    if (nsurfaces == nullptr)
+      CCTK_ERROR("Cannot find SphericalSurface::nsurfaces while surface tracking is enabled");
+    if (which_surface >= *nsurfaces)
+      CCTK_VERROR("Cannot track spherical surface #%d; SphericalSurface::nsurfaces is %d",
+                  which_surface, static_cast<int>(*nsurfaces));
+
+    sf_origin_x = static_cast<CCTK_REAL *>(
+        CCTK_VarDataPtr(cctkGH, 0, "SphericalSurface::sf_origin_x[0]"));
+    sf_origin_y = static_cast<CCTK_REAL *>(
+        CCTK_VarDataPtr(cctkGH, 0, "SphericalSurface::sf_origin_y[0]"));
+    sf_origin_z = static_cast<CCTK_REAL *>(
+        CCTK_VarDataPtr(cctkGH, 0, "SphericalSurface::sf_origin_z[0]"));
+    sf_valid = static_cast<CCTK_REAL *>(
+        CCTK_VarDataPtr(cctkGH, 0, "SphericalSurface::sf_valid[0]"));
+    sf_centroid_x = static_cast<CCTK_REAL *>(
+        CCTK_VarDataPtr(cctkGH, 0, "SphericalSurface::sf_centroid_x[0]"));
+    sf_centroid_y = static_cast<CCTK_REAL *>(
+        CCTK_VarDataPtr(cctkGH, 0, "SphericalSurface::sf_centroid_y[0]"));
+    sf_centroid_z = static_cast<CCTK_REAL *>(
+        CCTK_VarDataPtr(cctkGH, 0, "SphericalSurface::sf_centroid_z[0]"));
+    if (sf_origin_x == nullptr)
+      CCTK_ERROR("SphericalSurface::sf_origin has no storage while surface tracking is enabled");
+    if (sf_valid == nullptr)
+      CCTK_ERROR("SphericalSurface::sf_valid has no storage while surface tracking is enabled");
+    if (sf_centroid_x == nullptr)
+      CCTK_ERROR("SphericalSurface::sf_centroid has no storage while surface tracking is enabled");
+  }
+
   /* FIXME: Add this symmetry stuff... Should be straightforward. */
   CCTK_REAL sym_factor1, sym_factor2, sym_factor3;
 
@@ -111,9 +151,10 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
              VolIntegral[4 * (which_integral) + i]);
   }
 
-  /* AMR box centre tracks volume integral output */
+  /* Convert the CoM reductions when either an AMR box or a surface tracks them. */
   if (num_reductions == 4 &&
-      amr_centre__tracks__volintegral_inside_sphere[which_integral] != -1) {
+      (amr_centre__tracks__volintegral_inside_sphere[which_integral] != -1 ||
+       which_surface != -1)) {
     const double norm = sym_factor1 * VolIntegral[4 * (which_integral) + 3];
     if (std::isfinite(norm) && std::abs(norm) > 0.0) {
       volintegral_inside_sphere__center_x[which_integral] =
@@ -125,35 +166,56 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
 
       const int which_centre =
           amr_centre__tracks__volintegral_inside_sphere[which_integral];
-      if (which_centre < 0 || which_centre > 2) {
-        CCTK_VERROR("Invalid BoxInBox centre index %d for integral %d; valid range is [0,2]",
-                    which_centre, which_integral);
+      if (which_centre != -1) {
+        if (which_centre < 0 || which_centre > 2) {
+          CCTK_VERROR("Invalid BoxInBox centre index %d for integral %d; valid range is [0,2]",
+                      which_centre, which_integral);
+        }
+
+        if (verbose >= 1)
+          printf("VolumeIntegrals_GRMHDX: AMR centre #%d tracks Integral %d: "
+                 "(x,y,z)=(%e,%e,%e) [norm=%e]. Prev centre @ (%e,%e,%e).\n",
+                 which_centre, which_integral,
+                 volintegral_inside_sphere__center_x[which_integral],
+                 volintegral_inside_sphere__center_y[which_integral],
+                 volintegral_inside_sphere__center_z[which_integral], norm,
+                 position_x[which_centre], position_y[which_centre],
+                 position_z[which_centre]);
+
+        active[which_centre] = 1;
+        position_x[which_centre] =
+            volintegral_inside_sphere__center_x[which_integral];
+        position_y[which_centre] =
+            volintegral_inside_sphere__center_y[which_integral];
+        position_z[which_centre] =
+            volintegral_inside_sphere__center_z[which_integral];
       }
 
-      if (verbose >= 1)
-        printf("VolumeIntegrals_GRMHDX: AMR centre #%d tracks Integral %d: "
-               "(x,y,z)=(%e,%e,%e) [norm=%e]. Prev centre @ (%e,%e,%e).\n",
-               amr_centre__tracks__volintegral_inside_sphere[which_integral],
-               which_integral,
-               volintegral_inside_sphere__center_x[which_integral],
-               volintegral_inside_sphere__center_y[which_integral],
-               volintegral_inside_sphere__center_z[which_integral], norm,
-               position_x[which_centre], position_y[which_centre],
-               position_z[which_centre]);
+      if (which_surface != -1) {
+        if (verbose >= 1)
+          printf("VolumeIntegrals_GRMHDX: Spherical Surface #%d tracks "
+                 "Integral %d: (x,y,z)=(%e,%e,%e) [norm=%e]. Prev centre @ "
+                 "(%e,%e,%e).\n",
+                 which_surface, which_integral,
+                 volintegral_inside_sphere__center_x[which_integral],
+                 volintegral_inside_sphere__center_y[which_integral],
+                 volintegral_inside_sphere__center_z[which_integral], norm,
+                 sf_origin_x[which_surface], sf_origin_y[which_surface],
+                 sf_origin_z[which_surface]);
 
-      /* Activate AMR box tracking for this centre */
-      active[which_centre] = 1;
-      /* Update AMR box centre position.
-         Note that this will have no effect until cctk_iteration%regrid_every==0
-       */
-      position_x[which_centre] =
-          volintegral_inside_sphere__center_x[which_integral];
-      position_y[which_centre] =
-          volintegral_inside_sphere__center_y[which_integral];
-      position_z[which_centre] =
-          volintegral_inside_sphere__center_z[which_integral];
+        sf_origin_x[which_surface] =
+            volintegral_inside_sphere__center_x[which_integral];
+        sf_origin_y[which_surface] =
+            volintegral_inside_sphere__center_y[which_integral];
+        sf_origin_z[which_surface] =
+            volintegral_inside_sphere__center_z[which_integral];
+        sf_centroid_x[which_surface] = sf_origin_x[which_surface];
+        sf_centroid_y[which_surface] = sf_origin_y[which_surface];
+        sf_centroid_z[which_surface] = sf_origin_z[which_surface];
+        sf_valid[which_surface] = 1;
+      }
     } else if (myproc == 0 && verbose >= 1) {
-      printf("VolumeIntegrals_GRMHDX: DoSum skipped AMR centre update: integral=%d norm=%e raw_mass=%e\n",
+      printf("VolumeIntegrals_GRMHDX: DoSum skipped centre update: integral=%d norm=%e raw_mass=%e\n",
              which_integral, norm, VolIntegral[4 * (which_integral) + 3]);
     }
   } else {

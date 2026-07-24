@@ -128,7 +128,8 @@ extern "C" void VI_GRMHDX_file_output(CCTK_ARGUMENTS) {
             sprintf(
                 header_buffer,
                 "%s# Col. %d: %s. Init. IN sphere @ (%e,%e,%e), r=%e. OUT "
-                "sphere @ (%e,%e,%e), r=%e. Moves/Tracks AMR Centre %d/%d\n",
+                "sphere @ (%e,%e,%e), r=%e. Moves/Tracks AMR Centre %d/%d. "
+                "SphericalSurface target %d.\n",
                 header_buffer, which_col,
                 Integration_quantity_keyword[which_integral],
                 volintegral_sphere__center_x_initial[which_integral],
@@ -140,12 +141,13 @@ extern "C" void VI_GRMHDX_file_output(CCTK_ARGUMENTS) {
                 volintegral_outside_sphere__center_z[which_integral],
                 volintegral_outside_sphere__radius[which_integral],
                 amr_centre__tracks__volintegral_inside_sphere[which_integral],
-                volintegral_sphere__tracks__amr_centre[which_integral]);
+                volintegral_sphere__tracks__amr_centre[which_integral],
+                sphericalsurface__tracks__volintegral_inside_sphere[which_integral]);
           } else if (volintegral_inside_sphere__radius[which_integral] > 0) {
             sprintf(
                 header_buffer,
                 "%s# Col. %d: %s. Init. IN sphere @ (%e,%e,%e), r=%e. "
-                "Moves/Tracks AMR Centre %d/%d\n",
+                "Moves/Tracks AMR Centre %d/%d. SphericalSurface target %d.\n",
                 header_buffer, which_col,
                 Integration_quantity_keyword[which_integral],
                 volintegral_sphere__center_x_initial[which_integral],
@@ -153,7 +155,8 @@ extern "C" void VI_GRMHDX_file_output(CCTK_ARGUMENTS) {
                 volintegral_sphere__center_z_initial[which_integral],
                 volintegral_inside_sphere__radius[which_integral],
                 amr_centre__tracks__volintegral_inside_sphere[which_integral],
-                volintegral_sphere__tracks__amr_centre[which_integral]);
+                volintegral_sphere__tracks__amr_centre[which_integral],
+                sphericalsurface__tracks__volintegral_inside_sphere[which_integral]);
           } else if (volintegral_outside_sphere__radius[which_integral] > 0) {
             sprintf(header_buffer,
                     "%s# Col. %d: %s. OUT sphere @ (%e,%e,%e), r=%e.\n",

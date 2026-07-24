@@ -378,6 +378,21 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
         });
   }
 
+}
+
+extern "C" void VI_vacuumX_ApplyRegionMasks(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_VI_vacuumX_ApplyRegionMasks;
+  DECLARE_CCTK_PARAMETERS;
+
+  const int which_integral =
+      NumIntegrals - static_cast<int>(*IntegralCounter) + 1;
+  if (which_integral < 1 || which_integral > NumIntegrals ||
+      which_integral > 100) {
+    CCTK_VERROR("Invalid integral index: which_integral=%d NumIntegrals=%d IntegralCounter=%d",
+                which_integral, NumIntegrals,
+                static_cast<int>(*IntegralCounter));
+  }
+
   if (cctk_iteration == 0) {
     volintegral_inside_sphere__center_x[which_integral] =
         volintegral_sphere__center_x_initial[which_integral];
@@ -402,9 +417,12 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
                   which_centre, which_integral);
     }
 
-    volintegral_inside_sphere__center_x[which_integral] = position_x[which_centre];
-    volintegral_inside_sphere__center_y[which_integral] = position_y[which_centre];
-    volintegral_inside_sphere__center_z[which_integral] = position_z[which_centre];
+    volintegral_inside_sphere__center_x[which_integral] =
+        position_x[which_centre];
+    volintegral_inside_sphere__center_y[which_integral] =
+        position_y[which_centre];
+    volintegral_inside_sphere__center_z[which_integral] =
+        position_z[which_centre];
 
     volintegral_outside_sphere__center_x[which_integral] =
         position_x[which_centre];
@@ -412,21 +430,6 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
         position_y[which_centre];
     volintegral_outside_sphere__center_z[which_integral] =
         position_z[which_centre];
-  }
-
-}
-
-extern "C" void VI_vacuumX_ApplyRegionMasks(CCTK_ARGUMENTS) {
-  DECLARE_CCTK_ARGUMENTSX_VI_vacuumX_ApplyRegionMasks;
-  DECLARE_CCTK_PARAMETERS;
-
-  const int which_integral =
-      NumIntegrals - static_cast<int>(*IntegralCounter) + 1;
-  if (which_integral < 1 || which_integral > NumIntegrals ||
-      which_integral > 100) {
-    CCTK_VERROR("Invalid integral index: which_integral=%d NumIntegrals=%d IntegralCounter=%d",
-                which_integral, NumIntegrals,
-                static_cast<int>(*IntegralCounter));
   }
 
   /* ZERO OUT INTEGRATION REGIONS */
