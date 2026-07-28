@@ -26,6 +26,14 @@ struct VI_vacuumX_dynamic_gf {
   VI_vacuumX_centering_kind centering;
 };
 
+struct VI_vacuumX_excision_regions {
+  int count;
+  CCTK_REAL x[100];
+  CCTK_REAL y[100];
+  CCTK_REAL z[100];
+  CCTK_REAL radius[100];
+};
+
 
 inline int VI_vacuumX_varindex_or_error(const char *varname) {
   const int vi = CCTK_VarIndex(varname);
@@ -143,9 +151,24 @@ extern "C" void VI_vacuumX_ComputeIntegrandFluxes(CCTK_ARGUMENTS) {
   grid.box_int<1, 1, 1>(grid.nghostzones, int_min, int_max);
 
   using std::max, std::min;
-  
-  const vect<int, dim> flux_min = max(all_min, int_min - 1);
-  const vect<int, dim> flux_max = min(all_max, int_max + 1);
+
+  const bool is_volume_mass =
+      CCTK_EQUALS(Integration_quantity_keyword[which_integral], "ADM_Mass");
+  const int required_ghosts = is_volume_mass ? 3 : 2;
+  if (any(grid.nghostzones < required_ghosts)) {
+    CCTK_VERROR("Fourth-order ADM derivatives for '%s' require at least %d "
+                "ghost zones; found {%d,%d,%d}",
+                Integration_quantity_keyword[which_integral], required_ghosts,
+                grid.nghostzones[0], grid.nghostzones[1],
+                grid.nghostzones[2]);
+  }
+
+  // Direct surface interpolation only needs valid interior fluxes; its SYNC
+  // fills inter-patch ghosts. The legacy volume form differentiates the flux
+  // once more and therefore needs one valid flux layer around the interior.
+  const int flux_halo = is_volume_mass ? 1 : 0;
+  const vect<int, dim> flux_min = max(all_min, int_min - flux_halo);
+  const vect<int, dim> flux_max = min(all_max, int_max + flux_halo);
 
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral], "ADM_Mass") ||
       CCTK_EQUALS(Integration_quantity_keyword[which_integral],
@@ -157,38 +180,6 @@ extern "C" void VI_vacuumX_ComputeIntegrandFluxes(CCTK_ARGUMENTS) {
             VI_vacuumX_ADM_Mass_integrand_eval_derivs(
                 VolIntegrand2, VolIntegrand3, VolIntegrand4, p, idx, idy, idz,
                 alp, gxx, gxy, gxz, gyy, gyz, gzz);
-          } else {
-            VolIntegrand2(p.I) = 0.0;
-            VolIntegrand3(p.I) = 0.0;
-            VolIntegrand4(p.I) = 0.0;
-          }
-        });
-  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
-                         "ADM_Momentum")) {
-    grid.loop_all_device<1, 1, 1>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          if (all(p.I >= flux_min && p.I < flux_max)) {
-            VI_vacuumX_ADM_Momentum_integrand_eval_derivs(
-                VolIntegrand2, VolIntegrand3, VolIntegrand4, p, idx, idy, idz,
-                alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz, kyy, kyz,
-                kzz);
-          } else {
-            VolIntegrand2(p.I) = 0.0;
-            VolIntegrand3(p.I) = 0.0;
-            VolIntegrand4(p.I) = 0.0;
-          }
-        });
-  } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
-                         "ADM_Angular_Momentum")) {
-    grid.loop_all_device<1, 1, 1>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          if (all(p.I >= flux_min && p.I < flux_max)) {
-            VI_vacuumX_ADM_Angular_Momentum_integrand_eval_derivs(
-                VolIntegrand2, VolIntegrand3, VolIntegrand4, p, idx, idy, idz,
-                alp, gxx, gxy, gxz, gyy, gyz, gzz, kxx, kxy, kxz, kyy, kyz,
-                kzz);
           } else {
             VolIntegrand2(p.I) = 0.0;
             VolIntegrand3(p.I) = 0.0;
@@ -240,8 +231,8 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
   if (volintegral_sphere__tracks__amr_centre[which_integral] != -1) {
     const int which_centre =
         volintegral_sphere__tracks__amr_centre[which_integral];
-    if (which_centre < 0 || which_centre > 2) {
-      CCTK_VERROR("Invalid BoxInBox centre index %d for integral %d; valid range is [0,2]",
+    if (which_centre < 0 || which_centre >= 100) {
+      CCTK_VERROR("Invalid BoxInBox centre index %d for integral %d; valid range is [0,99]",
                   which_centre, which_integral);
     }
 
@@ -283,9 +274,9 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
           const CCTK_REAL M1 = VI_vacuumX_sample_dynamic_gf(MU1_gf, p);
           const CCTK_REAL M2 = VI_vacuumX_sample_dynamic_gf(MU2_gf, p);
           VolIntegrand1(p.I) = H * H;
-          VolIntegrand2(p.I) = M0 * M0;
-          VolIntegrand3(p.I) = M1 * M1;
-          VolIntegrand4(p.I) = M2 * M2;
+          VolIntegrand2(p.I) = M0 * M0 + M1 * M1 + M2 * M2;
+          VolIntegrand3(p.I) = 0.0;
+          VolIntegrand4(p.I) = 0.0;
         });
 
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
@@ -317,7 +308,9 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
             const CCTK_REAL M2 = VI_vacuumX_sample_dynamic_gf(MU2_gf, p);
             const CCTK_REAL M2sq = M0 * M0 + M1 * M1 + M2 * M2;
             VolIntegrand1(p.I) = H * H;
-            VolIntegrand2(p.I) = M2sq * M2sq;
+            VolIntegrand2(p.I) = M2sq;
+            VolIntegrand3(p.I) = 0.0;
+            VolIntegrand4(p.I) = 0.0;
           });
     } else {
       const int M2_vi = VI_vacuumX_varindex_or_error(MomentumSquaredVarString);
@@ -330,7 +323,9 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
             const CCTK_REAL H = VI_vacuumX_sample_dynamic_gf(H_gf, p);
             const CCTK_REAL M2 = VI_vacuumX_sample_dynamic_gf(M2_gf, p);
             VolIntegrand1(p.I) = H * H;
-            VolIntegrand2(p.I) = M2 * M2;
+            VolIntegrand2(p.I) = M2;
+            VolIntegrand3(p.I) = 0.0;
+            VolIntegrand4(p.I) = 0.0;
           });
     }
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
@@ -449,9 +444,10 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
     grid.loop_int_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          VI_vacuumX_ADM_Momentum_integrand(VolIntegrand1, p, idx, idy, idz,
-                                            VolIntegrand2, VolIntegrand3,
-                                            VolIntegrand4);
+          VI_vacuumX_ADM_vector_volume_integrand(
+              VolIntegrand1, VolIntegrand2, VolIntegrand3, VolIntegrand4, p,
+              idx, idy, idz, 0.0, 0.0, 0.0, false, gxx, gxy, gxz, gyy, gyz,
+              gzz, kxx, kxy, kxz, kyy, kyz, kzz);
         });
 
   } else if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
@@ -460,28 +456,26 @@ extern "C" void VI_vacuumX_ComputeIntegrand(CCTK_ARGUMENTS) {
     const CCTK_REAL idx = 1.0 / CCTK_DELTA_SPACE(0);
     const CCTK_REAL idy = 1.0 / CCTK_DELTA_SPACE(1);
     const CCTK_REAL idz = 1.0 / CCTK_DELTA_SPACE(2);
+    const CCTK_REAL center_x =
+        volintegral_inside_sphere__center_x[which_integral];
+    const CCTK_REAL center_y =
+        volintegral_inside_sphere__center_y[which_integral];
+    const CCTK_REAL center_z =
+        volintegral_inside_sphere__center_z[which_integral];
 
     grid.loop_int_device<1, 1, 1>(
         grid.nghostzones,
         [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          VI_vacuumX_ADM_Angular_Momentum_integrand(
-              VolIntegrand1, p, idx, idy, idz, VolIntegrand2, VolIntegrand3,
-              VolIntegrand4);
+          VI_vacuumX_ADM_vector_volume_integrand(
+              VolIntegrand1, VolIntegrand2, VolIntegrand3, VolIntegrand4, p,
+              idx, idy, idz, center_x, center_y, center_z, true, gxx, gxy,
+              gxz, gyy, gyz, gzz, kxx, kxy, kxz, kyy, kyz, kzz);
         });
 
   } else {
-
-    /* Print a warning if no integrand is computed because
-     * Integration_quantity_keyword unrecognized. */
-    printf("VolumeIntegrals_vacuumX: WARNING: Integrand not computed. Did not "
-           "understand Integration_quantity_keyword[%d] = %s\n",
-           which_integral, Integration_quantity_keyword[which_integral]);
-    // Unknown keyword: clear integrands so stale values cannot leak into sums.
-    grid.loop_int_device<1, 1, 1>(
-        grid.nghostzones,
-        [=] CCTK_DEVICE(const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-          VolIntegrand1(p.I) = 0.0;
-        });
+    CCTK_VERROR("Unknown Integration_quantity_keyword[%d] = '%s'",
+                which_integral,
+                Integration_quantity_keyword[which_integral]);
   }
 
 }
@@ -516,11 +510,21 @@ extern "C" void VI_vacuumX_ApplyRegionMasks(CCTK_ARGUMENTS) {
       volintegral_inside_sphere__radius[which_integral] > 0.0;
   const bool use_outside_sphere =
       volintegral_outside_sphere__radius[which_integral] > 0.0;
+  const bool is_constraint_integral =
+      CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "H_M_CnstraintsL2") ||
+      CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "H_M2_CnstraintsL2");
+  const bool use_constraint_excision =
+      is_constraint_integral &&
+      (constraint_excision_num_regions > 0 ||
+       constraint_excision_outer_radius > 0.0);
 
-  if (!use_inside_sphere && !use_outside_sphere)
+  if (!use_inside_sphere && !use_outside_sphere && !use_constraint_excision)
     return;
 
   const double inside_radius = volintegral_inside_sphere__radius[which_integral];
+  const double inside_radius2 = inside_radius * inside_radius;
   double inside_xprime = volintegral_sphere__center_x_initial[which_integral];
   double inside_yprime = volintegral_sphere__center_y_initial[which_integral];
   double inside_zprime = volintegral_sphere__center_z_initial[which_integral];
@@ -535,9 +539,29 @@ extern "C" void VI_vacuumX_ApplyRegionMasks(CCTK_ARGUMENTS) {
 
   const double outside_radius =
       volintegral_outside_sphere__radius[which_integral];
+  const double outside_radius2 = outside_radius * outside_radius;
   const double outside_xprime = volintegral_outside_sphere__center_x[which_integral];
   const double outside_yprime = volintegral_outside_sphere__center_y[which_integral];
   const double outside_zprime = volintegral_outside_sphere__center_z[which_integral];
+
+  VI_vacuumX_excision_regions excision_regions{};
+  excision_regions.count = constraint_excision_num_regions;
+  for (int n = 0; n < constraint_excision_num_regions; ++n) {
+    const int tracked_center = constraint_excision_tracks_amr_centre[n];
+    if (tracked_center >= 0) {
+      excision_regions.x[n] = position_x[tracked_center];
+      excision_regions.y[n] = position_y[tracked_center];
+      excision_regions.z[n] = position_z[tracked_center];
+    } else {
+      excision_regions.x[n] = constraint_excision_center_x[n];
+      excision_regions.y[n] = constraint_excision_center_y[n];
+      excision_regions.z[n] = constraint_excision_center_z[n];
+    }
+    excision_regions.radius[n] = constraint_excision_radius[n];
+  }
+
+  const CCTK_REAL excision_outer_radius2 =
+      constraint_excision_outer_radius * constraint_excision_outer_radius;
 
   grid.loop_int_device<1, 1, 1>(
       grid.nghostzones,
@@ -550,7 +574,7 @@ extern "C" void VI_vacuumX_ApplyRegionMasks(CCTK_ARGUMENTS) {
           const double dz = p.z - inside_zprime;
           zero_integrand =
               zero_integrand ||
-              (sqrt(dx * dx + dy * dy + dz * dz) > inside_radius);
+              (dx * dx + dy * dy + dz * dz > inside_radius2);
         }
 
         if (use_outside_sphere) {
@@ -559,7 +583,32 @@ extern "C" void VI_vacuumX_ApplyRegionMasks(CCTK_ARGUMENTS) {
           const double dz = p.z - outside_zprime;
           zero_integrand =
               zero_integrand ||
-              (sqrt(dx * dx + dy * dy + dz * dz) <= outside_radius);
+              (dx * dx + dy * dy + dz * dz <= outside_radius2);
+        }
+
+        if (use_constraint_excision) {
+          for (int n = 0; n < excision_regions.count; ++n) {
+            const CCTK_REAL radius = excision_regions.radius[n];
+            const CCTK_REAL dx = p.x - excision_regions.x[n];
+            const CCTK_REAL dy = p.y - excision_regions.y[n];
+            const CCTK_REAL dz = p.z - excision_regions.z[n];
+            zero_integrand =
+                zero_integrand ||
+                (radius > 0.0 &&
+                 dx * dx + dy * dy + dz * dz <= radius * radius);
+          }
+
+          if (constraint_excision_outer_radius > 0.0) {
+            const CCTK_REAL dx =
+                p.x - constraint_excision_outer_center_x;
+            const CCTK_REAL dy =
+                p.y - constraint_excision_outer_center_y;
+            const CCTK_REAL dz =
+                p.z - constraint_excision_outer_center_z;
+            zero_integrand =
+                zero_integrand ||
+                dx * dx + dy * dy + dz * dz >= excision_outer_radius2;
+          }
         }
 
         if (zero_integrand) {

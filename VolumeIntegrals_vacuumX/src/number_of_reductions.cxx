@@ -16,7 +16,7 @@ VI_vacuumX_number_of_reductions(int which_integral) {
   DECLARE_CCTK_PARAMETERS;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                   "H_M_CnstraintsL2"))
-    return 4;
+    return 2;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                   "H_M2_CnstraintsL2"))
     return 2;
@@ -35,13 +35,13 @@ VI_vacuumX_number_of_reductions(int which_integral) {
     return 1;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                   "ADM_Momentum"))
-    return 1;
+    return 3;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                   "ADM_Momentum_Surface"))
     return 3;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                   "ADM_Angular_Momentum"))
-    return 1;
+    return 3;
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                   "ADM_Angular_Momentum_Surface"))
     return 3;

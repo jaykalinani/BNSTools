@@ -81,6 +81,7 @@ extern "C" void VI_vacuumX_file_output_routine_Startup(CCTK_ARGUMENTS) {
   if(enable_file_output==1) {
     char *actual_dir;
     CREATE_OUTDIR(CCTK_PASS_CTOC,outVolIntegral_dir,actual_dir);
+    free(actual_dir);
   }
 }
 
@@ -100,9 +101,8 @@ extern "C" void VI_vacuumX_file_output(CCTK_ARGUMENTS) {
     sprintf (filename, "%svolume_integrals-vacuumX.asc", actual_dir);
     FILE *file = fopen (filename,"a+");
     if (! file) {
-      CCTK_VWarn (1, __LINE__, __FILE__, CCTK_THORNSTRING,
-		  "VolumeIntegrals_vacuumX: Cannot open output file '%s'", filename);
-      exit(1);
+      CCTK_VERROR("Cannot open VolumeIntegrals_vacuumX output file '%s'",
+                  filename);
     } else {
       fseek(file, 0, SEEK_END);
       long size = ftell(file);
@@ -118,13 +118,12 @@ extern "C" void VI_vacuumX_file_output(CCTK_ARGUMENTS) {
 	for(int which_integral=1;which_integral<=NumIntegrals;which_integral++) {
 		  if(volintegral_surface_sphere__radius[which_integral]>0) {
 		    sprintf(header_buffer + strlen(header_buffer),
-			    "# Col. %d: %s. Surface sphere @ (%e,%e,%e), r=%e, kernel width=%e. Moves/Tracks AMR Centre %d/%d\n",
+			    "# Col. %d: %s. Direct surface sphere @ (%e,%e,%e), r=%e. Moves/Tracks AMR Centre %d/%d\n",
 			    which_col,Integration_quantity_keyword[which_integral],
 			    volintegral_sphere__center_x_initial[which_integral],
 			    volintegral_sphere__center_y_initial[which_integral],
 			    volintegral_sphere__center_z_initial[which_integral],
 			    volintegral_surface_sphere__radius[which_integral],
-			    volintegral_surface_sphere__width[which_integral],
 			    amr_centre__tracks__volintegral_inside_sphere[which_integral],
 			    volintegral_sphere__tracks__amr_centre[which_integral]);
 		  } else if(volintegral_inside_sphere__radius[which_integral]>0 && volintegral_outside_sphere__radius[which_integral]>0) {
@@ -203,6 +202,7 @@ extern "C" void VI_vacuumX_file_output(CCTK_ARGUMENTS) {
       free(buffer);
     }
     free(filename);
+    free(actual_dir);
   }
 }
 #undef CREATE_OUTDIR

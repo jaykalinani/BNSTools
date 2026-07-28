@@ -104,6 +104,7 @@ SCHEDULE VI_vacuumX_ComputeIntegrand in VI_vacuumX_VolumeIntegralGroup BEFORE VI
   READS: ADMBaseX::kzz(everywhere)
   READS: VolIntegrand2(everywhere) VolIntegrand3(everywhere) VolIntegrand4(everywhere)
   WRITES: VolIntegrand1(interior) VolIntegrand2(interior) VolIntegrand3(interior) VolIntegrand4(interior)
+  SYNC: VolIntegrands
   WRITES: volintegral_inside_sphere__center_x(everywhere)
   WRITES: volintegral_inside_sphere__center_y(everywhere)
   WRITES: volintegral_inside_sphere__center_z(everywhere)
@@ -123,7 +124,9 @@ SCHEDULE VI_vacuumX_ApplyRegionMasks in VI_vacuumX_VolumeIntegralGroup BEFORE VI
   READS: volintegral_outside_sphere__center_x(everywhere)
   READS: volintegral_outside_sphere__center_y(everywhere)
   READS: volintegral_outside_sphere__center_z(everywhere)
+  READS: BoxInBox::position_x(everywhere) BoxInBox::position_y(everywhere) BoxInBox::position_z(everywhere)
   WRITES: VolIntegrands(interior)
+  SYNC: VolIntegrands
 } "Apply sphere-based region masks to integrands"
 
 SCHEDULE VI_vacuumX_DoSum in VI_vacuumX_VolumeIntegralGroup AFTER VI_vacuumX_ApplyRegionMasks
@@ -138,7 +141,7 @@ SCHEDULE VI_vacuumX_DoSum in VI_vacuumX_VolumeIntegralGroup AFTER VI_vacuumX_App
   READS: volintegral_outside_sphere__center_y(everywhere)
   READS: volintegral_outside_sphere__center_z(everywhere)
   READS: VolIntegral(everywhere)
-  READS: VolIntegrands(interior)
+  READS: VolIntegrands(everywhere)
   READS: BoxInBox::position_x(everywhere)
   READS: BoxInBox::position_y(everywhere)
   READS: BoxInBox::position_z(everywhere)

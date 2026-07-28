@@ -70,7 +70,7 @@ CCTK_INT VolIntegral_out_every "How often to compute volume integrals?" STEERABL
 
 CCTK_INT NumIntegrals "Number of volume integrals to perform" STEERABLE = ALWAYS
 {
-  0:1000 :: "zero (disable integration) or some other number"
+  0:100 :: "zero (disable integration) or some other number"
 } 0
 
 keyword Integration_quantity_keyword[101] "Which quantity to integrate" STEERABLE = ALWAYS
@@ -82,11 +82,11 @@ keyword Integration_quantity_keyword[101] "Which quantity to integrate" STEERABL
 "centeroflapse"           :: "Center of Lapse"
 "one"                     :: "Integrand = 1. Useful for debugging"
 "ADM_Mass"                :: "ADM Mass"
-"ADM_Mass_Surface"        :: "ADM mass from a spherical surface integral using a normalized shell kernel"
+"ADM_Mass_Surface"        :: "ADM mass from a direct coordinate-sphere integral using conformal fluxes"
 "ADM_Momentum"            :: "ADM Momentum"
-"ADM_Momentum_Surface"    :: "ADM linear momentum components from a spherical surface integral using a normalized shell kernel"
+"ADM_Momentum_Surface"    :: "ADM linear momentum components from a direct coordinate-sphere integral using conformal fluxes"
 "ADM_Angular_Momentum"    :: "ADM Angular Momentum"
-"ADM_Angular_Momentum_Surface" :: "ADM angular momentum components from a spherical surface integral using a normalized shell kernel"
+"ADM_Angular_Momentum_Surface" :: "ADM angular momentum components from a direct coordinate-sphere integral using conformal fluxes"
 } "nothing"
 
 ########################################
@@ -124,27 +124,100 @@ CCTK_REAL volintegral_outside_sphere__radius[101] "Volume integral outside a sph
   *:* :: "Any number"
 } 0
 
-CCTK_REAL volintegral_surface_sphere__radius[101] "Surface integral on a spherical shell: radius of spherical surface" STEERABLE=ALWAYS
+CCTK_REAL volintegral_surface_sphere__radius[101] "Direct coordinate-sphere integral: radius of spherical surface" STEERABLE=ALWAYS
 {
   *:* :: "Any number"
 } 0
 
-CCTK_REAL volintegral_surface_sphere__width[101] "Surface integral on a spherical shell: radial kernel half-width. If <=0, use twice the local maximum grid spacing." STEERABLE=ALWAYS
+CCTK_REAL volintegral_surface_sphere__width[101] "Deprecated compatibility parameter; direct spherical extraction ignores it" STEERABLE=ALWAYS
 {
   *:* :: "Any number"
+} 0
+
+CCTK_STRING surface_interpolator_name "Interpolator used for direct spherical ADM extraction"
+{
+  ".+" :: "A registered Cactus interpolator"
+} "CarpetX"
+
+CCTK_STRING surface_interpolator_pars "Parameters for direct spherical ADM interpolation"
+{
+  ".*" :: "Any string accepted by Util_TableSetFromString"
+} "order=4 boundary_off_centering_tolerance={0 0 0 0 0 0} boundary_extrapolation_tolerance={0 0 0 0 0 0}"
+
+CCTK_INT surface_ntheta "Number of theta points for direct spherical extraction, including both poles"
+{
+  3:*:2 :: "An odd number for composite Simpson quadrature"
+} 37
+
+CCTK_INT surface_nphi "Number of periodic phi points for direct spherical extraction; the 2*pi endpoint is omitted"
+{
+  2:* :: "At least two periodic points"
+} 24
+
+########################################
+# Constraint-norm excision
+
+CCTK_INT constraint_excision_num_regions "Number of spherical regions excised from constraint norms"
+{
+  0:100 :: "Zero disables inner constraint excision"
+} 0
+
+CCTK_REAL constraint_excision_center_x[100] "Fixed x-coordinate of a constraint-excision region"
+{
+  *:* :: "Any coordinate"
+} 0
+
+CCTK_REAL constraint_excision_center_y[100] "Fixed y-coordinate of a constraint-excision region"
+{
+  *:* :: "Any coordinate"
+} 0
+
+CCTK_REAL constraint_excision_center_z[100] "Fixed z-coordinate of a constraint-excision region"
+{
+  *:* :: "Any coordinate"
+} 0
+
+CCTK_REAL constraint_excision_radius[100] "Radius of a constraint-excision region"
+{
+  0:* :: "Zero disables this region"
+} 0
+
+CCTK_INT constraint_excision_tracks_amr_centre[100] "BoxInBox center tracked by this constraint-excision region"
+{
+  -1:99 :: "-1 uses the fixed center; 0..99 selects a BoxInBox center"
+} -1
+
+CCTK_REAL constraint_excision_outer_radius "Zero constraint integrands outside this coordinate radius"
+{
+  *:* :: "A positive radius enables outer excision"
+} 0
+
+CCTK_REAL constraint_excision_outer_center_x "x-coordinate of the outer constraint-excision sphere"
+{
+  *:* :: "Any coordinate"
+} 0
+
+CCTK_REAL constraint_excision_outer_center_y "y-coordinate of the outer constraint-excision sphere"
+{
+  *:* :: "Any coordinate"
+} 0
+
+CCTK_REAL constraint_excision_outer_center_z "z-coordinate of the outer constraint-excision sphere"
+{
+  *:* :: "Any coordinate"
 } 0
 
 ########################################
 
 CCTK_INT amr_centre__tracks__volintegral_inside_sphere[101] "Use output from volume integral to move AMR box centre N." STEERABLE = ALWAYS
 {
-  -1:100 :: "-1 = do not track an AMR box centre. Runtime check enforces BoxInBox-supported index range."
+  -1:99 :: "-1 = do not track an AMR box centre; 0..99 selects a BoxInBox centre."
 } -1
 
 
 CCTK_INT volintegral_sphere__tracks__amr_centre[101] "Volume integral tracks AMR box centre N." STEERABLE = ALWAYS
 {
-  -1:100 :: "-1 = do not track an AMR box centre. Runtime check enforces BoxInBox-supported index range."
+  -1:99 :: "-1 = do not track an AMR box centre; 0..99 selects a BoxInBox centre."
 } -1
 
 
