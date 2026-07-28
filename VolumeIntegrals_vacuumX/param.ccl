@@ -65,7 +65,7 @@ STRING outVolIntegral_dir "Output directory for volume integration output files,
 
 CCTK_INT VolIntegral_out_every "How often to compute volume integrals?" STEERABLE = ALWAYS
 {
-  0:1000 :: "zero (disable integration) or some other number"
+  0:* :: "zero (disable integration) or some other number"
 } 0
 
 CCTK_INT NumIntegrals "Number of volume integrals to perform" STEERABLE = ALWAYS
