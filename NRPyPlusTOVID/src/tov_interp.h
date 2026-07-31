@@ -69,6 +69,10 @@ static inline int bisection_idx_finder(const REAL rrbar, const int numlines_in_f
   int x2 = numlines_in_file-1;
   REAL y1 = rrbar-rbar_arr[x1];
   REAL y2 = rrbar-rbar_arr[x2];
+  if (y1 <= 0)
+    return x1;
+  else if (y2 >=0)
+    return x2;
   if(y1*y2 >= 0) {
     fprintf(stderr,"INTERPOLATION BRACKETING ERROR %e | %e %e\n",rrbar,y1,y2);
     exit(1);

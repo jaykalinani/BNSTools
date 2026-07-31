@@ -493,6 +493,46 @@ extern "C" void VI_vacuumX_ApplyRegionMasks(CCTK_ARGUMENTS) {
                 static_cast<int>(*IntegralCounter));
   }
 
+  // CODEx-STAMP: VIGX_ASTERX_2026-07-31_01
+  if (cctk_iteration == 0) {
+    volintegral_inside_sphere__center_x[which_integral] =
+        volintegral_sphere__center_x_initial[which_integral];
+    volintegral_inside_sphere__center_y[which_integral] =
+        volintegral_sphere__center_y_initial[which_integral];
+    volintegral_inside_sphere__center_z[which_integral] =
+        volintegral_sphere__center_z_initial[which_integral];
+
+    volintegral_outside_sphere__center_x[which_integral] =
+        volintegral_sphere__center_x_initial[which_integral];
+    volintegral_outside_sphere__center_y[which_integral] =
+        volintegral_sphere__center_y_initial[which_integral];
+    volintegral_outside_sphere__center_z[which_integral] =
+        volintegral_sphere__center_z_initial[which_integral];
+  }
+
+  if (volintegral_sphere__tracks__amr_centre[which_integral] != -1) {
+    const int which_centre =
+        volintegral_sphere__tracks__amr_centre[which_integral];
+    if (which_centre < 0 || which_centre >= 100) {
+      CCTK_VERROR("Invalid BoxInBox centre index %d for integral %d; valid range is [0,99]",
+                  which_centre, which_integral);
+    }
+
+    volintegral_inside_sphere__center_x[which_integral] =
+        position_x[which_centre];
+    volintegral_inside_sphere__center_y[which_integral] =
+        position_y[which_centre];
+    volintegral_inside_sphere__center_z[which_integral] =
+        position_z[which_centre];
+
+    volintegral_outside_sphere__center_x[which_integral] =
+        position_x[which_centre];
+    volintegral_outside_sphere__center_y[which_integral] =
+        position_y[which_centre];
+    volintegral_outside_sphere__center_z[which_integral] =
+        position_z[which_centre];
+  }
+
   if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
                   "ADM_Mass_Surface") ||
       CCTK_EQUALS(Integration_quantity_keyword[which_integral],

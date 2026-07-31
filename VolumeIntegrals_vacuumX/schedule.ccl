@@ -117,6 +117,7 @@ SCHEDULE VI_vacuumX_ApplyRegionMasks in VI_vacuumX_VolumeIntegralGroup BEFORE VI
 {
   LANG: C
   READS: IntegralCounter(everywhere)
+  READS: BoxInBox::position_x(everywhere) BoxInBox::position_y(everywhere) BoxInBox::position_z(everywhere)
   READS: VolIntegrands(interior)
   READS: volintegral_inside_sphere__center_x(everywhere)
   READS: volintegral_inside_sphere__center_y(everywhere)
@@ -127,6 +128,12 @@ SCHEDULE VI_vacuumX_ApplyRegionMasks in VI_vacuumX_VolumeIntegralGroup BEFORE VI
   READS: BoxInBox::position_x(everywhere) BoxInBox::position_y(everywhere) BoxInBox::position_z(everywhere)
   WRITES: VolIntegrands(interior)
   SYNC: VolIntegrands
+  WRITES: volintegral_inside_sphere__center_x(everywhere)
+  WRITES: volintegral_inside_sphere__center_y(everywhere)
+  WRITES: volintegral_inside_sphere__center_z(everywhere)
+  WRITES: volintegral_outside_sphere__center_x(everywhere)
+  WRITES: volintegral_outside_sphere__center_y(everywhere)
+  WRITES: volintegral_outside_sphere__center_z(everywhere)
 } "Apply sphere-based region masks to integrands"
 
 SCHEDULE VI_vacuumX_DoSum in VI_vacuumX_VolumeIntegralGroup AFTER VI_vacuumX_ApplyRegionMasks
@@ -142,6 +149,7 @@ SCHEDULE VI_vacuumX_DoSum in VI_vacuumX_VolumeIntegralGroup AFTER VI_vacuumX_App
   READS: volintegral_outside_sphere__center_z(everywhere)
   READS: VolIntegral(everywhere)
   READS: VolIntegrands(everywhere)
+  READS: BoxInBox::active(everywhere)
   READS: BoxInBox::position_x(everywhere)
   READS: BoxInBox::position_y(everywhere)
   READS: BoxInBox::position_z(everywhere)
@@ -159,6 +167,7 @@ SCHEDULE VI_vacuumX_DecrementIntegralCounter in VI_vacuumX_VolumeIntegralGroup A
 {
   LANG: C
   OPTIONS: GLOBAL
+  READS: IntegralCounter(everywhere)
   WRITES: IntegralCounter(everywhere)
 } "Decrement IntegralCounter variable"
 ##################
