@@ -125,7 +125,6 @@ SCHEDULE VI_vacuumX_ApplyRegionMasks in VI_vacuumX_VolumeIntegralGroup BEFORE VI
   READS: volintegral_outside_sphere__center_x(everywhere)
   READS: volintegral_outside_sphere__center_y(everywhere)
   READS: volintegral_outside_sphere__center_z(everywhere)
-  READS: BoxInBox::position_x(everywhere) BoxInBox::position_y(everywhere) BoxInBox::position_z(everywhere)
   WRITES: VolIntegrands(interior)
   SYNC: VolIntegrands
   WRITES: volintegral_inside_sphere__center_x(everywhere)
