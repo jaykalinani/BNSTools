@@ -182,33 +182,38 @@ extern "C" void NRPyPlusTOVID_Interpolation_C2V(CCTK_ARGUMENTS) {
   DECLARE_CCTK_PARAMETERS;
 
   CCTK_INFO("Starting interpolation for ADM variables.");
-  grid.loop_int<0, 0, 0>(grid.nghostzones,
-                         [=] CCTK_HOST(const Loop::PointDesc &p)
-                             CCTK_ATTRIBUTE_ALWAYS_INLINE {
-                               gxx(p.I) = calc_avg_c2v<4>(gxx_cc, p);
-                               gxy(p.I) = calc_avg_c2v<4>(gxy_cc, p);
-                               gxz(p.I) = calc_avg_c2v<4>(gxz_cc, p);
-                               gyy(p.I) = calc_avg_c2v<4>(gyy_cc, p);
-                               gyz(p.I) = calc_avg_c2v<4>(gyz_cc, p);
-                               gzz(p.I) = calc_avg_c2v<4>(gzz_cc, p);
+  const auto interpolate =
+      [=] CCTK_DEVICE CCTK_HOST(const Loop::PointDesc &p)
+          CCTK_ATTRIBUTE_ALWAYS_INLINE {
+        gxx(p.I) = calc_avg_c2v<4>(gxx_cc, p);
+        gxy(p.I) = calc_avg_c2v<4>(gxy_cc, p);
+        gxz(p.I) = calc_avg_c2v<4>(gxz_cc, p);
+        gyy(p.I) = calc_avg_c2v<4>(gyy_cc, p);
+        gyz(p.I) = calc_avg_c2v<4>(gyz_cc, p);
+        gzz(p.I) = calc_avg_c2v<4>(gzz_cc, p);
 
-                               kxx(p.I) = 0.0;
-                               kxy(p.I) = 0.0;
-                               kxz(p.I) = 0.0;
-                               kyy(p.I) = 0.0;
-                               kyz(p.I) = 0.0;
-                               kzz(p.I) = 0.0;
+        kxx(p.I) = 0.0;
+        kxy(p.I) = 0.0;
+        kxz(p.I) = 0.0;
+        kyy(p.I) = 0.0;
+        kyz(p.I) = 0.0;
+        kzz(p.I) = 0.0;
 
-                               alp(p.I) = calc_avg_c2v<4>(alp_cc, p);
-                               betax(p.I) = calc_avg_c2v<4>(betax_cc, p);
-                               betay(p.I) = calc_avg_c2v<4>(betay_cc, p);
-                               betaz(p.I) = calc_avg_c2v<4>(betaz_cc, p);
+        alp(p.I) = calc_avg_c2v<4>(alp_cc, p);
+        betax(p.I) = calc_avg_c2v<4>(betax_cc, p);
+        betay(p.I) = calc_avg_c2v<4>(betay_cc, p);
+        betaz(p.I) = calc_avg_c2v<4>(betaz_cc, p);
 
-                               dtalp(p.I) = 0.0;
-                               dtbetax(p.I) = 0.0;
-                               dtbetay(p.I) = 0.0;
-                               dtbetaz(p.I) = 0.0;
-                             });
+        dtalp(p.I) = 0.0;
+        dtbetax(p.I) = 0.0;
+        dtbetay(p.I) = 0.0;
+        dtbetaz(p.I) = 0.0;
+      };
+
+  if (interpolate_c2v_on_device)
+    grid.loop_int_device<0, 0, 0>(grid.nghostzones, interpolate);
+  else
+    grid.loop_int<0, 0, 0>(grid.nghostzones, interpolate);
 
   CCTK_INFO("Done interpolation for ADM variables.");
 }

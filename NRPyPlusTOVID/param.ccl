@@ -68,3 +68,7 @@ CCTK_REAL Pressure_depletion_factor "Pressure depletion factor = Pdf: P => (1-Pd
 BOOLEAN NRPyTOV_Cowling "Schedule NRPyTOVID for cowling case."
 {
 } "no"
+
+BOOLEAN interpolate_c2v_on_device "Run cell-to-vertex ADM interpolation on the accelerator"
+{
+} "yes"
