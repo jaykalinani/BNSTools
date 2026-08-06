@@ -26,6 +26,7 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_INITIAL BEFORE AsterX
   LANG: C
   OPTIONS: GLOBAL
   WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere)
+  WRITES: AsterSeeds::CoM_NS1(everywhere) AsterSeeds::CoM_NS2(everywhere)
   WRITES: VolIntegral(everywhere)
   WRITES: volintegral_inside_sphere__center_x(everywhere)
   WRITES: volintegral_inside_sphere__center_y(everywhere)
@@ -40,6 +41,7 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLE
   LANG: C
   OPTIONS: GLOBAL
   WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere)
+  WRITES: AsterSeeds::CoM_NS1(everywhere) AsterSeeds::CoM_NS2(everywhere)
   WRITES: VolIntegral(everywhere)
   WRITES: volintegral_inside_sphere__center_x(everywhere)
   WRITES: volintegral_inside_sphere__center_y(everywhere)
