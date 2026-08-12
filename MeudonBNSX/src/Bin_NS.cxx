@@ -3,7 +3,6 @@
 #include <cstring>
 #include <cassert>
 #include <cmath>
-#include <array>
 #include <vec.hxx>
 #include <vector>
 #include <ios>
@@ -27,9 +26,7 @@ using namespace std;
 using namespace Arith;
 using namespace Loop;
 
-// define namespace here for old versions of Lorene that don't do so
-// namespace Lorene {}
-using namespace Lorene;
+using namespace ::Lorene;
 
 namespace {
 std::mutex meudon_init_mutex;
@@ -66,18 +63,19 @@ extern "C" void MeudonBNSX_initialise(CCTK_ARGUMENTS) {
 
   CCTK_INFO("Setting up coordinates");
 
-  const array<CCTK_INT, dim> indextype = {1, 1, 1};
-  const GF3D2layout CCC_layout(cctkGH, indextype);
-
-  int const nx = cctk_lsh[0] - 1;
-  int const ny = cctk_lsh[1] - 1;
-  int const nz = cctk_lsh[2] - 1;
-  int const npoints = nx * ny * nz;
+  // loop_all is restricted to the current AMReX tile. Use a compact layout for
+  // exactly that box so every coordinate passed to LORENE is initialized.
+  vect<int, dim> loop_min, loop_max;
+  grid.box_all<1, 1, 1>(grid.nghostzones, loop_min, loop_max);
+  const GF3D2layout lorene_layout(loop_min, loop_max);
+  const int npoints = lorene_layout.np;
+  assert(npoints > 0);
   vector<double> xx(npoints), yy(npoints), zz(npoints);
 
   grid.loop_all<1, 1, 1>(grid.nghostzones,
                          [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-                           CCTK_INT idx = CCC_layout.linear(p.I);
+                           const int idx = lorene_layout.linear(p.I);
+                           assert(idx >= 0 && idx < npoints);
                            xx[idx] = p.X[0] * coord_unit;
                            yy[idx] = p.X[1] * coord_unit;
                            zz[idx] = p.X[2] * coord_unit;
@@ -105,7 +103,7 @@ extern "C" void MeudonBNSX_initialise(CCTK_ARGUMENTS) {
   CCTK_VInfo(CCTK_THORNSTRING, "Reading from file \"%s\"", filename);
 
   // try {
-  Bin_NS bin_ns(npoints, &xx[0], &yy[0], &zz[0], filename);
+  Bin_NS bin_ns(npoints, xx.data(), yy.data(), zz.data(), filename);
 
   CCTK_VInfo(CCTK_THORNSTRING, "omega [rad/s]:       %g", bin_ns.omega);
   CCTK_VInfo(CCTK_THORNSTRING, "dist [km]:           %g", bin_ns.dist);
@@ -175,7 +173,8 @@ extern "C" void MeudonBNSX_initialise(CCTK_ARGUMENTS) {
 
   grid.loop_all<1, 1, 1>(
       grid.nghostzones, [&](const PointDesc &p) CCTK_ATTRIBUTE_ALWAYS_INLINE {
-        CCTK_INT idx = CCC_layout.linear(p.I);
+        const int idx = lorene_layout.linear(p.I);
+        assert(idx >= 0 && idx < npoints);
 
         if (CCTK_EQUALS(initial_lapse, "MeudonBNSX")) {
           alp_cc(p.I) = bin_ns.nnn[idx];
