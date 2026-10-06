@@ -44,6 +44,7 @@ SCHEDULE compute_mhd_diagnostics AT CCTK_ANALYSIS BEFORE compute_mhd_derivs
   READS: ADMBaseX::metric(everywhere) ADMBaseX::lapse(everywhere) ADMBaseX::shift(everywhere)
   READS: HydroBaseX::vel(everywhere) HydroBaseX::Bvec(everywhere)
   READS: AsterX::w_lorentz(everywhere)
+  READS: smallb_Poyn(everywhere)
   WRITES: smallb_Poyn(everywhere)
 } "Set b^mu, b^2, and Poynting flux gridfunctions"
 
@@ -55,6 +56,7 @@ SCHEDULE compute_mhd_derivs AT CCTK_ANALYSIS BEFORE VI_GRMHD_InitializeIntegralC
   READS: AsterX::dBx_stag(interior) AsterX::dBy_stag(interior) AsterX::dBz_stag(interior)
   READS: AsterX::w_lorentz(interior)
   READS: smallb_Poyn(interior), vels_old(interior)
+  READS: velocity_derivatives_3p1(interior) constraints_derivative_tensors(interior) diagnostics_mhd(interior)
   WRITES: velocity_derivatives_3p1(interior) constraints_derivative_tensors(interior) diagnostics_mhd(interior) vels_old(interior)
   SYNC: velocity_derivatives_3p1 constraints_derivative_tensors diagnostics_mhd vels_old
 } "Set fluid derivatives"
