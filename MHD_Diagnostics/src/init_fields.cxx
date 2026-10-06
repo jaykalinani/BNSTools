@@ -60,6 +60,7 @@ extern "C" void init_fields(CCTK_ARGUMENTS) {
                                       normB(p.I) = 0.0;
                                       normcurlB(p.I) = 0.0;
                                       a4sq(p.I) = 0.0;
+                                      divB(p.I) = 0.0;
 
                                       velxold(p.I) = 0.0;
                                       velyold(p.I) = 0.0;
