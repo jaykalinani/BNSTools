@@ -18,8 +18,7 @@ int count_num_lines_in_file(FILE *in1Dpolytrope) {
   char * line = NULL;
 
   size_t len = 0;
-  ssize_t read;
-  while ((read = getline(&line, &len, in1Dpolytrope)) != -1) {
+  while (getline(&line, &len, in1Dpolytrope) != -1) {
     numlines_in_file++;
   }
   rewind(in1Dpolytrope);
@@ -33,29 +32,44 @@ int read_datafile__set_arrays(FILE *in1Dpolytrope, REAL *restrict r_Schw_arr,REA
   char * line = NULL;
 
   size_t len = 0;
-  ssize_t read;
-
   int which_line = 0;
-  while ((read = getline(&line, &len, in1Dpolytrope)) != -1) {
-    // Define the line delimiters (i.e., the stuff that goes between the data on a given
-    //     line of data.  Here, we define both spaces " " and tabs "\t" as data delimiters.
-    const char delimiters[] = " \t";
-
-    //Now we define "token", a pointer to the first column of data
-    char *token;
-
-    //Each successive time we call strtok(NULL,blah), we read in a new column of data from
-    //     the originally defined character array, as pointed to by token.
-
-    token=strtok(line, delimiters); if(token==NULL) { printf("BADDDD\n"); return 1; }
-    r_Schw_arr[which_line]     = strtod(token, NULL); token = strtok( NULL, delimiters );
-    rho_arr[which_line]        = strtod(token, NULL); token = strtok( NULL, delimiters );
-    rho_baryon_arr[which_line] = strtod(token, NULL); token = strtok( NULL, delimiters );
-    P_arr[which_line]          = strtod(token, NULL); token = strtok( NULL, delimiters );
-    M_arr[which_line]          = strtod(token, NULL); token = strtok( NULL, delimiters );
-    expnu_arr[which_line]      = strtod(token, NULL); token = strtok( NULL, delimiters );
-    exp4phi_arr[which_line]    = strtod(token, NULL); token = strtok( NULL, delimiters );
-    rbar_arr[which_line]       = strtod(token, NULL);
+  while (getline(&line, &len, in1Dpolytrope) != -1) {
+    // This routine is called concurrently for CarpetX grid components.
+    // strtok stores its continuation pointer in process-global state, so
+    // concurrent readers silently mixed columns from different TOV-table
+    // lines.  Parse one complete line with the re-entrant stdio conversion
+    // instead and reject malformed input before publishing any values.
+    REAL r_Schw, rho, rho_baryon, P, M, expnu, exp4phi, rbar;
+    char trailing;
+    const int ncols = sscanf(line,
+                             " %lf %lf %lf %lf %lf %lf %lf %lf %c",
+                             &r_Schw, &rho, &rho_baryon, &P, &M, &expnu,
+                             &exp4phi, &rbar, &trailing);
+    if (ncols != 8) {
+      fprintf(stderr,
+              "Malformed TOV input line %d: expected exactly 8 numeric "
+              "columns with no trailing data, found %d conversion(s)\n",
+              which_line + 1, ncols);
+      free(line);
+      return 1;
+    }
+    if (!isfinite(r_Schw) || !isfinite(rho) || !isfinite(rho_baryon) ||
+        !isfinite(P) || !isfinite(M) || !isfinite(expnu) ||
+        !isfinite(exp4phi) || !isfinite(rbar)) {
+      fprintf(stderr,
+              "Malformed TOV input line %d: all 8 columns must be finite\n",
+              which_line + 1);
+      free(line);
+      return 1;
+    }
+    r_Schw_arr[which_line]     = r_Schw;
+    rho_arr[which_line]        = rho;
+    rho_baryon_arr[which_line] = rho_baryon;
+    P_arr[which_line]          = P;
+    M_arr[which_line]          = M;
+    expnu_arr[which_line]      = expnu;
+    exp4phi_arr[which_line]    = exp4phi;
+    rbar_arr[which_line]       = rbar;
 
     which_line++;
   }
