@@ -20,8 +20,22 @@ STORAGE: HydroBaseX::rho,HydroBaseX::vel,HydroBaseX::Bvec
 SCHEDULE init_fields IN HydroBaseX_InitialData #after ID_TabEOS_HydroQuantities
 {
   LANG: C
-  WRITES: smallb_Poyn(everywhere) velocity_derivatives_3p1(everywhere) constraints_derivative_tensors(everywhere) diagnostics_mhd(everywhere) vels_old(everywhere)
+  WRITES: smallb_Poyn(everywhere) velocity_derivatives_3p1(everywhere) constraints_derivative_tensors(everywhere) diagnostics_mhd(everywhere)
 } "Set all diagnostic fields to zero in the beginning."
+
+SCHEDULE MHD_Diagnostics_Reset_VelsOld_PostRegrid AT postinitial AFTER ODESolvers_PostStep
+{
+  LANG: C
+  READS: HydroBaseX::vel(everywhere) AsterX::w_lorentz(everywhere)
+  WRITES: vels_old(everywhere)
+  SYNC: vels_old
+} "Initialize MHD diagnostics old velocity storage"
+
+SCHEDULE init_fields AT post_recover_variables AFTER ODESolvers_PostStep
+{
+  LANG: C
+  WRITES: smallb_Poyn(everywhere) velocity_derivatives_3p1(everywhere) constraints_derivative_tensors(everywhere) diagnostics_mhd(everywhere)
+} "Initialize non-checkpointed MHD diagnostic fields after recovery"
 
 SCHEDULE MHD_Diagnostics_Sync_Recovered AT post_recover_variables
 {
@@ -30,7 +44,13 @@ SCHEDULE MHD_Diagnostics_Sync_Recovered AT post_recover_variables
   SYNC: vels_old
 } "Synchronize recovered MHD diagnostics restart storage"
 
-SCHEDULE MHD_Diagnostics_Reset_VelsOld_PostRegrid AT postregrid AFTER ODESolvers_PostStep
+SCHEDULE init_fields AT postregrid AFTER ODESolvers_PostStep
+{
+  LANG: C
+  WRITES: smallb_Poyn(everywhere) velocity_derivatives_3p1(everywhere) constraints_derivative_tensors(everywhere) diagnostics_mhd(everywhere)
+} "Initialize MHD diagnostic fields after regrid"
+
+SCHEDULE MHD_Diagnostics_Reset_VelsOld_PostRegrid AT postregrid AFTER (ODESolvers_PostStep init_fields)
 {
   LANG: C
   READS: HydroBaseX::vel(everywhere) AsterX::w_lorentz(everywhere)
@@ -48,14 +68,14 @@ SCHEDULE compute_mhd_diagnostics AT CCTK_ANALYSIS BEFORE compute_mhd_derivs
   WRITES: smallb_Poyn(everywhere)
 } "Set b^mu, b^2, and Poynting flux gridfunctions"
 
-SCHEDULE compute_mhd_derivs AT CCTK_ANALYSIS BEFORE VI_GRMHD_InitializeIntegralCounter
+SCHEDULE compute_mhd_derivs AT CCTK_ANALYSIS AFTER compute_mhd_diagnostics
 {
   LANG: C
-  READS: ADMBaseX::lapse(interior) ADMBaseX::shift(interior) ADMBaseX::metric(interior) ADMBaseX::curv(interior) 
-  READS: HydroBaseX::vel(interior) HydroBaseX::rho(interior) HydroBaseX::Bvec(interior)
-  READS: AsterX::dBx_stag(interior) AsterX::dBy_stag(interior) AsterX::dBz_stag(interior)
-  READS: AsterX::w_lorentz(interior)
-  READS: smallb_Poyn(interior), vels_old(interior)
+  READS: ADMBaseX::lapse(everywhere) ADMBaseX::shift(everywhere) ADMBaseX::metric(everywhere) ADMBaseX::curv(everywhere)
+  READS: HydroBaseX::vel(everywhere) HydroBaseX::rho(everywhere) HydroBaseX::Bvec(everywhere)
+  READS: AsterX::dBx_stag(everywhere) AsterX::dBy_stag(everywhere) AsterX::dBz_stag(everywhere)
+  READS: AsterX::w_lorentz(everywhere)
+  READS: smallb_Poyn(everywhere), vels_old(interior)
   READS: velocity_derivatives_3p1(interior) constraints_derivative_tensors(interior) diagnostics_mhd(interior)
   WRITES: velocity_derivatives_3p1(interior) constraints_derivative_tensors(interior) diagnostics_mhd(interior) vels_old(interior)
   SYNC: velocity_derivatives_3p1 constraints_derivative_tensors diagnostics_mhd vels_old

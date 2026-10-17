@@ -62,11 +62,6 @@ extern "C" void init_fields(CCTK_ARGUMENTS) {
                                       a4sq(p.I) = 0.0;
                                       divB(p.I) = 0.0;
 
-                                      velxold(p.I) = 0.0;
-                                      velyold(p.I) = 0.0;
-                                      velzold(p.I) = 0.0;
-                                      w_lorentzold(p.I) = 0.0;
-
                                       /*
                                       expansion_4(p.I)               = 0.0;
                                       shear_tt(p.I)                  = 0.0;
