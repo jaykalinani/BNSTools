@@ -17,6 +17,7 @@ SCHEDULE TriggerX_Check AT postinitial BEFORE EstimateError
   LANG: C
   OPTIONS: GLOBAL
   STORAGE: TriggerX_Vars
+  WRITES: TriggerX_Vars(everywhere)
 } "Evaluate triggers before CarpetX initial regridding"
 
 SCHEDULE TriggerX_Check AT poststep BEFORE EstimateError
@@ -24,4 +25,5 @@ SCHEDULE TriggerX_Check AT poststep BEFORE EstimateError
   LANG: C
   OPTIONS: GLOBAL
   STORAGE: TriggerX_Vars
+  WRITES: TriggerX_Vars(everywhere)
 } "Evaluate triggers before CarpetX regridding"
