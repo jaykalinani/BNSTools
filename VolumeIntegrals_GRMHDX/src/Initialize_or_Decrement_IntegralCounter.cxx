@@ -54,6 +54,16 @@ extern "C" void VI_GRMHDX_InitializeIntegralCounterToZero(CCTK_ARGUMENTS) {
            static_cast<int>(*IntegralCounter));
 }
 
+extern "C" void VI_GRMHDX_InitializeAfterRecovery(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_VI_GRMHDX_InitializeAfterRecovery;
+
+  *IntegralCounter = 0;
+  *comx = 0;
+  *comy = 0;
+  *comz = 0;
+  *density_mode_rho_max = 0;
+}
+
 extern "C" void VI_GRMHDX_InitializeIntegralCounter(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_VI_GRMHDX_InitializeIntegralCounter;
   DECLARE_CCTK_PARAMETERS;

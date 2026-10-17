@@ -36,20 +36,12 @@ SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_INITIAL BEFORE AsterX
   WRITES: volintegral_outside_sphere__center_z(everywhere)
 } "Initialize IntegralCounter variable to zero"
 
-SCHEDULE VI_GRMHDX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLES
+SCHEDULE VI_GRMHDX_InitializeAfterRecovery AT CCTK_POST_RECOVER_VARIABLES
 {
   LANG: C
   OPTIONS: GLOBAL
   WRITES: IntegralCounter(everywhere) GlobalCoM(everywhere) density_mode_rho_max(everywhere)
-  WRITES: AsterSeeds::CoM_NS1(everywhere) AsterSeeds::CoM_NS2(everywhere)
-  WRITES: VolIntegral(everywhere)
-  WRITES: volintegral_inside_sphere__center_x(everywhere)
-  WRITES: volintegral_inside_sphere__center_y(everywhere)
-  WRITES: volintegral_inside_sphere__center_z(everywhere)
-  WRITES: volintegral_outside_sphere__center_x(everywhere)
-  WRITES: volintegral_outside_sphere__center_y(everywhere)
-  WRITES: volintegral_outside_sphere__center_z(everywhere)
-} "Initialize IntegralCounter variable to zero"
+} "Initialize non-checkpointed variables after recovery"
 
 # BoxInBox_Setup is scheduled AS EstimateError; order against the alias name.
 SCHEDULE VI_GRMHDX_InitializeIntegralCounter AT poststep AFTER SphericalSurface_Set BEFORE (VI_GRMHDX_VolumeIntegralGroup EstimateError)
@@ -88,6 +80,7 @@ SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_G
   READS: ADMBaseX::gzz(everywhere)
   READS: AsterX::w_lorentz(interior)
   READS: AsterX::b2small(interior)
+  READS: VolIntegrands(interior)
   WRITES: VolIntegrands(interior)
 } "Compute Integrand"
 
