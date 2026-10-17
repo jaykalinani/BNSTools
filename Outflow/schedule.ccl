@@ -6,10 +6,38 @@ STORAGE: w_lorentz_projected
 STORAGE: eninf_projected
 STORAGE: surface_projections
 
-schedule outflow at CCTK_ANALYSIS
+SCHEDULE outflow_init AT CCTK_INITIAL
+{
+  LANG: C
+  OPTIONS: global
+  WRITES: outflow_flux(everywhere) fluxdens_projected(everywhere)
+  WRITES: w_lorentz_projected(everywhere) eninf_projected(everywhere)
+  WRITES: surface_projections(everywhere)
+} "Initialize outflow results"
+
+SCHEDULE outflow_init AT CCTK_POST_RECOVER_VARIABLES
+{
+  LANG: C
+  OPTIONS: global
+  WRITES: outflow_flux(everywhere) fluxdens_projected(everywhere)
+  WRITES: w_lorentz_projected(everywhere) eninf_projected(everywhere)
+  WRITES: surface_projections(everywhere)
+} "Initialize non-checkpointed outflow results after recovery"
+
+schedule outflow at CCTK_ANALYSIS AFTER compute_mhd_diagnostics
 {
   lang: C
   options: global
+  READS: ADMBaseX::metric(everywhere) ADMBaseX::lapse(everywhere) ADMBaseX::shift(everywhere)
+  READS: HydroBaseX::rho(everywhere) HydroBaseX::vel(everywhere)
+  READS: SphericalSurface::sf_valid(everywhere) SphericalSurface::sf_info(everywhere)
+  READS: SphericalSurface::sf_radius(everywhere)
+  READS: SphericalSurface::sf_coordinate_descriptors(everywhere)
+  READS: SphericalSurface::sf_shape_descriptors(everywhere)
+  READS: outflow_flux(everywhere)
+  WRITES: outflow_flux(everywhere) fluxdens_projected(everywhere)
+  WRITES: w_lorentz_projected(everywhere) eninf_projected(everywhere)
+  WRITES: surface_projections(everywhere)
 } "compute outflow"
 
 schedule outflow_setup at CCTK_STARTUP

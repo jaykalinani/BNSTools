@@ -902,6 +902,25 @@ static void fill_variable(int idx, const char *optstring, void *callback_arg) {
 /* Scheduled routines                                                 */
 /**********************************************************************/
 
+void outflow_init(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTS;
+  DECLARE_CCTK_PARAMETERS;
+
+  for (int det = 0; det < num_detectors; ++det)
+    outflow_flux[det] = 0.0;
+
+  const int npoints = maxntheta * maxnphi * num_detectors;
+  for (int i = 0; i < npoints; ++i)
+    fluxdens_projected[i] = w_lorentz_projected[i] =
+        eninf_projected[i] = 0.0;
+
+  for (int e = 0; e < MAX_NUMBER_EXTRAS; ++e) {
+    CCTK_REAL *surface_projection = get_surface_projection(CCTK_PASS_CTOC, e);
+    for (int i = 0; i < npoints; ++i)
+      surface_projection[i] = 0.0;
+  }
+}
+
 void outflow(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS;
   DECLARE_CCTK_PARAMETERS;
