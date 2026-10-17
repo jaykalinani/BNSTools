@@ -141,6 +141,10 @@ extern "C" void VI_vacuumX_ComputeIntegrandFluxes(CCTK_ARGUMENTS) {
                 static_cast<int>(*IntegralCounter));
   }
 
+  if (CCTK_EQUALS(Integration_quantity_keyword[which_integral],
+                  "usepreviousintegrands"))
+    return;
+
   const CCTK_REAL idx = 1.0 / CCTK_DELTA_SPACE(0);
   const CCTK_REAL idy = 1.0 / CCTK_DELTA_SPACE(1);
   const CCTK_REAL idz = 1.0 / CCTK_DELTA_SPACE(2);

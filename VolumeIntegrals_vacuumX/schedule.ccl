@@ -36,20 +36,13 @@ SCHEDULE VI_vacuumX_InitializeIntegralCounterToZero AT CCTK_INITIAL
   WRITES: volintegral_outside_sphere__center_z(everywhere)
 } "Initialize IntegralCounter variable to zero"
 
-SCHEDULE VI_vacuumX_InitializeIntegralCounterToZero AT CCTK_POST_RECOVER_VARIABLES
+SCHEDULE VI_vacuumX_InitializeAfterRecovery AT CCTK_POST_RECOVER_VARIABLES
 {
   LANG: C
   OPTIONS: GLOBAL
   WRITES: IntegralCounter(everywhere)
-  WRITES: VolIntegral(everywhere)
   WRITES: physical_time(everywhere)
-  WRITES: volintegral_inside_sphere__center_x(everywhere)
-  WRITES: volintegral_inside_sphere__center_y(everywhere)
-  WRITES: volintegral_inside_sphere__center_z(everywhere)
-  WRITES: volintegral_outside_sphere__center_x(everywhere)
-  WRITES: volintegral_outside_sphere__center_y(everywhere)
-  WRITES: volintegral_outside_sphere__center_z(everywhere)
-} "Initialize IntegralCounter variable to zero"
+} "Initialize non-checkpointed variables after recovery"
 
 # Z4c and CanudaX_BSSNMoL constraints are computed at analysis.
 # Run VI_vacuumX in analysis so H/M constraint integrals use up-to-date data.
@@ -81,6 +74,7 @@ SCHEDULE VI_vacuumX_ComputeIntegrandFluxes in VI_vacuumX_VolumeIntegralGroup BEF
   READS: ADMBaseX::kyy(everywhere)
   READS: ADMBaseX::kyz(everywhere)
   READS: ADMBaseX::kzz(everywhere)
+  READS: VolIntegrand2(everywhere) VolIntegrand3(everywhere) VolIntegrand4(everywhere)
   WRITES: VolIntegrand2(everywhere) VolIntegrand3(everywhere) VolIntegrand4(everywhere)
 } "Precompute ADM derivative/flux workspaces"
 
@@ -102,8 +96,8 @@ SCHEDULE VI_vacuumX_ComputeIntegrand in VI_vacuumX_VolumeIntegralGroup BEFORE VI
   READS: ADMBaseX::kyy(everywhere)
   READS: ADMBaseX::kyz(everywhere)
   READS: ADMBaseX::kzz(everywhere)
-  READS: VolIntegrand2(everywhere) VolIntegrand3(everywhere) VolIntegrand4(everywhere)
-  WRITES: VolIntegrand1(interior) VolIntegrand2(interior) VolIntegrand3(interior) VolIntegrand4(interior)
+  READS: VolIntegrands(interior)
+  WRITES: VolIntegrands(interior)
   SYNC: VolIntegrands
   WRITES: volintegral_inside_sphere__center_x(everywhere)
   WRITES: volintegral_inside_sphere__center_y(everywhere)

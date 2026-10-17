@@ -39,6 +39,13 @@ extern "C" void VI_vacuumX_InitializeIntegralCounterToZero(CCTK_ARGUMENTS) {
            static_cast<int>(*IntegralCounter));
 }
 
+extern "C" void VI_vacuumX_InitializeAfterRecovery(CCTK_ARGUMENTS) {
+  DECLARE_CCTK_ARGUMENTSX_VI_vacuumX_InitializeAfterRecovery;
+
+  *IntegralCounter = 0;
+  *physical_time = 0.0;
+}
+
 extern "C" void VI_vacuumX_InitializeIntegralCounter(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTSX_VI_vacuumX_InitializeIntegralCounter;
   DECLARE_CCTK_PARAMETERS;
