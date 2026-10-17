@@ -2,6 +2,9 @@
 
 STORAGE: metric_cc, lapse_cc, shift_cc
 
+if (CCTK_EQUALS(initial_data, "NRPyPlusTOVID"))
+{
+
 schedule NRPyPlusTOVID_ET_InitialData IN HydroBaseX_InitialData
 {
   LANG: C
@@ -97,6 +100,8 @@ if (NRPyTOV_Cowling) {
     SYNC: ADMBaseX::metric ADMBaseX::lapse ADMBaseX::shift ADMBaseX::curv
     SYNC: ADMBaseX::dtlapse ADMBaseX::dtshift
   } "Interpolate metric from cell center to vertex"
+}
+
 }
 
 
