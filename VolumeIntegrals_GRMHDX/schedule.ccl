@@ -80,7 +80,6 @@ SCHEDULE VI_GRMHDX_ComputeIntegrand in VI_GRMHDX_VolumeIntegralGroup BEFORE VI_G
   READS: ADMBaseX::gzz(everywhere)
   READS: AsterX::w_lorentz(interior)
   READS: AsterX::b2small(interior)
-  READS: VolIntegrands(interior)
   WRITES: VolIntegrands(interior)
 } "Compute Integrand"
 
@@ -116,6 +115,7 @@ SCHEDULE VI_GRMHDX_DoSum in VI_GRMHDX_VolumeIntegralGroup AFTER VI_GRMHDX_ApplyR
   READS: volintegral_outside_sphere__center_x(everywhere)
   READS: volintegral_outside_sphere__center_y(everywhere)
   READS: volintegral_outside_sphere__center_z(everywhere)
+  READS: VolIntegrands(interior)
   READS: VolIntegral(everywhere)
   READS: GlobalCoM(everywhere)
   READS: BoxInBox::position_x(everywhere)
