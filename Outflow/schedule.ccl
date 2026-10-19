@@ -34,7 +34,6 @@ schedule outflow at CCTK_ANALYSIS AFTER compute_mhd_diagnostics
   READS: SphericalSurface::sf_radius(everywhere)
   READS: SphericalSurface::sf_coordinate_descriptors(everywhere)
   READS: SphericalSurface::sf_shape_descriptors(everywhere)
-  READS: outflow_flux(everywhere)
   WRITES: outflow_flux(everywhere) fluxdens_projected(everywhere)
   WRITES: w_lorentz_projected(everywhere) eninf_projected(everywhere)
   WRITES: surface_projections(everywhere)
