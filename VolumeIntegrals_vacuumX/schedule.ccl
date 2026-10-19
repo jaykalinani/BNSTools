@@ -74,7 +74,6 @@ SCHEDULE VI_vacuumX_ComputeIntegrandFluxes in VI_vacuumX_VolumeIntegralGroup BEF
   READS: ADMBaseX::kyy(everywhere)
   READS: ADMBaseX::kyz(everywhere)
   READS: ADMBaseX::kzz(everywhere)
-  READS: VolIntegrand2(everywhere) VolIntegrand3(everywhere) VolIntegrand4(everywhere)
   WRITES: VolIntegrand2(everywhere) VolIntegrand3(everywhere) VolIntegrand4(everywhere)
 } "Precompute ADM derivative/flux workspaces"
 
@@ -96,8 +95,8 @@ SCHEDULE VI_vacuumX_ComputeIntegrand in VI_vacuumX_VolumeIntegralGroup BEFORE VI
   READS: ADMBaseX::kyy(everywhere)
   READS: ADMBaseX::kyz(everywhere)
   READS: ADMBaseX::kzz(everywhere)
-  READS: VolIntegrands(interior)
-  WRITES: VolIntegrands(interior)
+  READS: VolIntegrand2(everywhere) VolIntegrand3(everywhere) VolIntegrand4(everywhere)
+  WRITES: VolIntegrand1(interior) VolIntegrand2(interior) VolIntegrand3(interior) VolIntegrand4(interior)
   SYNC: VolIntegrands
   WRITES: volintegral_inside_sphere__center_x(everywhere)
   WRITES: volintegral_inside_sphere__center_y(everywhere)
