@@ -14,11 +14,7 @@
 #include <tuple.hxx>
 #include <loop.hxx>
 
-namespace CarpetX {
-using Loop::dim;
-}
-
-#include <reduction.hxx>
+#include <carpetx.hxx>
 
 typedef struct {
   int number;
@@ -139,7 +135,8 @@ static int TriggerX_CarpetXReductionSupported(const char *reduction) {
 }
 
 static int TriggerX_CarpetXReductionValue(
-    int trigger, const char *reduction, const CarpetX::reduction_CCTK_REAL &red,
+    int trigger, const char *reduction,
+    const CarpetX::reduction<CCTK_REAL, Loop::dim> &red,
     CCTK_REAL *value) {
   if (CCTK_EQUALS(reduction, "minimum")) {
     *value = red.min;
@@ -198,7 +195,9 @@ static int TriggerX_ReduceVariable(const cGH *GH, int trigger, int varindex,
     }
 
     return TriggerX_CarpetXReductionValue(trigger, reduction,
-                                          CarpetX::reduce(groupindex, vi, 0),
+                                          CarpetX::reduce(CarpetX::gi_t{groupindex},
+                                                          CarpetX::vi_t{vi},
+                                                          CarpetX::tl_t{0}),
                                           value);
   }
 

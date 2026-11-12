@@ -5,7 +5,7 @@ INHERITS: CarpetXRegrid
 
 USES INCLUDE HEADER: tuple.hxx
 USES INCLUDE HEADER: loop.hxx
-USES INCLUDE HEADER: reduction.hxx
+USES INCLUDE HEADER: carpetx.hxx
 
 PUBLIC:
 
