@@ -7,8 +7,7 @@
 #include <cstring>
 
 #include "integrands.cxx"
-#include "../../../CarpetX/CarpetX/src/driver.hxx"
-#include "../../../CarpetX/CarpetX/src/reduction.hxx"
+#include <carpetx.hxx>
 
 using namespace Loop;
 
@@ -44,7 +43,8 @@ extern "C" void VI_GRMHDX_ComputeDensityModeRhoMax(CCTK_ARGUMENTS) {
   assert(v0 >= 0);
   const int vi = varindex - v0;
 
-  const CarpetX::reduction<CCTK_REAL, 3> red = CarpetX::reduce(gi, vi, 0);
+  const CarpetX::reduction<CCTK_REAL, 3> red = CarpetX::reduce(
+      CarpetX::gi_t{gi}, CarpetX::vi_t{vi}, CarpetX::tl_t{0});
   if (std::isfinite(red.max) && red.max > 0.0) {
     *density_mode_rho_max = red.max;
   } else if (CCTK_MyProc(cctkGH) == 0 && verbose >= 1) {
