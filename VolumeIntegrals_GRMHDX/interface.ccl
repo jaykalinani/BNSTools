@@ -5,6 +5,7 @@ implements: VolumeIntegrals_GRMHDX
 inherits: ADMBaseX HydroBaseX BoxInBox AsterSeeds AsterX
 
 USES INCLUDE HEADER: loop_device.hxx
+USES INCLUDE HEADER: carpetx.hxx
 
 public:
 CCTK_REAL GlobalCoM type=SCALAR tags='checkpoint="no"'

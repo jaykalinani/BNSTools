@@ -8,8 +8,7 @@
 #include <iostream>
 
 #include "number_of_reductions.cxx"
-#include "../../../CarpetX/CarpetX/src/driver.hxx"
-#include "../../../CarpetX/CarpetX/src/reduction.hxx"
+#include <carpetx.hxx>
 
 extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
   DECLARE_CCTK_ARGUMENTS_VI_GRMHDX_DoSum;
@@ -120,7 +119,8 @@ extern "C" void VI_GRMHDX_DoSum(CCTK_ARGUMENTS) {
     const int vi = varindex - v0;
 
     // Perform reduction. We only want the summed integrands.
-    const CarpetX::reduction<CCTK_REAL, 3> red = CarpetX::reduce(gi, vi, 0);
+    const CarpetX::reduction<CCTK_REAL, 3> red = CarpetX::reduce(
+        CarpetX::gi_t{gi}, CarpetX::vi_t{vi}, CarpetX::tl_t{0});
 
     const CCTK_REAL redsum = red.sum;
     if (std::isfinite(redsum)) {

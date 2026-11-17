@@ -1,6 +1,6 @@
 # Configuration definitions for thorn VolumeIntegrals_vacuumX
 
-REQUIRES Loop
+REQUIRES CarpetX Loop
 
 OPTIONAL MPI
 {

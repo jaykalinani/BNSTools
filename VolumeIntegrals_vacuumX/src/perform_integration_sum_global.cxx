@@ -14,8 +14,7 @@
 #endif
 
 #include "number_of_reductions.cxx"
-#include "../../../CarpetX/CarpetX/src/driver.hxx"
-#include "../../../CarpetX/CarpetX/src/reduction.hxx"
+#include <carpetx.hxx>
 
 namespace {
 
@@ -236,7 +235,8 @@ extern "C" void VI_vacuumX_DoSum(CCTK_ARGUMENTS) {
     assert(v0 >= 0);
     const int vi = varindex - v0;
 
-    const CarpetX::reduction<CCTK_REAL, 3> red = CarpetX::reduce(gi, vi, 0);
+    const CarpetX::reduction<CCTK_REAL, 3> red = CarpetX::reduce(
+        CarpetX::gi_t{gi}, CarpetX::vi_t{vi}, CarpetX::tl_t{0});
     const CCTK_REAL redsum = red.sum;
     if (!std::isfinite(redsum)) {
       CCTK_VERROR("Non-finite reduction for integral %d component %d/%d "
